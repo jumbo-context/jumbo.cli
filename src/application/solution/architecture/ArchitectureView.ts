@@ -1,0 +1,15 @@
+import { DataStore } from "../../../domain/solution/architecture/EventIndex.js";
+
+export interface ArchitectureView {
+  architectureId: string;
+  description: string;
+  organization: string;
+  patterns: string[];
+  principles: string[];
+  dataFlow: string | null;
+  dataStores: DataStore[];
+  stack: string[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}

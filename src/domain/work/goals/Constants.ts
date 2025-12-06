@@ -1,0 +1,74 @@
+/**
+ * Domain constants for Goal aggregate.
+ * Centralizes event types, status values, error messages, and limits.
+ */
+
+// Goal event types
+export const GoalEventType = {
+  ADDED: 'GoalAddedEvent',
+  STARTED: 'GoalStartedEvent',
+  UPDATED: 'GoalUpdatedEvent',
+  BLOCKED: 'GoalBlockedEvent',
+  UNBLOCKED: 'GoalUnblockedEvent',
+  COMPLETED: 'GoalCompletedEvent',
+  RESET: 'GoalResetEvent',
+  REMOVED: 'GoalRemovedEvent'
+} as const;
+
+export type GoalEventTypeValue = typeof GoalEventType[keyof typeof GoalEventType];
+
+// Goal status enum
+export const GoalStatus = {
+  TODO: 'to-do',
+  DOING: 'doing',
+  BLOCKED: 'blocked',
+  COMPLETED: 'completed'
+} as const;
+
+export type GoalStatusType = typeof GoalStatus[keyof typeof GoalStatus];
+
+// Error messages
+export const GoalErrorMessages = {
+  OBJECTIVE_REQUIRED: 'Goal objective must be provided',
+  OBJECTIVE_TOO_LONG: 'Objective must be less than {max} characters',
+  SUCCESS_CRITERIA_REQUIRED: 'At least one success criterion must be provided',
+  SUCCESS_CRITERION_TOO_LONG: 'Success criterion must be less than {max} characters',
+  TOO_MANY_CRITERIA: 'Cannot have more than {max} success criteria',
+  SCOPE_ITEM_TOO_LONG: 'Scope item must be less than {max} characters',
+  TOO_MANY_SCOPE_ITEMS: 'Cannot have more than {max} scope items',
+  GOAL_NOT_FOUND: 'Goal not found: {id}',
+  CANNOT_START_BLOCKED: 'Cannot start a blocked goal. Unblock it first.',
+  CANNOT_START_COMPLETED: 'Cannot start a completed goal.',
+  NOT_FOUND: 'Goal with ID {goalId} not found',
+  NO_CHANGES_PROVIDED: 'At least one field must be provided for update',
+  CANNOT_UPDATE_COMPLETED: 'Cannot update a completed goal',
+  NOTE_REQUIRED: 'Note is required when blocking a goal',
+  NOTE_TOO_LONG: 'Note must be less than {max} characters',
+  CANNOT_BLOCK_IN_STATUS: 'Cannot block goal in {status} status. Goal must be in to-do or doing status.',
+  CANNOT_UNBLOCK_IN_STATUS: 'Cannot unblock goal in {status} status. Goal must be blocked.',
+  NOT_STARTED: 'Cannot complete a goal that has not been started',
+  ALREADY_COMPLETED: 'Goal is already completed',
+  CANNOT_RESET_BLOCKED: 'Cannot reset a blocked goal. Unblock it first to preserve blocker context.',
+  ALREADY_TODO: 'Goal is already in to-do status'
+} as const;
+
+// Numeric limits
+export const GoalLimits = {
+  OBJECTIVE_MAX_LENGTH: 200,
+  SUCCESS_CRITERION_MAX_LENGTH: 300,
+  MAX_SUCCESS_CRITERIA: 20,
+  SCOPE_ITEM_MAX_LENGTH: 200,
+  MAX_SCOPE_ITEMS: 20,
+  NOTE_MAX_LENGTH: 500
+} as const;
+
+// Helper function for message formatting
+export function formatErrorMessage(
+  template: string,
+  replacements: Record<string, string | number>
+): string {
+  return Object.entries(replacements).reduce(
+    (msg, [key, value]) => msg.replace(`{${key}}`, String(value)),
+    template
+  );
+}

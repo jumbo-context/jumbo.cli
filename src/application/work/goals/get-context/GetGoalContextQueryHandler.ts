@@ -1,0 +1,304 @@
+import { IGoalContextReader } from "./IGoalContextReader.js";
+import { GoalContextView } from "./GoalContextView.js";
+import { IComponentContextReader } from "./IComponentContextReader.js";
+import { IDependencyContextReader } from "./IDependencyContextReader.js";
+import { IDecisionContextReader } from "./IDecisionContextReader.js";
+import { IInvariantContextReader } from "./IInvariantContextReader.js";
+import { IGuidelineContextReader } from "./IGuidelineContextReader.js";
+import { IProjectContextReader } from "../../../project-knowledge/project/query/IProjectContextReader.js";
+import { IRelationReader } from "../../../relations/IRelationReader.js";
+import { InvariantView } from "../../../solution/invariants/InvariantView.js";
+
+/**
+ * GetGoalContextQueryHandler - Query handler for goal context retrieval
+ *
+ * Retrieves comprehensive context for a goal, filtered by scope for token optimization.
+ *
+ * Returns context across all 6 categories:
+ * 1. Work - Goal details (objective, criteria, scope, boundaries)
+ * 2. Solution - Components, dependencies, decisions (filtered by scopeIn/scopeOut)
+ * 3. Invariants - Non-negotiable constraints
+ * 4. Guidelines - Execution guidelines
+ * 5. Domain Knowledge - Project purpose, business context
+ * 6. Relations - Connections between entities
+ *
+ * Phase 1 Implementation: Goal details only
+ * Phase 2 Implementation: Components, dependencies, decisions filtered by scope
+ * Phase 3 Implementation: Invariants and guidelines
+ * Phase 4 Implementation: Project context and relations
+ */
+export class GetGoalContextQueryHandler {
+  constructor(
+    private readonly goalReader: IGoalContextReader,
+    private readonly componentReader?: IComponentContextReader,
+    private readonly dependencyReader?: IDependencyContextReader,
+    private readonly decisionReader?: IDecisionContextReader,
+    private readonly invariantReader?: IInvariantContextReader,
+    private readonly guidelineReader?: IGuidelineContextReader,
+    private readonly projectContextReader?: IProjectContextReader,
+    private readonly relationReader?: IRelationReader
+  ) {}
+
+  /**
+   * Execute the query to get goal context
+   *
+   * @param goalId - ID of the goal to get context for
+   * @returns GoalContextView with all context data
+   * @throws Error if goal not found
+   */
+  async execute(goalId: string): Promise<GoalContextView> {
+    // Phase 1: Get goal details
+    const goal = await this.goalReader.findById(goalId);
+
+    if (!goal) {
+      throw new Error(`Goal not found: ${goalId}`);
+    }
+
+    // Phase 2: Filter components by scope
+    const components = await this.filterComponents(goal.scopeIn, goal.scopeOut);
+
+    // Phase 2: Get dependencies for scoped components
+    const dependencies = await this.filterDependencies(components);
+
+    // Phase 2: Get active decisions
+    const decisions = await this.getDecisions();
+
+    // Phase 3: Get invariants and guidelines
+    const invariants = await this.getInvariants();
+    const guidelines = await this.getGuidelines();
+
+    // Phase 4: Get project context and relations
+    const project = await this.getProject();
+    const relations = await this.getRelations(components);
+
+    return {
+      goal,
+      components,
+      dependencies,
+      decisions,
+      invariants,
+      guidelines,
+      project,
+      relations,
+    };
+  }
+
+  /**
+   * Filter components by scopeIn and scopeOut
+   *
+   * @param scopeIn - Component names to include
+   * @param scopeOut - Component names to exclude
+   * @returns Filtered component context views
+   */
+  private async filterComponents(scopeIn: string[], scopeOut: string[]): Promise<Array<{ componentId: string; name: string; description: string; status: string }>> {
+    if (!this.componentReader) {
+      return [];
+    }
+
+    const allComponents = await this.componentReader.findAll();
+
+    // Filter by scopeIn (case-insensitive) and exclude scopeOut
+    const filtered = allComponents.filter((component) => {
+      const name = component.name.toLowerCase();
+
+      // Check if in scopeOut (exclude)
+      const isExcluded = scopeOut.some(out => name.includes(out.toLowerCase()) || out.toLowerCase().includes(name));
+      if (isExcluded) {
+        return false;
+      }
+
+      // If scopeIn is empty, include all (except those in scopeOut)
+      if (scopeIn.length === 0) {
+        return true;
+      }
+
+      // Check if in scopeIn (include)
+      return scopeIn.some(in_ => name.includes(in_.toLowerCase()) || in_.toLowerCase().includes(name));
+    });
+
+    // Map to simplified context view
+    return filtered
+      .filter(c => c.status === 'active') // Only include active components
+      .map((c) => ({
+        componentId: c.componentId,
+        name: c.name,
+        description: c.description,
+        status: c.status,
+      }));
+  }
+
+  /**
+   * Get dependencies for scoped components
+   *
+   * @param components - Filtered components
+   * @returns Dependency context views
+   */
+  private async filterDependencies(components: any[]): Promise<any[]> {
+    if (!this.dependencyReader || components.length === 0) {
+      return [];
+    }
+
+    const componentIds = new Set(components.map(c => c.componentId));
+    const allDependencies = await this.dependencyReader.findAll();
+
+    // Filter dependencies where consumer or provider is in scoped components
+    const filtered = allDependencies.filter((dep) =>
+      componentIds.has(dep.consumerId) || componentIds.has(dep.providerId)
+    );
+
+    // Map to context view - use consumer and provider names for clarity
+    return filtered
+      .filter(d => d.status === 'active')
+      .map((d) => {
+        const consumer = components.find(c => c.componentId === d.consumerId);
+        const provider = components.find(c => c.componentId === d.providerId);
+
+        return {
+          dependencyId: d.dependencyId,
+          name: `${consumer?.name || d.consumerId} → ${provider?.name || d.providerId}`,
+          version: null,
+          purpose: d.contract || d.endpoint || "Architectural dependency",
+        };
+      });
+  }
+
+  /**
+   * Get active decisions
+   *
+   * @returns Decision context views
+   */
+  private async getDecisions(): Promise<any[]> {
+    if (!this.decisionReader) {
+      return [];
+    }
+
+    const activeDecisions = await this.decisionReader.findAllActive();
+
+    return activeDecisions.map((d) => ({
+      decisionId: d.decisionId,
+      title: d.title,
+      rationale: d.rationale || d.context,
+      status: d.status,
+    }));
+  }
+
+  /**
+   * Get all invariants
+   *
+   * @returns Invariant context views
+   */
+  private async getInvariants(): Promise<any[]> {
+    if (!this.invariantReader) {
+      return [];
+    }
+
+    const allInvariants = await this.invariantReader.findAll();
+
+    // For Phase 3, include all invariants
+    // Future optimization: could filter based on goal scope
+    return allInvariants.map((inv: InvariantView) => ({
+      invariantId: inv.invariantId,
+      category: inv.title, // Use title as category for display
+      description: inv.description,
+    }));
+  }
+
+  /**
+   * Get active guidelines
+   *
+   * @returns Guideline context views
+   */
+  private async getGuidelines(): Promise<any[]> {
+    if (!this.guidelineReader) {
+      return [];
+    }
+
+    const allGuidelines = await this.guidelineReader.findAll();
+
+    // Filter out removed guidelines
+    const activeGuidelines = allGuidelines.filter((g) => !g.isRemoved);
+
+    return activeGuidelines.map((g) => ({
+      guidelineId: g.guidelineId,
+      category: g.category,
+      description: g.description,
+    }));
+  }
+
+  /**
+   * Get project context
+   *
+   * @returns Project context view or null
+   */
+  private async getProject(): Promise<any | null> {
+    if (!this.projectContextReader) {
+      return null;
+    }
+
+    const project = await this.projectContextReader.getProject();
+
+    if (!project) {
+      return null;
+    }
+
+    return {
+      projectId: project.projectId,
+      name: project.name,
+      problem: project.purpose || "No purpose defined",
+      solution: project.tagline || "No tagline defined",
+    };
+  }
+
+  /**
+   * Get relations for scoped components
+   *
+   * @param components - Filtered components
+   * @returns Relation context views
+   */
+  private async getRelations(components: any[]): Promise<any[]> {
+    if (!this.relationReader || components.length === 0) {
+      return [];
+    }
+
+    const componentIds = new Set(components.map((c: { componentId: string }) => c.componentId));
+    const relations: any[] = [];
+
+    // Get relations for each component
+    for (const component of components) {
+      // Relations where this component is the source
+      const fromRelations = await this.relationReader.findByFromEntity(
+        "component",
+        component.componentId
+      );
+
+      // Relations where this component is the target
+      const toRelations = await this.relationReader.findByToEntity(
+        "component",
+        component.componentId
+      );
+
+      // Filter to only include relations between scoped components
+      const relevantFromRelations = fromRelations.filter(
+        (r: { status: string; toEntityId: string }) => r.status === "active" && componentIds.has(r.toEntityId)
+      );
+
+      const relevantToRelations = toRelations.filter(
+        (r: { status: string; fromEntityId: string }) => r.status === "active" && componentIds.has(r.fromEntityId)
+      );
+
+      relations.push(...relevantFromRelations, ...relevantToRelations);
+    }
+
+    // Deduplicate relations
+    const uniqueRelations = Array.from(
+      new Map(relations.map((r) => [r.relationId, r])).values()
+    );
+
+    return uniqueRelations.map((r) => ({
+      fromEntityId: r.fromEntityId,
+      toEntityId: r.toEntityId,
+      relationType: r.relationType,
+      description: r.description,
+    }));
+  }
+}
