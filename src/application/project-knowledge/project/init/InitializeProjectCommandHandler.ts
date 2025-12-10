@@ -7,9 +7,8 @@
  * 3. Executes domain logic (initialize)
  * 4. Persists event to event store
  * 5. Publishes event to event bus for projection updates
- * 6. Creates/updates agent instruction files (AGENTS.md, CLAUDE.md, GEMINI.md)
- * 7. Configures Claude Code SessionStart hook (.claude/settings.json)
- * 8. Creates GitHub Copilot instructions (.github/copilot-instructions.md)
+ * 6. Creates/updates AGENTS.md with Jumbo instructions
+ * 7. Configures all supported agents (markdown files, settings, hooks)
  */
 
 import { InitializeProjectCommand } from "./InitializeProjectCommand.js";
@@ -56,15 +55,11 @@ export class InitializeProjectCommandHandler {
     // 4. Publish event to bus (projections will update via subscriptions)
     await this.eventBus.publish(event);
 
-    // 5. Create/update agent instruction files (side effect)
+    // 5. Create/update AGENTS.md (side effect)
     await this.agentFileProtocol.ensureAgentsMd(projectRoot);
-    await this.agentFileProtocol.ensureAgentFileReferences(projectRoot);
 
-    // 6. Configure Claude Code SessionStart hook (side effect)
-    await this.agentFileProtocol.ensureClaudeSettings(projectRoot);
-
-    // 7. Create GitHub Copilot instructions (side effect)
-    await this.agentFileProtocol.ensureCopilotInstructions(projectRoot);
+    // 6. Configure all supported agents (side effect)
+    await this.agentFileProtocol.ensureAgentConfigurations(projectRoot);
 
     return { projectId };
   }

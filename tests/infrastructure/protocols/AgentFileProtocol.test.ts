@@ -77,10 +77,10 @@ describe("AgentFileProtocol", () => {
     });
   });
 
-  describe("ensureAgentFileReferences()", () => {
-    it("should create CLAUDE.md if it doesn't exist", async () => {
+  describe("ensureAgentConfigurations()", () => {
+    it("should create CLAUDE.md with AGENTS.md reference", async () => {
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
       // Assert
       const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
@@ -91,9 +91,9 @@ describe("AgentFileProtocol", () => {
       expect(content).toContain("AGENTS.md");
     });
 
-    it("should create GEMINI.md if it doesn't exist", async () => {
+    it("should create GEMINI.md with AGENTS.md reference", async () => {
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
       // Assert
       const geminiMdPath = path.join(tmpDir, "GEMINI.md");
@@ -102,6 +102,78 @@ describe("AgentFileProtocol", () => {
 
       const content = await fs.readFile(geminiMdPath, "utf-8");
       expect(content).toContain("AGENTS.md");
+    });
+
+    it("should create .claude/settings.json with SessionStart hook", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const settingsPath = path.join(tmpDir, ".claude", "settings.json");
+      const exists = await fs.pathExists(settingsPath);
+      expect(exists).toBe(true);
+
+      const content = await fs.readFile(settingsPath, "utf-8");
+      const settings = JSON.parse(content);
+      expect(settings.hooks?.SessionStart).toBeDefined();
+      expect(settings.hooks.SessionStart[0].matcher).toBe("startup");
+      expect(settings.hooks.SessionStart[0].hooks[0].command).toBe("jumbo session start");
+    });
+
+    it("should create .gemini/settings.json with SessionStart hook", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const settingsPath = path.join(tmpDir, ".gemini", "settings.json");
+      const exists = await fs.pathExists(settingsPath);
+      expect(exists).toBe(true);
+
+      const content = await fs.readFile(settingsPath, "utf-8");
+      const settings = JSON.parse(content);
+      expect(settings.hooks?.SessionStart).toBeDefined();
+      expect(settings.hooks.SessionStart[0].matcher).toBe("startup");
+      expect(settings.hooks.SessionStart[0].hooks[0].command).toBe("jumbo session start");
+    });
+
+    it("should create .github/copilot-instructions.md with Jumbo instructions", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const copilotPath = path.join(tmpDir, ".github", "copilot-instructions.md");
+      const exists = await fs.pathExists(copilotPath);
+      expect(exists).toBe(true);
+
+      const content = await fs.readFile(copilotPath, "utf-8");
+      expect(content).toContain("Jumbo");
+    });
+
+    it("should create CURSOR.md with AGENTS.md reference", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const cursorMdPath = path.join(tmpDir, "CURSOR.md");
+      const exists = await fs.pathExists(cursorMdPath);
+      expect(exists).toBe(true);
+
+      const content = await fs.readFile(cursorMdPath, "utf-8");
+      expect(content).toContain("AGENTS.md");
+    });
+
+    it("should create .cursor/rules/jumbo/RULE.md with Jumbo instructions", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const rulePath = path.join(tmpDir, ".cursor", "rules", "jumbo", "RULE.md");
+      const exists = await fs.pathExists(rulePath);
+      expect(exists).toBe(true);
+
+      const content = await fs.readFile(rulePath, "utf-8");
+      expect(content).toContain("alwaysApply: true");
+      expect(content).toContain("Jumbo");
     });
 
     it("should append reference if CLAUDE.md exists without it", async () => {
@@ -114,7 +186,7 @@ describe("AgentFileProtocol", () => {
       );
 
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
       // Assert
       const content = await fs.readFile(claudeMdPath, "utf-8");
@@ -129,7 +201,7 @@ describe("AgentFileProtocol", () => {
       await fs.writeFile(claudeMdPath, initialContent, "utf-8");
 
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
       // Assert - verify reference block not duplicated by checking unique marker
       const content = await fs.readFile(claudeMdPath, "utf-8");
@@ -137,32 +209,47 @@ describe("AgentFileProtocol", () => {
       expect(occurrences).toBe(1);
     });
 
-    it("should handle both files independently", async () => {
+    it("should handle all agents independently", async () => {
       // Arrange - Create only CLAUDE.md
       const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
       await fs.writeFile(claudeMdPath, "# CLAUDE.md\n\nExisting content.", "utf-8");
 
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
-      // Assert
+      // Assert - CLAUDE.md updated
       const claudeContent = await fs.readFile(claudeMdPath, "utf-8");
       expect(claudeContent).toContain("AGENTS.md");
 
+      // Assert - GEMINI.md created
       const geminiMdPath = path.join(tmpDir, "GEMINI.md");
       const geminiExists = await fs.pathExists(geminiMdPath);
       expect(geminiExists).toBe(true);
 
-      const geminiContent = await fs.readFile(geminiMdPath, "utf-8");
-      expect(geminiContent).toContain("AGENTS.md");
-    });
+      // Assert - .claude/settings.json created
+      const claudeSettingsPath = path.join(tmpDir, ".claude", "settings.json");
+      const claudeSettingsExists = await fs.pathExists(claudeSettingsPath);
+      expect(claudeSettingsExists).toBe(true);
 
-    it("should handle errors gracefully without throwing", async () => {
-      // Arrange - use invalid path
-      const invalidPath = path.join(tmpDir, "nonexistent", "deeply", "nested");
+      // Assert - .gemini/settings.json created
+      const geminiSettingsPath = path.join(tmpDir, ".gemini", "settings.json");
+      const geminiSettingsExists = await fs.pathExists(geminiSettingsPath);
+      expect(geminiSettingsExists).toBe(true);
 
-      // Act & Assert - should not throw
-      await expect(protocol.ensureAgentFileReferences(invalidPath)).resolves.not.toThrow();
+      // Assert - .github/copilot-instructions.md created
+      const copilotPath = path.join(tmpDir, ".github", "copilot-instructions.md");
+      const copilotExists = await fs.pathExists(copilotPath);
+      expect(copilotExists).toBe(true);
+
+      // Assert - CURSOR.md created
+      const cursorMdPath = path.join(tmpDir, "CURSOR.md");
+      const cursorMdExists = await fs.pathExists(cursorMdPath);
+      expect(cursorMdExists).toBe(true);
+
+      // Assert - .cursor/rules/jumbo/RULE.md created
+      const cursorRulePath = path.join(tmpDir, ".cursor", "rules", "jumbo", "RULE.md");
+      const cursorRuleExists = await fs.pathExists(cursorRulePath);
+      expect(cursorRuleExists).toBe(true);
     });
   });
 
@@ -180,11 +267,11 @@ describe("AgentFileProtocol", () => {
       expect(occurrences).toBe(1);
     });
 
-    it("should be safe to run ensureAgentFileReferences multiple times", async () => {
+    it("should be safe to run ensureAgentConfigurations multiple times", async () => {
       // Act
-      await protocol.ensureAgentFileReferences(tmpDir);
-      await protocol.ensureAgentFileReferences(tmpDir);
-      await protocol.ensureAgentFileReferences(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
+      await protocol.ensureAgentConfigurations(tmpDir);
 
       // Assert - verify reference block appears only once by checking for unique marker
       const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
@@ -196,6 +283,12 @@ describe("AgentFileProtocol", () => {
       const geminiContent = await fs.readFile(geminiMdPath, "utf-8");
       const geminiOccurrences = (geminiContent.match(/CRITICAL STARTUP INSTRUCTION/g) || []).length;
       expect(geminiOccurrences).toBe(1);
+
+      // Assert - settings.json not duplicating hooks
+      const claudeSettingsPath = path.join(tmpDir, ".claude", "settings.json");
+      const claudeSettings = JSON.parse(await fs.readFile(claudeSettingsPath, "utf-8"));
+      expect(claudeSettings.hooks.SessionStart.length).toBe(1);
+      expect(claudeSettings.hooks.SessionStart[0].hooks.length).toBe(1);
     });
   });
 });

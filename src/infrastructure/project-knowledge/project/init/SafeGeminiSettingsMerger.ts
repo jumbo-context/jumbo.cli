@@ -2,32 +2,27 @@ import * as fs from "fs-extra";
 import * as path from "path";
 
 /**
- * Claude Code settings structure
- * Based on: https://code.claude.com/docs/en/hooks
+ * Gemini CLI settings structure
+ * Based on Gemini CLI hooks configuration
  */
-export interface ClaudeHook {
+export interface GeminiHook {
   type: "command";
   command: string;
 }
 
-export interface ClaudeSessionStartMatcher {
+export interface GeminiSessionStartMatcher {
   matcher: "startup" | "resume" | "clear" | "compact";
-  hooks: ClaudeHook[];
+  hooks: GeminiHook[];
 }
 
-export interface ClaudeSettings {
+export interface GeminiSettings {
   hooks?: {
-    SessionStart?: ClaudeSessionStartMatcher[];
-  };
-  permissions?: {
-    allow?: string[];
-    deny?: string[];
-    ask?: string[];
+    SessionStart?: GeminiSessionStartMatcher[];
   };
 }
 
 /**
- * Safe merger for Claude Code settings.json files
+ * Safe merger for Gemini CLI settings.json files
  *
  * Strategy:
  * - Creates backup before modification
@@ -37,7 +32,7 @@ export interface ClaudeSettings {
  * - Idempotent (safe to run multiple times)
  *
  * @example
- * await SafeSettingsMerger.mergeSettings(projectRoot, {
+ * await SafeGeminiSettingsMerger.mergeSettings(projectRoot, {
  *   hooks: {
  *     SessionStart: [{
  *       matcher: "startup",
@@ -46,9 +41,9 @@ export interface ClaudeSettings {
  *   }
  * });
  */
-export class SafeSettingsMerger {
+export class SafeGeminiSettingsMerger {
   /**
-   * Merges new settings into existing .claude/settings.json
+   * Merges new settings into existing .gemini/settings.json
    *
    * @param projectRoot - Root directory of the project
    * @param newSettings - Settings to merge in
@@ -56,13 +51,13 @@ export class SafeSettingsMerger {
    */
   static async mergeSettings(
     projectRoot: string,
-    newSettings: ClaudeSettings
+    newSettings: GeminiSettings
   ): Promise<void> {
-    const settingsPath = path.join(projectRoot, ".claude", "settings.json");
+    const settingsPath = path.join(projectRoot, ".gemini", "settings.json");
     const backupPath = `${settingsPath}.backup.${Date.now()}`;
 
-    // Ensure .claude directory exists
-    await fs.ensureDir(path.join(projectRoot, ".claude"));
+    // Ensure .gemini directory exists
+    await fs.ensureDir(path.join(projectRoot, ".gemini"));
 
     // STEP 1: Create backup if file exists
     if (await fs.pathExists(settingsPath)) {
@@ -71,7 +66,7 @@ export class SafeSettingsMerger {
 
     try {
       // STEP 2: Read existing or use empty object
-      let existing: ClaudeSettings = {};
+      let existing: GeminiSettings = {};
       if (await fs.pathExists(settingsPath)) {
         const content = await fs.readFile(settingsPath, "utf-8");
         existing = this.parseAndValidate(content);
@@ -108,10 +103,10 @@ export class SafeSettingsMerger {
    * - Existing user settings are preserved
    */
   private static deepMerge(
-    existing: ClaudeSettings,
-    newSettings: ClaudeSettings
-  ): ClaudeSettings {
-    const result: ClaudeSettings = { ...existing };
+    existing: GeminiSettings,
+    newSettings: GeminiSettings
+  ): GeminiSettings {
+    const result: GeminiSettings = { ...existing };
 
     // Merge hooks
     if (newSettings.hooks) {
@@ -129,32 +124,6 @@ export class SafeSettingsMerger {
       }
     }
 
-    // Merge permissions
-    if (newSettings.permissions) {
-      result.permissions = result.permissions ?? {};
-
-      // Merge allow array (unique values)
-      if (newSettings.permissions.allow) {
-        const existingAllow = existing.permissions?.allow ?? [];
-        const newAllow = newSettings.permissions.allow;
-        result.permissions.allow = Array.from(new Set([...existingAllow, ...newAllow]));
-      }
-
-      // Merge deny array (unique values)
-      if (newSettings.permissions.deny) {
-        const existingDeny = existing.permissions?.deny ?? [];
-        const newDeny = newSettings.permissions.deny;
-        result.permissions.deny = Array.from(new Set([...existingDeny, ...newDeny]));
-      }
-
-      // Merge ask array (unique values)
-      if (newSettings.permissions.ask) {
-        const existingAsk = existing.permissions?.ask ?? [];
-        const newAsk = newSettings.permissions.ask;
-        result.permissions.ask = Array.from(new Set([...existingAsk, ...newAsk]));
-      }
-    }
-
     return result;
   }
 
@@ -162,9 +131,9 @@ export class SafeSettingsMerger {
    * Merges SessionStart hook arrays, deduplicating by command
    */
   private static mergeSessionStartHooks(
-    existing: ClaudeSessionStartMatcher[],
-    additions: ClaudeSessionStartMatcher[]
-  ): ClaudeSessionStartMatcher[] {
+    existing: GeminiSessionStartMatcher[],
+    additions: GeminiSessionStartMatcher[]
+  ): GeminiSessionStartMatcher[] {
     const merged = [...existing];
 
     for (const newMatcher of additions) {
@@ -176,7 +145,7 @@ export class SafeSettingsMerger {
       if (existingIndex >= 0) {
         // Merge hooks within the same matcher, deduplicating by command
         const existingMatcher = merged[existingIndex];
-        const hookMap = new Map<string, ClaudeHook>();
+        const hookMap = new Map<string, GeminiHook>();
 
         // Add existing hooks
         for (const hook of existingMatcher.hooks) {
@@ -204,7 +173,7 @@ export class SafeSettingsMerger {
   /**
    * Parses JSON string and validates structure
    */
-  private static parseAndValidate(jsonString: string): ClaudeSettings {
+  private static parseAndValidate(jsonString: string): GeminiSettings {
     try {
       const parsed = JSON.parse(jsonString);
       this.validateSettings(parsed);
@@ -219,7 +188,7 @@ export class SafeSettingsMerger {
   /**
    * Validates settings structure
    */
-  private static validateSettings(settings: ClaudeSettings): void {
+  private static validateSettings(settings: GeminiSettings): void {
     // Must be an object
     if (typeof settings !== "object" || settings === null) {
       throw new Error("Settings must be an object");
@@ -255,25 +224,6 @@ export class SafeSettingsMerger {
             }
           }
         }
-      }
-    }
-
-    // Validate permissions structure if present
-    if (settings.permissions !== undefined) {
-      if (typeof settings.permissions !== "object" || settings.permissions === null) {
-        throw new Error("permissions must be an object");
-      }
-
-      if (settings.permissions.allow !== undefined && !Array.isArray(settings.permissions.allow)) {
-        throw new Error("permissions.allow must be an array");
-      }
-
-      if (settings.permissions.deny !== undefined && !Array.isArray(settings.permissions.deny)) {
-        throw new Error("permissions.deny must be an array");
-      }
-
-      if (settings.permissions.ask !== undefined && !Array.isArray(settings.permissions.ask)) {
-        throw new Error("permissions.ask must be an array");
       }
     }
 
