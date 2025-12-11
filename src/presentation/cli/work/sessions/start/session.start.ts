@@ -57,7 +57,8 @@ export async function sessionStart(
       container.goalStatusReader,
       container.projectContextReader,
       container.audienceContextReader,
-      container.audiencePainContextReader
+      container.audiencePainContextReader,
+      container.unprimedBrownfieldQualifier
     );
     const sessionContext = await getSessionStartContext.execute();
 
@@ -79,7 +80,8 @@ export async function sessionStart(
 
     // Render historical context (previous session)
     const sessionContextMarkdown = sessionSummaryFormatter.format(
-      sessionContext.latestSessionSummary
+      sessionContext.latestSessionSummary,
+      sessionContext.hasSolutionContext
     );
     renderer.info(sessionContextMarkdown);
 

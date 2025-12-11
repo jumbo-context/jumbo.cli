@@ -5,6 +5,7 @@ import { GoalStatus } from "../../../../domain/work/goals/Constants.js";
 import { IProjectContextReader } from "../../../project-knowledge/project/query/IProjectContextReader.js";
 import { IAudienceContextReader } from "../../../project-knowledge/audiences/query/IAudienceContextReader.js";
 import { IAudiencePainContextReader } from "../../../project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
+import { UnprimedBrownfieldQualifier } from "../../../solution/UnprimedBrownfieldQualifier.js";
 
 /**
  * GetSessionStartContextQueryHandler - Query handler for session start orientation context
@@ -30,7 +31,8 @@ export class GetSessionStartContextQueryHandler {
     private readonly goalStatusReader: IGoalStatusReader,
     private readonly projectContextReader?: IProjectContextReader,
     private readonly audienceContextReader?: IAudienceContextReader,
-    private readonly audiencePainContextReader?: IAudiencePainContextReader
+    private readonly audiencePainContextReader?: IAudiencePainContextReader,
+    private readonly unprimedBrownfieldQualifier?: UnprimedBrownfieldQualifier
   ) {}
 
   /**
@@ -55,6 +57,7 @@ export class GetSessionStartContextQueryHandler {
       latestSessionSummary,
       inProgressGoals,
       plannedGoals,
+      isUnprimed,
     ] = await Promise.all([
       this.projectContextReader?.getProject() ?? Promise.resolve(null),
       this.audienceContextReader?.findAllActive() ?? Promise.resolve([]),
@@ -62,6 +65,7 @@ export class GetSessionStartContextQueryHandler {
       this.sessionSummaryReader.findLatest(),
       this.goalStatusReader.findByStatus(GoalStatus.DOING),
       this.goalStatusReader.findByStatus(GoalStatus.TODO),
+      this.unprimedBrownfieldQualifier?.isUnprimed() ?? Promise.resolve(false),
     ]);
 
     return {
@@ -71,6 +75,7 @@ export class GetSessionStartContextQueryHandler {
       latestSessionSummary,
       inProgressGoals,
       plannedGoals,
+      hasSolutionContext: !isUnprimed,
     };
   }
 }

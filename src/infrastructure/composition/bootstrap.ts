@@ -160,6 +160,8 @@ import { SqliteAudienceContextReader } from "../project-knowledge/audiences/quer
 import { SqliteAudiencePainContextReader } from "../project-knowledge/audience-pains/query/SqliteAudiencePainContextReader.js";
 // CLI Metadata Reader
 import { BuildTimeCliMetadataReader } from "../cli-metadata/query/BuildTimeCliMetadataReader.js";
+// Solution Context Reader
+import { SqliteSolutionContextReader } from "../solution/SqliteSolutionContextReader.js";
 
 // Event Handlers (Projection Handlers)
 import { SessionStartedEventHandler } from "../../application/work/sessions/start/SessionStartedEventHandler.js";
@@ -318,6 +320,9 @@ import { IAgentFileProtocol } from "../../application/project-knowledge/project/
 import { IAudienceContextReader } from "../../application/project-knowledge/audiences/query/IAudienceContextReader.js";
 import { IAudiencePainContextReader } from "../../application/project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
 import { ICliMetadataReader } from "../../application/cli-metadata/query/ICliMetadataReader.js";
+// Solution Context
+import { ISolutionContextReader } from "../../application/solution/ISolutionContextReader.js";
+import { UnprimedBrownfieldQualifier } from "../../application/solution/UnprimedBrownfieldQualifier.js";
 
 // Port interfaces for session event stores - decomposed by use case
 import { ISessionStartedEventWriter } from "../../application/work/sessions/start/ISessionStartedEventWriter.js";
@@ -497,6 +502,9 @@ export interface ApplicationContainer {
   invariantUpdatedProjector: IInvariantUpdatedProjector & IInvariantUpdateReader;
   invariantRemovedProjector: IInvariantRemovedProjector & IInvariantRemoveReader;
   invariantContextReader: IInvariantContextReader;
+  // Solution Context - cross-cutting reader and qualifier
+  solutionContextReader: ISolutionContextReader;
+  unprimedBrownfieldQualifier: UnprimedBrownfieldQualifier;
 
   // Project Knowledge Category - Event Stores
   // Project Event Stores - decomposed by use case
@@ -702,6 +710,9 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const invariantUpdatedProjector = new SqliteInvariantUpdatedProjector(db);
   const invariantRemovedProjector = new SqliteInvariantRemovedProjector(db);
   const invariantContextReader = new SqliteInvariantContextReader(db);
+  // Solution Context - cross-cutting reader and qualifier
+  const solutionContextReader = new SqliteSolutionContextReader(db);
+  const unprimedBrownfieldQualifier = new UnprimedBrownfieldQualifier(solutionContextReader);
 
   // Project Knowledge Category
   // Project Projection Stores - decomposed by use case
@@ -982,6 +993,9 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     invariantUpdatedProjector,
     invariantRemovedProjector,
     invariantContextReader,
+    // Solution Context - cross-cutting reader and qualifier
+    solutionContextReader,
+    unprimedBrownfieldQualifier,
 
     // Project Knowledge Category
     // Project Event Stores - decomposed by use case

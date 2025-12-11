@@ -56,4 +56,19 @@ export interface SessionStartContextView {
    * These are planned but not yet started
    */
   readonly plannedGoals: GoalView[];
+
+  /**
+   * Indicates whether the project has any solution context recorded in Jumbo.
+   *
+   * Solution context includes:
+   * - Architecture (patterns, principles, tech stack, data flow)
+   * - Components (system parts and their responsibilities)
+   * - Decisions (architectural and design choices with rationale)
+   * - Invariants (non-negotiable constraints)
+   * - Guidelines (coding standards and practices)
+   *
+   * When false, this is a brownfield project that needs priming - the LLM should
+   * proactively offer to help transfer existing project knowledge into Jumbo.
+   */
+  readonly hasSolutionContext: boolean;
 }

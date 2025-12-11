@@ -26,11 +26,23 @@ export class SessionSummaryFormatter {
    * Format session summary as pure YAML
    *
    * @param summary - SessionSummaryProjection to format
+   * @param hasSolutionContext - Whether the project has any solution context recorded
    * @returns YAML string with session context
    */
-  format(summary: SessionSummaryProjection | null): string {
-    if (!summary) {
+  format(summary: SessionSummaryProjection | null, hasSolutionContext: boolean): string {
+    // Show brownfield instructions if no solution context exists,
+    // regardless of whether a session summary exists
+    if (!hasSolutionContext) {
       return this.formatInitialBrownfieldSession();
+    }
+
+    // No session summary but has solution context - just return empty session context
+    if (!summary) {
+      return this.yamlFormatter.toYaml({
+        sessionContext: {
+          message: "No previous session context available.",
+        },
+      });
     }
 
     const contextData: any = {
@@ -109,7 +121,7 @@ export class SessionSummaryFormatter {
       "- Start with docs: README.md, package.json, or docs/ are good starting points.",
       "",
       "AVAILABLE COMMANDS (use after getting user permission):",
-      "- jumbo project init --name 'X' --problem 'Y' --solution 'Z' --audience 'W'",
+      "- jumbo architecture define --help",
       "- jumbo component add --name 'ComponentName' --description 'What it does'",
       "- jumbo decision add --title 'Decision' --rationale 'Why' --context 'Background'",
       "- jumbo guideline add --category 'testing' --description 'Guideline text'",
