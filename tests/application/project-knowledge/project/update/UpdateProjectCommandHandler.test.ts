@@ -42,7 +42,7 @@ describe("UpdateProjectCommandHandler", () => {
       mockReader.getProject.mockResolvedValue(null);
 
       const command: UpdateProjectCommand = {
-        tagline: "New tagline",
+        purpose: "New purpose",
       };
 
       // Act & Assert
@@ -53,12 +53,11 @@ describe("UpdateProjectCommandHandler", () => {
       expect(mockEventBus.publish).not.toHaveBeenCalled();
     });
 
-    it("should update project tagline and publish event", async () => {
+    it("should update project purpose and publish event", async () => {
       // Arrange
       const existingView: ProjectView = {
         projectId: "project",
         name: "My Project",
-        tagline: "Original tagline",
         purpose: "Original purpose",
         boundaries: [],
         version: 1,
@@ -73,7 +72,6 @@ describe("UpdateProjectCommandHandler", () => {
         timestamp: "2025-01-01T00:00:00.000Z",
         payload: {
           name: "My Project",
-          tagline: "Original tagline",
           purpose: "Original purpose",
           boundaries: [],
         },
@@ -83,7 +81,7 @@ describe("UpdateProjectCommandHandler", () => {
       mockEventWriter.readStream.mockResolvedValue([initEvent]);
 
       const command: UpdateProjectCommand = {
-        tagline: "New tagline",
+        purpose: "New purpose",
       };
 
       // Act
@@ -91,7 +89,7 @@ describe("UpdateProjectCommandHandler", () => {
 
       // Assert
       expect(result.updated).toBe(true);
-      expect(result.changedFields).toEqual(["tagline"]);
+      expect(result.changedFields).toEqual(["purpose"]);
 
       // Verify event was appended to event store
       expect(mockEventWriter.append).toHaveBeenCalledTimes(1);
@@ -99,8 +97,7 @@ describe("UpdateProjectCommandHandler", () => {
       expect(appendedEvent.type).toBe(ProjectEventType.UPDATED);
       expect(appendedEvent.aggregateId).toBe("project");
       expect(appendedEvent.version).toBe(2);
-      expect(appendedEvent.payload.tagline).toBe("New tagline");
-      expect(appendedEvent.payload.purpose).toBeUndefined();
+      expect(appendedEvent.payload.purpose).toBe("New purpose");
       expect(appendedEvent.payload.boundaries).toBeUndefined();
 
       // Verify event was published to event bus
@@ -113,7 +110,6 @@ describe("UpdateProjectCommandHandler", () => {
       const existingView: ProjectView = {
         projectId: "project",
         name: "My Project",
-        tagline: "Original tagline",
         purpose: "Original purpose",
         boundaries: [],
         version: 1,
@@ -128,7 +124,6 @@ describe("UpdateProjectCommandHandler", () => {
         timestamp: "2025-01-01T00:00:00.000Z",
         payload: {
           name: "My Project",
-          tagline: "Original tagline",
           purpose: "Original purpose",
           boundaries: [],
         },
@@ -138,7 +133,6 @@ describe("UpdateProjectCommandHandler", () => {
       mockEventWriter.readStream.mockResolvedValue([initEvent]);
 
       const command: UpdateProjectCommand = {
-        tagline: "New tagline",
         purpose: "New purpose",
         boundaries: ["Boundary 1", "Boundary 2"],
       };
@@ -148,12 +142,10 @@ describe("UpdateProjectCommandHandler", () => {
 
       // Assert
       expect(result.updated).toBe(true);
-      expect(result.changedFields).toContain("tagline");
       expect(result.changedFields).toContain("purpose");
       expect(result.changedFields).toContain("boundaries");
 
       const appendedEvent = mockEventWriter.append.mock.calls[0][0] as ProjectUpdated;
-      expect(appendedEvent.payload.tagline).toBe("New tagline");
       expect(appendedEvent.payload.purpose).toBe("New purpose");
       expect(appendedEvent.payload.boundaries).toEqual(["Boundary 1", "Boundary 2"]);
     });
@@ -163,8 +155,7 @@ describe("UpdateProjectCommandHandler", () => {
       const existingView: ProjectView = {
         projectId: "project",
         name: "My Project",
-        tagline: "Original tagline",
-        purpose: null,
+        purpose: "Original purpose",
         boundaries: [],
         version: 1,
         createdAt: "2025-01-01T00:00:00.000Z",
@@ -178,8 +169,7 @@ describe("UpdateProjectCommandHandler", () => {
         timestamp: "2025-01-01T00:00:00.000Z",
         payload: {
           name: "My Project",
-          tagline: "Original tagline",
-          purpose: null,
+          purpose: "Original purpose",
           boundaries: [],
         },
       };
@@ -188,7 +178,7 @@ describe("UpdateProjectCommandHandler", () => {
       mockEventWriter.readStream.mockResolvedValue([initEvent]);
 
       const command: UpdateProjectCommand = {
-        tagline: "Original tagline", // Same as current value
+        purpose: "Original purpose", // Same as current value
       };
 
       // Act
@@ -201,13 +191,12 @@ describe("UpdateProjectCommandHandler", () => {
       expect(mockEventBus.publish).not.toHaveBeenCalled();
     });
 
-    it("should throw error if tagline is too long", async () => {
+    it("should throw error if purpose is too long", async () => {
       // Arrange
       const existingView: ProjectView = {
         projectId: "project",
         name: "My Project",
-        tagline: "Original tagline",
-        purpose: null,
+        purpose: "Original purpose",
         boundaries: [],
         version: 1,
         createdAt: "2025-01-01T00:00:00.000Z",
@@ -221,8 +210,7 @@ describe("UpdateProjectCommandHandler", () => {
         timestamp: "2025-01-01T00:00:00.000Z",
         payload: {
           name: "My Project",
-          tagline: "Original tagline",
-          purpose: null,
+          purpose: "Original purpose",
           boundaries: [],
         },
       };
@@ -231,12 +219,12 @@ describe("UpdateProjectCommandHandler", () => {
       mockEventWriter.readStream.mockResolvedValue([initEvent]);
 
       const command: UpdateProjectCommand = {
-        tagline: "a".repeat(201), // Max is 200
+        purpose: "a".repeat(1001), // Max is 1000
       };
 
       // Act & Assert
       await expect(handler.execute(command)).rejects.toThrow(
-        "Tagline must be less than 200 characters"
+        "Purpose must be less than 1000 characters"
       );
       expect(mockEventWriter.append).not.toHaveBeenCalled();
       expect(mockEventBus.publish).not.toHaveBeenCalled();
@@ -247,7 +235,6 @@ describe("UpdateProjectCommandHandler", () => {
       const existingView: ProjectView = {
         projectId: "project",
         name: "My Project",
-        tagline: "Updated tagline",
         purpose: "Updated purpose",
         boundaries: [],
         version: 2,
@@ -262,7 +249,6 @@ describe("UpdateProjectCommandHandler", () => {
         timestamp: "2025-01-01T00:00:00.000Z",
         payload: {
           name: "My Project",
-          tagline: "Original tagline",
           purpose: "Original purpose",
           boundaries: [],
         },
@@ -274,7 +260,6 @@ describe("UpdateProjectCommandHandler", () => {
         version: 2,
         timestamp: "2025-01-02T00:00:00.000Z",
         payload: {
-          tagline: "Updated tagline",
           purpose: "Updated purpose",
         },
       };

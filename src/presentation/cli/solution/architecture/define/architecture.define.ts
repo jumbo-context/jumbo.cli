@@ -37,10 +37,6 @@ export const metadata: CommandMetadata = {
       description: "Design principles followed"
     },
     {
-      flags: "--data-flow <dataFlow>",
-      description: "Data flow description"
-    },
-    {
       flags: "--data-store <dataStores...>",
       description: "Data stores (format: name:type:purpose)"
     },
@@ -68,7 +64,6 @@ export async function architectureDefine(
     organization: string;
     pattern?: string[];
     principle?: string[];
-    dataFlow?: string;
     dataStore?: string[];  // Format: "name:type:purpose"
     stack?: string[];
   },
@@ -96,7 +91,6 @@ export async function architectureDefine(
       organization: options.organization,
       patterns: options.pattern,
       principles: options.principle,
-      dataFlow: options.dataFlow,
       dataStores,
       stack: options.stack
     };

@@ -19,7 +19,6 @@ export const ArchitectureErrorMessages = {
   DESCRIPTION_TOO_LONG: 'Architecture description must be less than {max} characters',
   ORGANIZATION_REQUIRED: 'Architecture organization must be provided',
   ORGANIZATION_TOO_LONG: 'Architecture organization must be less than {max} characters',
-  DATA_FLOW_TOO_LONG: 'Data flow description must be less than {max} characters',
   PATTERN_TOO_LONG: 'Pattern must be less than {max} characters',
   PRINCIPLE_TOO_LONG: 'Principle must be less than {max} characters',
   STACK_ITEM_TOO_LONG: 'Stack item must be less than {max} characters',
@@ -39,7 +38,6 @@ export const ArchitectureErrorMessages = {
 export const ArchitectureLimits = {
   DESCRIPTION_MAX_LENGTH: 500,
   ORGANIZATION_MAX_LENGTH: 200,
-  DATA_FLOW_MAX_LENGTH: 1000,
   PATTERN_MAX_LENGTH: 100,
   PRINCIPLE_MAX_LENGTH: 200,
   STACK_ITEM_MAX_LENGTH: 100,

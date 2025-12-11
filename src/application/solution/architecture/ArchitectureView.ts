@@ -6,7 +6,6 @@ export interface ArchitectureView {
   organization: string;
   patterns: string[];
   principles: string[];
-  dataFlow: string | null;
   dataStores: DataStore[];
   stack: string[];
   version: number;

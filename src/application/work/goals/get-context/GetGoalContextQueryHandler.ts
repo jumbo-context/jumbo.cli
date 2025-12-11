@@ -5,7 +5,6 @@ import { IDependencyContextReader } from "./IDependencyContextReader.js";
 import { IDecisionContextReader } from "./IDecisionContextReader.js";
 import { IInvariantContextReader } from "./IInvariantContextReader.js";
 import { IGuidelineContextReader } from "./IGuidelineContextReader.js";
-import { IProjectContextReader } from "../../../project-knowledge/project/query/IProjectContextReader.js";
 import { IRelationReader } from "../../../relations/IRelationReader.js";
 import { InvariantView } from "../../../solution/invariants/InvariantView.js";
 
@@ -14,18 +13,12 @@ import { InvariantView } from "../../../solution/invariants/InvariantView.js";
  *
  * Retrieves comprehensive context for a goal, filtered by scope for token optimization.
  *
- * Returns context across all 6 categories:
+ * Returns context across 5 categories:
  * 1. Work - Goal details (objective, criteria, scope, boundaries)
  * 2. Solution - Components, dependencies, decisions (filtered by scopeIn/scopeOut)
  * 3. Invariants - Non-negotiable constraints
  * 4. Guidelines - Execution guidelines
- * 5. Domain Knowledge - Project purpose, business context
- * 6. Relations - Connections between entities
- *
- * Phase 1 Implementation: Goal details only
- * Phase 2 Implementation: Components, dependencies, decisions filtered by scope
- * Phase 3 Implementation: Invariants and guidelines
- * Phase 4 Implementation: Project context and relations
+ * 5. Relations - Connections between entities
  */
 export class GetGoalContextQueryHandler {
   constructor(
@@ -35,7 +28,6 @@ export class GetGoalContextQueryHandler {
     private readonly decisionReader?: IDecisionContextReader,
     private readonly invariantReader?: IInvariantContextReader,
     private readonly guidelineReader?: IGuidelineContextReader,
-    private readonly projectContextReader?: IProjectContextReader,
     private readonly relationReader?: IRelationReader
   ) {}
 
@@ -67,8 +59,7 @@ export class GetGoalContextQueryHandler {
     const invariants = await this.getInvariants();
     const guidelines = await this.getGuidelines();
 
-    // Phase 4: Get project context and relations
-    const project = await this.getProject();
+    // Phase 4: Get relations
     const relations = await this.getRelations(components);
 
     return {
@@ -78,7 +69,6 @@ export class GetGoalContextQueryHandler {
       decisions,
       invariants,
       guidelines,
-      project,
       relations,
     };
   }
@@ -223,30 +213,6 @@ export class GetGoalContextQueryHandler {
       category: g.category,
       description: g.description,
     }));
-  }
-
-  /**
-   * Get project context
-   *
-   * @returns Project context view or null
-   */
-  private async getProject(): Promise<any | null> {
-    if (!this.projectContextReader) {
-      return null;
-    }
-
-    const project = await this.projectContextReader.getProject();
-
-    if (!project) {
-      return null;
-    }
-
-    return {
-      projectId: project.projectId,
-      name: project.name,
-      problem: project.purpose || "No purpose defined",
-      solution: project.tagline || "No tagline defined",
-    };
   }
 
   /**

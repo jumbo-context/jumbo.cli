@@ -14,15 +14,14 @@ export class SqliteProjectInitializedProjector implements IProjectInitializedPro
   async applyProjectInitialized(event: ProjectInitialized): Promise<void> {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO project_views (
-        projectId, name, tagline, purpose, boundaries,
+        projectId, name, purpose, boundaries,
         version, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
       event.aggregateId,
       event.payload.name,
-      event.payload.tagline,
       event.payload.purpose,
       JSON.stringify(event.payload.boundaries),
       event.version,
@@ -42,7 +41,6 @@ export class SqliteProjectInitializedProjector implements IProjectInitializedPro
     return {
       projectId: row.projectId as string,
       name: row.name as string,
-      tagline: (row.tagline as string) ?? null,
       purpose: (row.purpose as string) ?? null,
       boundaries: JSON.parse((row.boundaries as string) || "[]"),
       version: row.version as number,

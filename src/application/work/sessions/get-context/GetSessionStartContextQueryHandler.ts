@@ -39,7 +39,7 @@ export class GetSessionStartContextQueryHandler {
    * Execute query to assemble complete session start context
    *
    * Assembles:
-   * 1. Project context (name, purpose, tagline)
+   * 1. Project context (name, purpose)
    * 2. Target audiences
    * 3. Active audience pains
    * 4. Latest session summary (historical context)

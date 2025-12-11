@@ -7,6 +7,5 @@
 
 export interface ProjectSummaryView {
   name: string;
-  tagline: string | null;
   purpose: string | null;
 }

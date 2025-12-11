@@ -7,7 +7,6 @@ import { DESCRIPTION_RULES } from "./rules/DescriptionRules.js";
 import { ORGANIZATION_RULES } from "./rules/OrganizationRules.js";
 import { PATTERNS_RULES } from "./rules/PatternsRules.js";
 import { PRINCIPLES_RULES } from "./rules/PrinciplesRules.js";
-import { DATA_FLOW_RULES } from "./rules/DataFlowRules.js";
 import { DATA_STORES_RULES } from "./rules/DataStoresRules.js";
 import { STACK_RULES } from "./rules/StackRules.js";
 
@@ -18,7 +17,6 @@ export interface ArchitectureState extends AggregateState {
   organization: string;          // Required: architectural organization
   patterns: string[];            // Optional: architectural patterns
   principles: string[];          // Optional: design principles
-  dataFlow: string | null;       // Optional: data flow description
   dataStores: DataStore[];       // Optional: data stores
   stack: string[];               // Optional: technology stack
   version: number;               // Aggregate version
@@ -41,7 +39,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
         state.organization = e.payload.organization;
         state.patterns = e.payload.patterns;
         state.principles = e.payload.principles;
-        state.dataFlow = e.payload.dataFlow;
         state.dataStores = e.payload.dataStores;
         state.stack = e.payload.stack;
         state.version = e.version;
@@ -53,7 +50,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
         if (e.payload.organization !== undefined) state.organization = e.payload.organization;
         if (e.payload.patterns !== undefined) state.patterns = e.payload.patterns;
         if (e.payload.principles !== undefined) state.principles = e.payload.principles;
-        if (e.payload.dataFlow !== undefined) state.dataFlow = e.payload.dataFlow;
         if (e.payload.dataStores !== undefined) state.dataStores = e.payload.dataStores;
         if (e.payload.stack !== undefined) state.stack = e.payload.stack;
         state.version = e.version;
@@ -69,7 +65,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
       organization: "",
       patterns: [],
       principles: [],
-      dataFlow: null,
       dataStores: [],
       stack: [],
       version: 0,
@@ -88,7 +83,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
       organization: "",
       patterns: [],
       principles: [],
-      dataFlow: null,
       dataStores: [],
       stack: [],
       version: 0,
@@ -110,7 +104,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
     organization: string,
     patterns?: string[],
     principles?: string[],
-    dataFlow?: string,
     dataStores?: DataStore[],
     stack?: string[]
   ): ArchitectureDefined {
@@ -123,7 +116,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
     ValidationRuleSet.ensure(organization, ORGANIZATION_RULES);
     if (patterns && patterns.length > 0) ValidationRuleSet.ensure(patterns, PATTERNS_RULES);
     if (principles && principles.length > 0) ValidationRuleSet.ensure(principles, PRINCIPLES_RULES);
-    if (dataFlow) ValidationRuleSet.ensure(dataFlow, DATA_FLOW_RULES);
     if (dataStores && dataStores.length > 0) ValidationRuleSet.ensure(dataStores, DATA_STORES_RULES);
     if (stack && stack.length > 0) ValidationRuleSet.ensure(stack, STACK_RULES);
 
@@ -135,7 +127,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
         organization,
         patterns: patterns || [],
         principles: principles || [],
-        dataFlow: dataFlow || null,
         dataStores: dataStores || [],
         stack: stack || []
       },
@@ -152,7 +143,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
     organization?: string;
     patterns?: string[];
     principles?: string[];
-    dataFlow?: string | null;
     dataStores?: DataStore[];
     stack?: string[];
   }): ArchitectureUpdated {
@@ -173,9 +163,6 @@ export class Architecture extends BaseAggregate<ArchitectureState, ArchitectureE
     }
     if (updates.principles !== undefined && updates.principles.length > 0) {
       ValidationRuleSet.ensure(updates.principles, PRINCIPLES_RULES);
-    }
-    if (updates.dataFlow !== undefined && updates.dataFlow !== null) {
-      ValidationRuleSet.ensure(updates.dataFlow, DATA_FLOW_RULES);
     }
     if (updates.dataStores !== undefined && updates.dataStores.length > 0) {
       ValidationRuleSet.ensure(updates.dataStores, DATA_STORES_RULES);

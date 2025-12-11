@@ -30,7 +30,6 @@ export class UpdateArchitectureCommandHandler {
       organization: command.organization,
       patterns: command.patterns,
       principles: command.principles,
-      dataFlow: command.dataFlow,
       dataStores: command.dataStores,
       stack: command.stack
     });

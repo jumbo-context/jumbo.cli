@@ -6,7 +6,6 @@
  */
 
 export interface UpdateProjectCommand {
-  readonly tagline?: string | null;
   readonly purpose?: string | null;
   readonly boundaries?: string[];
 }

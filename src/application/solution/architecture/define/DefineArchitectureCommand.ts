@@ -5,7 +5,6 @@ export interface DefineArchitectureCommand {
   organization: string;
   patterns?: string[];
   principles?: string[];
-  dataFlow?: string;
   dataStores?: DataStore[];
   stack?: string[];
 }

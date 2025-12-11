@@ -54,7 +54,6 @@ export class SqliteSolutionContextReader implements ISolutionContextReader {
       organization: r.organization as string,
       patterns: JSON.parse((r.patterns as string) || "[]"),
       principles: JSON.parse((r.principles as string) || "[]"),
-      dataFlow: (r.dataFlow as string) ?? null,
       dataStores: JSON.parse((r.dataStores as string) || "[]"),
       stack: JSON.parse((r.stack as string) || "[]"),
       version: r.version as number,

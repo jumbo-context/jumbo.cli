@@ -44,7 +44,6 @@ export class InitializeProjectCommandHandler {
     // 2. Domain logic produces event
     const event = project.initialize(
       command.name,
-      command.tagline,
       command.purpose,
       command.boundaries
     );

@@ -20,7 +20,6 @@ export interface BannerContext {
    */
   project: {
     name: string;
-    tagline: string | null;
     purpose: string | null;
   } | null;
 
@@ -88,7 +87,6 @@ export async function gatherBannerContext(
       project: projectView
         ? {
             name: projectView.name,
-            tagline: projectView.tagline ?? null,
             purpose: projectView.purpose ?? null,
           }
         : null,

@@ -26,7 +26,6 @@ describe("Architecture aggregate", () => {
       expect(event.payload.organization).toBe("Clean Architecture");
       expect(event.payload.patterns).toEqual([]);
       expect(event.payload.principles).toEqual([]);
-      expect(event.payload.dataFlow).toBeNull();
       expect(event.payload.dataStores).toEqual([]);
       expect(event.payload.stack).toEqual([]);
     });
@@ -36,7 +35,6 @@ describe("Architecture aggregate", () => {
       const architecture = Architecture.create("architecture");
       const patterns = ["DDD", "CQRS", "Event Sourcing"];
       const principles = ["SOLID", "Clean Code"];
-      const dataFlow = "User -> CLI -> Application -> Domain -> Infrastructure";
       const dataStores: DataStore[] = [
         { name: "EventStore", type: "JSONL", purpose: "Event persistence" },
         { name: "SQLite", type: "Database", purpose: "Projections" }
@@ -49,7 +47,6 @@ describe("Architecture aggregate", () => {
         "Clean Architecture",
         patterns,
         principles,
-        dataFlow,
         dataStores,
         stack
       );
@@ -57,7 +54,6 @@ describe("Architecture aggregate", () => {
       // Assert
       expect(event.payload.patterns).toEqual(patterns);
       expect(event.payload.principles).toEqual(principles);
-      expect(event.payload.dataFlow).toBe(dataFlow);
       expect(event.payload.dataStores).toEqual(dataStores);
       expect(event.payload.stack).toEqual(stack);
     });
@@ -172,17 +168,6 @@ describe("Architecture aggregate", () => {
       ).toThrow("Principle must be less than");
     });
 
-    it("should throw error if data flow exceeds max length", () => {
-      // Arrange
-      const architecture = Architecture.create("architecture");
-      const longDataFlow = "A".repeat(1001); // Max is 1000
-
-      // Act & Assert
-      expect(() =>
-        architecture.define("Test", "Clean", undefined, undefined, longDataFlow)
-      ).toThrow("Data flow description must be less than");
-    });
-
     it("should throw error if data store has invalid fields", () => {
       // Arrange
       const architecture = Architecture.create("architecture");
@@ -190,7 +175,7 @@ describe("Architecture aggregate", () => {
 
       // Act & Assert
       expect(() =>
-        architecture.define("Test", "Clean", undefined, undefined, undefined, [invalidDataStore])
+        architecture.define("Test", "Clean", undefined, undefined, [invalidDataStore])
       ).toThrow("Data store name must be provided");
     });
 
@@ -201,7 +186,7 @@ describe("Architecture aggregate", () => {
 
       // Act & Assert
       expect(() =>
-        architecture.define("Test", "Clean", undefined, undefined, undefined, undefined, [longStackItem])
+        architecture.define("Test", "Clean", undefined, undefined, undefined, [longStackItem])
       ).toThrow("Stack item must be less than");
     });
   });
@@ -270,18 +255,6 @@ describe("Architecture aggregate", () => {
       expect(state.description).toBe("Updated");
       expect(state.organization).toBe("Clean");
       expect(state.version).toBe(2);
-    });
-
-    it("should allow clearing dataFlow with null", () => {
-      // Arrange
-      const architecture = Architecture.create("architecture");
-      architecture.define("Description", "Clean", undefined, undefined, "Original flow");
-
-      // Act
-      const event = architecture.update({ dataFlow: null });
-
-      // Assert
-      expect(event.payload.dataFlow).toBeNull();
     });
 
     it("should update dataStores", () => {
@@ -416,7 +389,6 @@ describe("Architecture aggregate", () => {
         "Clean Architecture",
         ["DDD"],
         ["SOLID"],
-        "Flow",
         [{ name: "DB", type: "SQL", purpose: "Store" }],
         ["TypeScript"]
       );
@@ -430,7 +402,6 @@ describe("Architecture aggregate", () => {
       expect(state.organization).toBe("Clean Architecture");
       expect(state.patterns).toEqual(["DDD"]);
       expect(state.principles).toEqual(["SOLID"]);
-      expect(state.dataFlow).toBe("Flow");
       expect(state.dataStores).toEqual([{ name: "DB", type: "SQL", purpose: "Store" }]);
       expect(state.stack).toEqual(["TypeScript"]);
       expect(state.version).toBe(1);

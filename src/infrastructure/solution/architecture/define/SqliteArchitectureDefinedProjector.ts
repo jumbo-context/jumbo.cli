@@ -15,8 +15,8 @@ export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedP
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO architecture_views (
         architectureId, description, organization, patterns, principles,
-        dataFlow, dataStores, stack, version, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        dataStores, stack, version, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -25,7 +25,6 @@ export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedP
       event.payload.organization,
       JSON.stringify(event.payload.patterns),
       JSON.stringify(event.payload.principles),
-      event.payload.dataFlow,
       JSON.stringify(event.payload.dataStores),
       JSON.stringify(event.payload.stack),
       event.version,
@@ -46,7 +45,6 @@ export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedP
       organization: row.organization as string,
       patterns: JSON.parse((row.patterns as string) || '[]'),
       principles: JSON.parse((row.principles as string) || '[]'),
-      dataFlow: (row.dataFlow as string) ?? null,
       dataStores: JSON.parse((row.dataStores as string) || '[]'),
       stack: JSON.parse((row.stack as string) || '[]'),
       version: row.version as number,

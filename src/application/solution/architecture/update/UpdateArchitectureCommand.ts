@@ -5,7 +5,6 @@ export interface UpdateArchitectureCommand {
   organization?: string;
   patterns?: string[];
   principles?: string[];
-  dataFlow?: string | null;
   dataStores?: DataStore[];
   stack?: string[];
 }

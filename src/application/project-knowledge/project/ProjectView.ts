@@ -10,7 +10,6 @@ import { UUID, ISO8601 } from "../../../domain/shared/BaseEvent.js";
 export interface ProjectView {
   projectId: UUID;
   name: string;
-  tagline: string | null;
   purpose: string | null;
   boundaries: string[];
   version: number; // For event sourcing

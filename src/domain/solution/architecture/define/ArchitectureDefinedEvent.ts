@@ -20,7 +20,6 @@ export interface ArchitectureDefined extends BaseEvent {
     readonly organization: string;
     readonly patterns: string[];
     readonly principles: string[];
-    readonly dataFlow: string | null;
     readonly dataStores: DataStore[];
     readonly stack: string[];
   };

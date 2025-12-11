@@ -89,7 +89,6 @@ describe("GetGoalContextQueryHandler", () => {
       expect(context.decisions).toEqual([]);
       expect(context.invariants).toEqual([]);
       expect(context.guidelines).toEqual([]);
-      expect(context.project).toBeNull();
       expect(context.relations).toEqual([]);
     });
 

@@ -15,10 +15,6 @@ export class SqliteProjectUpdatedProjector implements IProjectUpdatedProjector, 
     const updates: string[] = [];
     const params: unknown[] = [];
 
-    if (event.payload.tagline !== undefined) {
-      updates.push("tagline = ?");
-      params.push(event.payload.tagline);
-    }
     if (event.payload.purpose !== undefined) {
       updates.push("purpose = ?");
       params.push(event.payload.purpose);
@@ -52,7 +48,6 @@ export class SqliteProjectUpdatedProjector implements IProjectUpdatedProjector, 
     return {
       projectId: row.projectId as string,
       name: row.name as string,
-      tagline: (row.tagline as string) ?? null,
       purpose: (row.purpose as string) ?? null,
       boundaries: JSON.parse((row.boundaries as string) || "[]"),
       version: row.version as number,

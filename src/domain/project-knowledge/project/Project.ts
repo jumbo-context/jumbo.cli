@@ -2,7 +2,7 @@
  * Project Aggregate
  *
  * Domain aggregate representing the project being managed by Jumbo.
- * Captures the core project knowledge: name, tagline, purpose, and boundaries.
+ * Captures the core project knowledge: name, purpose, and boundaries.
  */
 
 import {
@@ -14,7 +14,6 @@ import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
 import { ProjectEvent, ProjectInitialized, ProjectUpdated } from "./EventIndex.js";
 import { ProjectEventType, ProjectErrorMessages } from "./Constants.js";
 import { NAME_RULES } from "./rules/NameRules.js";
-import { TAGLINE_RULES } from "./rules/TaglineRules.js";
 import { PURPOSE_RULES } from "./rules/PurposeRules.js";
 import { BOUNDARY_RULES } from "./rules/BoundaryRules.js";
 
@@ -24,7 +23,6 @@ import { BOUNDARY_RULES } from "./rules/BoundaryRules.js";
 export interface ProjectState extends AggregateState {
   id: UUID; // Aggregate identity
   name: string; // Required: project name
-  tagline: string | null; // Optional: short descriptor
   purpose: string | null; // Optional: high-level what
   boundaries: string[]; // Optional: what's out of scope
   version: number; // Aggregate version for event sourcing
@@ -44,7 +42,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
       case ProjectEventType.INITIALIZED: {
         const e = event as ProjectInitialized;
         state.name = e.payload.name;
-        state.tagline = e.payload.tagline;
         state.purpose = e.payload.purpose;
         state.boundaries = e.payload.boundaries;
         state.version = e.version;
@@ -52,7 +49,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
       }
       case ProjectEventType.UPDATED: {
         const e = event as ProjectUpdated;
-        if (e.payload.tagline !== undefined) state.tagline = e.payload.tagline;
         if (e.payload.purpose !== undefined) state.purpose = e.payload.purpose;
         if (e.payload.boundaries !== undefined) state.boundaries = e.payload.boundaries;
         state.version = e.version;
@@ -69,7 +65,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
     const state: ProjectState = {
       id,
       name: "",
-      tagline: null,
       purpose: null,
       boundaries: [],
       version: 0,
@@ -85,7 +80,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
     const state: ProjectState = {
       id,
       name: "",
-      tagline: null,
       purpose: null,
       boundaries: [],
       version: 0,
@@ -103,7 +97,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
    * This is the first event in the Project aggregate's lifecycle.
    *
    * @param name - Project name (required)
-   * @param tagline - Short project descriptor (optional)
    * @param purpose - High-level project purpose (optional)
    * @param boundaries - What's out of scope (optional)
    * @returns ProjectInitialized event
@@ -111,7 +104,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
    */
   initialize(
     name: string,
-    tagline?: string,
     purpose?: string,
     boundaries?: string[]
   ): ProjectInitialized {
@@ -122,7 +114,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
 
     // Input validation using rule pattern
     ValidationRuleSet.ensure(name, NAME_RULES);
-    if (tagline) ValidationRuleSet.ensure(tagline, TAGLINE_RULES);
     if (purpose) ValidationRuleSet.ensure(purpose, PURPOSE_RULES);
     if (boundaries) ValidationRuleSet.ensure(boundaries, BOUNDARY_RULES);
 
@@ -131,7 +122,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
       ProjectEventType.INITIALIZED,
       {
         name,
-        tagline: tagline || null,
         purpose: purpose || null,
         boundaries: boundaries || [],
       },
@@ -144,14 +134,12 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
    * Only changed fields are included in the resulting event.
    * Name cannot be updated after initialization (immutable).
    *
-   * @param tagline - Updated project tagline (optional)
    * @param purpose - Updated project purpose (optional)
    * @param boundaries - Updated project boundaries (optional)
    * @returns ProjectUpdated event or null if no changes
    * @throws Error if project is not initialized or validation fails
    */
   update(
-    tagline?: string | null,
     purpose?: string | null,
     boundaries?: string[]
   ): ProjectUpdated | null {
@@ -161,9 +149,6 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
     }
 
     // Input validation using existing rules
-    if (tagline !== undefined && tagline !== null) {
-      ValidationRuleSet.ensure(tagline, TAGLINE_RULES);
-    }
     if (purpose !== undefined && purpose !== null) {
       ValidationRuleSet.ensure(purpose, PURPOSE_RULES);
     }
@@ -173,14 +158,10 @@ export class Project extends BaseAggregate<ProjectState, ProjectEvent> {
 
     // Check if anything actually changed
     const changes: {
-      tagline?: string | null;
       purpose?: string | null;
       boundaries?: string[];
     } = {};
 
-    if (tagline !== undefined && tagline !== this.state.tagline) {
-      changes.tagline = tagline;
-    }
     if (purpose !== undefined && purpose !== this.state.purpose) {
       changes.purpose = purpose;
     }

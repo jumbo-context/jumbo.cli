@@ -10,7 +10,7 @@ import { ProjectSummaryView } from "../ProjectSummaryView.js";
  * Usage:
  *   const query = new GetProjectSummaryQueryHandler(projectContextReader);
  *   const summary = await query.execute();
- *   // Render banner with project name, tagline, purpose
+ *   // Render banner with project name and purpose
  */
 export class GetProjectSummaryQueryHandler {
   constructor(
@@ -31,7 +31,6 @@ export class GetProjectSummaryQueryHandler {
 
     return {
       name: project.name,
-      tagline: project.tagline,
       purpose: project.purpose,
     };
   }

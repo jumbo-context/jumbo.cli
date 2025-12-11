@@ -40,7 +40,6 @@ export class UpdateProjectCommandHandler {
 
     // 3. Domain logic produces event (or null if no changes)
     const event = project.update(
-      command.tagline,
       command.purpose,
       command.boundaries
     );

@@ -19,7 +19,6 @@ describe("Project Aggregate", () => {
       expect(event.aggregateId).toBe("project");
       expect(event.version).toBe(1);
       expect(event.payload.name).toBe("My Project");
-      expect(event.payload.tagline).toBeNull();
       expect(event.payload.purpose).toBeNull();
       expect(event.payload.boundaries).toEqual([]);
       expect(event.timestamp).toBeDefined();
@@ -32,14 +31,12 @@ describe("Project Aggregate", () => {
       // Act
       const event = project.initialize(
         "My Project",
-        "AI memory like an elephant",
         "Context management for LLM coding agents",
         ["Does not replace git", "Does not execute code"]
       );
 
       // Assert
       expect(event.payload.name).toBe("My Project");
-      expect(event.payload.tagline).toBe("AI memory like an elephant");
       expect(event.payload.purpose).toBe("Context management for LLM coding agents");
       expect(event.payload.boundaries).toEqual([
         "Does not replace git",
@@ -79,17 +76,6 @@ describe("Project Aggregate", () => {
       );
     });
 
-    it("should throw error if tagline is too long", () => {
-      // Arrange
-      const project = Project.create("project");
-      const longTagline = "a".repeat(201); // Max is 200
-
-      // Act & Assert
-      expect(() => project.initialize("My Project", longTagline)).toThrow(
-        "Tagline must be less than 200 characters"
-      );
-    });
-
     it("should throw error if purpose is too long", () => {
       // Arrange
       const project = Project.create("project");
@@ -97,7 +83,7 @@ describe("Project Aggregate", () => {
 
       // Act & Assert
       expect(() =>
-        project.initialize("My Project", undefined, longPurpose)
+        project.initialize("My Project", longPurpose)
       ).toThrow("Purpose must be less than 1000 characters");
     });
 
@@ -108,7 +94,7 @@ describe("Project Aggregate", () => {
 
       // Act & Assert
       expect(() =>
-        project.initialize("My Project", undefined, undefined, tooManyBoundaries)
+        project.initialize("My Project", undefined, tooManyBoundaries)
       ).toThrow("Cannot have more than 20 boundaries");
     });
 
@@ -119,7 +105,7 @@ describe("Project Aggregate", () => {
 
       // Act & Assert
       expect(() =>
-        project.initialize("My Project", undefined, undefined, [longBoundary])
+        project.initialize("My Project", undefined, [longBoundary])
       ).toThrow("Boundary item must be less than 200 characters");
     });
 
@@ -128,14 +114,13 @@ describe("Project Aggregate", () => {
       const project = Project.create("project");
 
       // Act
-      project.initialize("My Project", "Great tagline", "Amazing purpose", [
+      project.initialize("My Project", "Amazing purpose", [
         "Boundary 1",
       ]);
 
       // Assert
       const snapshot = project.snapshot;
       expect(snapshot.name).toBe("My Project");
-      expect(snapshot.tagline).toBe("Great tagline");
       expect(snapshot.purpose).toBe("Amazing purpose");
       expect(snapshot.boundaries).toEqual(["Boundary 1"]);
       expect(snapshot.version).toBe(1);
@@ -146,7 +131,7 @@ describe("Project Aggregate", () => {
     it("should rebuild aggregate from event history", () => {
       // Arrange
       const project1 = Project.create("project");
-      const event = project1.initialize("My Project", "Great tagline");
+      const event = project1.initialize("My Project", "Great purpose");
 
       // Act
       const project2 = Project.rehydrate("project", [event]);
@@ -154,7 +139,7 @@ describe("Project Aggregate", () => {
       // Assert
       const snapshot = project2.snapshot;
       expect(snapshot.name).toBe("My Project");
-      expect(snapshot.tagline).toBe("Great tagline");
+      expect(snapshot.purpose).toBe("Great purpose");
       expect(snapshot.version).toBe(1);
     });
   });
@@ -165,7 +150,7 @@ describe("Project Aggregate", () => {
       const project = Project.create("project");
 
       // Act & Assert
-      expect(() => project.update("New tagline")).toThrow(
+      expect(() => project.update("New purpose")).toThrow(
         "Project must be initialized before updating"
       );
     });
@@ -173,7 +158,7 @@ describe("Project Aggregate", () => {
     it("should return null if no changes provided", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline");
+      project.initialize("My Project", "Original purpose");
 
       // Act
       const event = project.update();
@@ -185,44 +170,28 @@ describe("Project Aggregate", () => {
     it("should return null if values are unchanged", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose");
+      project.initialize("My Project", "Original purpose");
 
       // Act
-      const event = project.update("Original tagline", "Original purpose");
+      const event = project.update("Original purpose");
 
       // Assert
       expect(event).toBeNull();
     });
 
-    it("should create ProjectUpdated event with only changed tagline", () => {
+    it("should create ProjectUpdated event with only changed purpose", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose");
+      project.initialize("My Project", "Original purpose");
 
       // Act
-      const event = project.update("New tagline");
+      const event = project.update("New purpose");
 
       // Assert
       expect(event).not.toBeNull();
       expect(event!.type).toBe(ProjectEventType.UPDATED);
       expect(event!.aggregateId).toBe("project");
       expect(event!.version).toBe(2);
-      expect(event!.payload.tagline).toBe("New tagline");
-      expect(event!.payload.purpose).toBeUndefined();
-      expect(event!.payload.boundaries).toBeUndefined();
-    });
-
-    it("should create ProjectUpdated event with only changed purpose", () => {
-      // Arrange
-      const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose");
-
-      // Act
-      const event = project.update(undefined, "New purpose");
-
-      // Assert
-      expect(event).not.toBeNull();
-      expect(event!.payload.tagline).toBeUndefined();
       expect(event!.payload.purpose).toBe("New purpose");
       expect(event!.payload.boundaries).toBeUndefined();
     });
@@ -230,14 +199,13 @@ describe("Project Aggregate", () => {
     it("should create ProjectUpdated event with only changed boundaries", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose", ["Old boundary"]);
+      project.initialize("My Project", "Original purpose", ["Old boundary"]);
 
       // Act
-      const event = project.update(undefined, undefined, ["New boundary 1", "New boundary 2"]);
+      const event = project.update(undefined, ["New boundary 1", "New boundary 2"]);
 
       // Assert
       expect(event).not.toBeNull();
-      expect(event!.payload.tagline).toBeUndefined();
       expect(event!.payload.purpose).toBeUndefined();
       expect(event!.payload.boundaries).toEqual(["New boundary 1", "New boundary 2"]);
     });
@@ -245,41 +213,28 @@ describe("Project Aggregate", () => {
     it("should create ProjectUpdated event with multiple changed fields", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose");
+      project.initialize("My Project", "Original purpose");
 
       // Act
-      const event = project.update("New tagline", "New purpose", ["Boundary 1"]);
+      const event = project.update("New purpose", ["Boundary 1"]);
 
       // Assert
       expect(event).not.toBeNull();
-      expect(event!.payload.tagline).toBe("New tagline");
       expect(event!.payload.purpose).toBe("New purpose");
       expect(event!.payload.boundaries).toEqual(["Boundary 1"]);
     });
 
-    it("should allow setting tagline to null", () => {
+    it("should allow setting purpose to null", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline");
+      project.initialize("My Project", "Original purpose");
 
       // Act
       const event = project.update(null);
 
       // Assert
       expect(event).not.toBeNull();
-      expect(event!.payload.tagline).toBeNull();
-    });
-
-    it("should throw error if tagline is too long", () => {
-      // Arrange
-      const project = Project.create("project");
-      project.initialize("My Project");
-      const longTagline = "a".repeat(201); // Max is 200
-
-      // Act & Assert
-      expect(() => project.update(longTagline)).toThrow(
-        "Tagline must be less than 200 characters"
-      );
+      expect(event!.payload.purpose).toBeNull();
     });
 
     it("should throw error if purpose is too long", () => {
@@ -289,7 +244,7 @@ describe("Project Aggregate", () => {
       const longPurpose = "a".repeat(1001); // Max is 1000
 
       // Act & Assert
-      expect(() => project.update(undefined, longPurpose)).toThrow(
+      expect(() => project.update(longPurpose)).toThrow(
         "Purpose must be less than 1000 characters"
       );
     });
@@ -301,7 +256,7 @@ describe("Project Aggregate", () => {
       const tooManyBoundaries = Array.from({ length: 21 }, (_, i) => `Boundary ${i}`);
 
       // Act & Assert
-      expect(() => project.update(undefined, undefined, tooManyBoundaries)).toThrow(
+      expect(() => project.update(undefined, tooManyBoundaries)).toThrow(
         "Cannot have more than 20 boundaries"
       );
     });
@@ -309,15 +264,14 @@ describe("Project Aggregate", () => {
     it("should update aggregate state after event creation", () => {
       // Arrange
       const project = Project.create("project");
-      project.initialize("My Project", "Original tagline", "Original purpose");
+      project.initialize("My Project", "Original purpose");
 
       // Act
-      project.update("New tagline", "New purpose");
+      project.update("New purpose");
 
       // Assert
       const snapshot = project.snapshot;
       expect(snapshot.name).toBe("My Project"); // Name unchanged
-      expect(snapshot.tagline).toBe("New tagline");
       expect(snapshot.purpose).toBe("New purpose");
       expect(snapshot.version).toBe(2);
     });
@@ -325,8 +279,8 @@ describe("Project Aggregate", () => {
     it("should rehydrate correctly with both initialized and updated events", () => {
       // Arrange
       const project1 = Project.create("project");
-      const initEvent = project1.initialize("My Project", "Original tagline", "Original purpose");
-      const updateEvent = project1.update("New tagline");
+      const initEvent = project1.initialize("My Project", "Original purpose");
+      const updateEvent = project1.update("New purpose");
 
       // Act
       const project2 = Project.rehydrate("project", [initEvent, updateEvent!]);
@@ -334,8 +288,7 @@ describe("Project Aggregate", () => {
       // Assert
       const snapshot = project2.snapshot;
       expect(snapshot.name).toBe("My Project");
-      expect(snapshot.tagline).toBe("New tagline");
-      expect(snapshot.purpose).toBe("Original purpose");
+      expect(snapshot.purpose).toBe("New purpose");
       expect(snapshot.version).toBe(2);
     });
   });

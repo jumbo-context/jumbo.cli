@@ -27,10 +27,6 @@ export const metadata: CommandMetadata = {
       description: "Project name (required in non-interactive mode)"
     },
     {
-      flags: "--tagline <tagline>",
-      description: "Short project descriptor"
-    },
-    {
       flags: "--purpose <purpose>",
       description: "High-level project purpose"
     },
@@ -61,7 +57,6 @@ export const metadata: CommandMetadata = {
  */
 interface ProjectInitOptions {
   name: string;
-  tagline?: string;
   purpose?: string;
   boundaries?: string[];
 }
@@ -83,18 +78,6 @@ async function promptForProjectDetails(): Promise<ProjectInitOptions> {
         }
         if (input.length > ProjectLimits.NAME_MAX_LENGTH) {
           return `Project name must be less than ${ProjectLimits.NAME_MAX_LENGTH} characters`;
-        }
-        return true;
-      },
-    },
-    {
-      type: "input",
-      name: "tagline",
-      message: "Tagline (optional):",
-      suffix: "\n  A brief descriptor, like a subtitle (e.g., 'AI-powered code review')\n>",
-      validate: (input: string) => {
-        if (input && input.length > ProjectLimits.TAGLINE_MAX_LENGTH) {
-          return `Tagline must be less than ${ProjectLimits.TAGLINE_MAX_LENGTH} characters`;
         }
         return true;
       },
@@ -129,7 +112,6 @@ async function promptForProjectDetails(): Promise<ProjectInitOptions> {
 
   return {
     name: answers.name.trim(),
-    tagline: answers.tagline?.trim() || undefined,
     purpose: answers.purpose?.trim() || undefined,
     boundaries: boundaries?.length ? boundaries : undefined,
   };
@@ -141,7 +123,6 @@ async function promptForProjectDetails(): Promise<ProjectInitOptions> {
 export async function projectInit(
   options: {
     name?: string;
-    tagline?: string;
     purpose?: string;
     boundary?: string[];
     nonInteractive?: boolean;
@@ -165,7 +146,6 @@ export async function projectInit(
     }
     projectDetails = {
       name: options.name,
-      tagline: options.tagline,
       purpose: options.purpose,
       boundaries: options.boundary,
     };
@@ -186,7 +166,6 @@ export async function projectInit(
   // Execute command
   const command: InitializeProjectCommand = {
     name: projectDetails.name,
-    tagline: projectDetails.tagline,
     purpose: projectDetails.purpose,
     boundaries: projectDetails.boundaries,
   };
@@ -198,9 +177,6 @@ export async function projectInit(
     projectId: result.projectId,
     name: projectDetails.name,
   };
-  if (projectDetails.tagline) {
-    data.tagline = projectDetails.tagline;
-  }
   if (projectDetails.purpose) {
     data.purpose = projectDetails.purpose;
   }

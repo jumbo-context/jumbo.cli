@@ -31,7 +31,7 @@ export interface AggregateState {
  *   initialize(...): ProjectInitialized {
  *     return this.makeEvent(
  *       ProjectEventType.INITIALIZED,
- *       { name, tagline, ... },
+ *       { name, purpose, ... },
  *       ProjectProjection.apply
  *     );
  *   }
@@ -65,7 +65,7 @@ export abstract class BaseAggregate<
    * ```typescript
    * return this.makeEvent(
    *   ProjectEventType.INITIALIZED,
-   *   { name: "MyProject", tagline: "Great project" },
+   *   { name: "MyProject", purpose: "Great project" },
    *   ProjectProjection.apply
    * );
    * ```

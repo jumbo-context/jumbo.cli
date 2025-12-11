@@ -29,7 +29,6 @@ export class DefineArchitectureCommandHandler {
       command.organization,
       command.patterns,
       command.principles,
-      command.dataFlow,
       command.dataStores,
       command.stack
     );

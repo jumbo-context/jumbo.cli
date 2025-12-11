@@ -35,14 +35,6 @@ export const metadata: CommandMetadata = {
       description: "Design principles followed"
     },
     {
-      flags: "--data-flow <dataFlow>",
-      description: "Data flow description"
-    },
-    {
-      flags: "--clear-data-flow",
-      description: "Clear the data flow field"
-    },
-    {
       flags: "--data-store <dataStores...>",
       description: "Data stores (format: name:type:purpose)"
     },
@@ -74,8 +66,6 @@ export async function architectureUpdate(
     organization?: string;
     pattern?: string[];
     principle?: string[];
-    dataFlow?: string;
-    clearDataFlow?: boolean;
     dataStore?: string[];  // Format: "name:type:purpose"
     stack?: string[];
   },
@@ -91,10 +81,7 @@ export async function architectureUpdate(
       container.eventBus
     );
 
-    // 2. Handle clear-data-flow flag
-    const dataFlow = options.clearDataFlow ? null : options.dataFlow;
-
-    // 3. Parse data stores from string format
+    // 2. Parse data stores from string format
     let dataStores: DataStore[] | undefined;
     if (options.dataStore) {
       dataStores = options.dataStore.map(ds => {
@@ -103,21 +90,20 @@ export async function architectureUpdate(
       });
     }
 
-    // 4. Build command
+    // 3. Build command
     const command: UpdateArchitectureCommand = {
       description: options.description,
       organization: options.organization,
       patterns: options.pattern,
       principles: options.principle,
-      dataFlow,
       dataStores,
       stack: options.stack
     };
 
-    // 5. Execute command
+    // 4. Execute command
     await commandHandler.execute(command);
 
-    // 6. Fetch updated view for display
+    // 5. Fetch updated view for display
     const view = await container.architectureUpdatedProjector.findById('architecture');
 
     // Success output
@@ -128,9 +114,6 @@ export async function architectureUpdate(
     if (options.organization) renderer.info(`Updated organization: ${options.organization}`);
     if (options.pattern) renderer.info(`Updated patterns: ${options.pattern.join(', ')}`);
     if (options.principle) renderer.info(`Updated principles: ${options.principle.join(', ')}`);
-    if (dataFlow !== undefined) {
-      renderer.info(`Updated data flow: ${dataFlow || '(cleared)'}`);
-    }
     if (options.dataStore) renderer.info(`Updated data stores: ${options.dataStore.join(', ')}`);
     if (options.stack) renderer.info(`Updated stack: ${options.stack.join(', ')}`);
   } catch (error) {

@@ -67,7 +67,7 @@ function generateFirstTimeContent(): string[] {
 /**
  * Explicit flag content: Full project status
  *
- * Shows goal counts and blockers. Project name, tagline, and session status
+ * Shows goal counts and blockers. Project name and session status
  * are intentionally omitted as they're already displayed in the animated
  * banner's info line and provide no additional value here.
  */

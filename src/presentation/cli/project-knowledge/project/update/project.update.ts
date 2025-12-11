@@ -1,7 +1,7 @@
 /**
  * CLI Command: jumbo project update
  *
- * Updates project metadata (tagline, purpose, boundaries).
+ * Updates project metadata (purpose, boundaries).
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
@@ -17,10 +17,6 @@ export const metadata: CommandMetadata = {
   category: "project-knowledge",
   options: [
     {
-      flags: "--tagline <tagline>",
-      description: "Updated project tagline"
-    },
-    {
       flags: "--purpose <purpose>",
       description: "Updated project purpose"
     },
@@ -31,8 +27,8 @@ export const metadata: CommandMetadata = {
   ],
   examples: [
     {
-      command: "jumbo project update --tagline 'New tagline'",
-      description: "Update project tagline"
+      command: "jumbo project update --purpose 'Updated purpose'",
+      description: "Update project purpose"
     },
     {
       command: "jumbo project update --purpose 'Updated purpose' --boundary 'Does not replace git'",
@@ -47,7 +43,6 @@ export const metadata: CommandMetadata = {
  * Called by Commander with parsed options
  */
 export async function projectUpdate(options: {
-  tagline?: string | null;
   purpose?: string | null;
   boundary?: string[];
 }, container: ApplicationContainer) {
@@ -63,13 +58,12 @@ export async function projectUpdate(options: {
 
     // 2. Build command (convert CLI options)
     const command: any = {};
-    if (options.tagline !== undefined) command.tagline = options.tagline;
     if (options.purpose !== undefined) command.purpose = options.purpose;
     if (options.boundary !== undefined) command.boundaries = options.boundary;
 
     // Check if any fields provided
     if (Object.keys(command).length === 0) {
-      renderer.error("No fields provided. Specify --tagline, --purpose, or --boundary");
+      renderer.error("No fields provided. Specify --purpose or --boundary");
       process.exit(1);
     }
 
@@ -87,9 +81,6 @@ export async function projectUpdate(options: {
         updated: result.changedFields.join(", "),
         name: view?.name || "N/A",
       };
-      if (view?.tagline) {
-        data.tagline = view.tagline;
-      }
       if (view?.purpose) {
         data.purpose = view.purpose;
       }

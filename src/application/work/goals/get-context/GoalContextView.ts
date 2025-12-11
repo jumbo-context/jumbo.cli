@@ -49,16 +49,6 @@ export interface GuidelineContextView {
 }
 
 /**
- * ProjectContextView - Project knowledge for goal context
- */
-export interface ProjectContextView {
-  readonly projectId: string;
-  readonly name: string;
-  readonly problem: string;
-  readonly solution: string;
-}
-
-/**
  * RelationContextView - Relation information for goal context
  */
 export interface RelationContextView {
@@ -76,8 +66,7 @@ export interface RelationContextView {
  * - Category 2: Solution (Components, dependencies, decisions)
  * - Category 3: Invariants & Boundaries
  * - Category 4: Execution Guidelines
- * - Category 5: Domain Knowledge (Project context)
- * - Category 6: Relations
+ * - Category 5: Relations
  *
  * All data filtered by goal.scopeIn and goal.scopeOut for token optimization.
  */
@@ -96,9 +85,6 @@ export interface GoalContextView {
   // Category 4: Execution Guidelines
   readonly guidelines: GuidelineContextView[];
 
-  // Category 5: Domain Knowledge
-  readonly project: ProjectContextView | null;
-
-  // Category 6: Relations
+  // Category 5: Relations
   readonly relations: RelationContextView[];
 }

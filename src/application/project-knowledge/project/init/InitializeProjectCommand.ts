@@ -6,7 +6,6 @@
 
 export interface InitializeProjectCommand {
   name: string;
-  tagline?: string;
   purpose?: string;
   boundaries?: string[];
 }

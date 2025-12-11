@@ -15,7 +15,7 @@ import { AudiencePainView } from "../../../project-knowledge/audience-pains/Audi
  * keeping the presentation layer free from repository orchestration concerns.
  *
  * Contents:
- * - project: Project context (name, purpose, tagline)
+ * - project: Project context (name, purpose)
  * - audiences: Target audiences for the project
  * - audiencePains: Active pain points being addressed
  * - latestSessionSummary: Historical context (what was worked on previously)
@@ -24,7 +24,7 @@ import { AudiencePainView } from "../../../project-knowledge/audience-pains/Audi
  */
 export interface SessionStartContextView {
   /**
-   * Project context (name, purpose, tagline, boundaries)
+   * Project context (name, purpose, boundaries)
    * Null if project hasn't been initialized
    */
   readonly project: ProjectView | null;

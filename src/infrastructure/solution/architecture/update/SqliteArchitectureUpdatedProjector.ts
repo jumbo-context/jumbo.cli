@@ -31,10 +31,6 @@ export class SqliteArchitectureUpdatedProjector implements IArchitectureUpdatedP
       updates.push('principles = ?');
       params.push(JSON.stringify(event.payload.principles));
     }
-    if (event.payload.dataFlow !== undefined) {
-      updates.push('dataFlow = ?');
-      params.push(event.payload.dataFlow);
-    }
     if (event.payload.dataStores !== undefined) {
       updates.push('dataStores = ?');
       params.push(JSON.stringify(event.payload.dataStores));
@@ -69,7 +65,6 @@ export class SqliteArchitectureUpdatedProjector implements IArchitectureUpdatedP
       organization: row.organization as string,
       patterns: JSON.parse((row.patterns as string) || '[]'),
       principles: JSON.parse((row.principles as string) || '[]'),
-      dataFlow: (row.dataFlow as string) ?? null,
       dataStores: JSON.parse((row.dataStores as string) || '[]'),
       stack: JSON.parse((row.stack as string) || '[]'),
       version: row.version as number,

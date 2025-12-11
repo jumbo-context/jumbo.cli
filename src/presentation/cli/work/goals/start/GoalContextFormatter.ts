@@ -9,8 +9,7 @@ import { YamlFormatter } from "../../../shared/formatting/YamlFormatter.js";
  * - Category 2: Solution (Components, dependencies, decisions - filtered by scope)
  * - Category 3: Invariants & Boundaries
  * - Category 4: Execution Guidelines
- * - Category 5: Domain Knowledge
- * - Category 6: Relations
+ * - Category 5: Relations
  *
  * Output Format: Markdown with YAML blocks (LLM-friendly)
  *
@@ -98,16 +97,7 @@ export class GoalContextFormatter {
       }));
     }
 
-    // Category 5: Domain Knowledge (only if data exists)
-    if (context.project) {
-      goalContext.goalContext.project = {
-        name: context.project.name,
-        problem: context.project.problem,
-        solution: context.project.solution,
-      };
-    }
-
-    // Category 6: Relations (only if data exists)
+    // Category 5: Relations (only if data exists)
     if (context.relations.length > 0) {
       goalContext.goalContext.relations = context.relations.map((r) => ({
         from: r.fromEntityId,
