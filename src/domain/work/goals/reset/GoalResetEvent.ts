@@ -1,4 +1,4 @@
-import { BaseEvent, UUID, ISO8601 } from "../../../shared/BaseEvent.js";
+import { BaseEvent } from "../../../shared/BaseEvent.js";
 import { GoalStatusType } from "../Constants.js";
 
 /**
@@ -7,9 +7,6 @@ import { GoalStatusType } from "../Constants.js";
  */
 export interface GoalResetEvent extends BaseEvent {
   readonly type: "GoalResetEvent";
-  readonly aggregateId: UUID;
-  readonly version: number;
-  readonly timestamp: ISO8601;
   readonly payload: {
     readonly status: GoalStatusType;  // Will be 'to-do'
   };
