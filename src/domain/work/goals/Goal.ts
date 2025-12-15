@@ -10,6 +10,37 @@ import { UPDATE_RULES } from "./rules/UpdateRules.js";
 import { NOTE_RULES, OPTIONAL_NOTE_RULES } from "./rules/NoteRules.js";
 import { CanBlockRule, CanUnblockRule } from "./rules/StateTransitionRules.js";
 
+// Embedded context types - based on aggregate state models
+export interface EmbeddedInvariant {
+  title: string;
+  description: string;
+  rationale?: string;
+}
+
+export interface EmbeddedGuideline {
+  title: string;
+  description: string;
+  rationale?: string;
+  examples?: string[];
+}
+
+export interface EmbeddedDependency {
+  consumer: string;  // component name
+  provider: string;  // component name
+}
+
+export interface EmbeddedComponent {
+  name: string;
+  responsibility: string;
+}
+
+export interface EmbeddedArchitecture {
+  description: string;
+  organization: string;
+  patterns?: string[];
+  principles?: string[];
+}
+
 // Domain state: business properties + aggregate metadata
 export interface GoalState extends AggregateState {
   id: UUID;
@@ -21,6 +52,14 @@ export interface GoalState extends AggregateState {
   status: GoalStatusType;
   version: number;
   note?: string;  // Optional: populated when blocked or completed
+  // Embedded context fields - populated during goal creation with --interactive
+  relevantInvariants?: EmbeddedInvariant[];
+  relevantGuidelines?: EmbeddedGuideline[];
+  relevantDependencies?: EmbeddedDependency[];
+  relevantComponents?: EmbeddedComponent[];
+  architecture?: EmbeddedArchitecture;
+  filesToBeCreated?: string[];
+  filesToBeChanged?: string[];
 }
 
 export class Goal extends BaseAggregate<GoalState, GoalEvent> {
@@ -42,6 +81,29 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         state.scopeOut = e.payload.scopeOut;
         state.boundaries = e.payload.boundaries;
         state.status = e.payload.status;
+        // Embedded context fields (optional - populated with --interactive)
+        const payload = e.payload as Record<string, unknown>;
+        if (payload.relevantInvariants !== undefined) {
+          state.relevantInvariants = payload.relevantInvariants as EmbeddedInvariant[];
+        }
+        if (payload.relevantGuidelines !== undefined) {
+          state.relevantGuidelines = payload.relevantGuidelines as EmbeddedGuideline[];
+        }
+        if (payload.relevantDependencies !== undefined) {
+          state.relevantDependencies = payload.relevantDependencies as EmbeddedDependency[];
+        }
+        if (payload.relevantComponents !== undefined) {
+          state.relevantComponents = payload.relevantComponents as EmbeddedComponent[];
+        }
+        if (payload.architecture !== undefined) {
+          state.architecture = payload.architecture as EmbeddedArchitecture;
+        }
+        if (payload.filesToBeCreated !== undefined) {
+          state.filesToBeCreated = payload.filesToBeCreated as string[];
+        }
+        if (payload.filesToBeChanged !== undefined) {
+          state.filesToBeChanged = payload.filesToBeChanged as string[];
+        }
         state.version = e.version;
         break;
       }
@@ -70,6 +132,29 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         }
         if (e.payload.boundaries !== undefined) {
           state.boundaries = e.payload.boundaries;
+        }
+        // Embedded context fields (partial update support)
+        const payload = e.payload as Record<string, unknown>;
+        if (payload.relevantInvariants !== undefined) {
+          state.relevantInvariants = payload.relevantInvariants as EmbeddedInvariant[];
+        }
+        if (payload.relevantGuidelines !== undefined) {
+          state.relevantGuidelines = payload.relevantGuidelines as EmbeddedGuideline[];
+        }
+        if (payload.relevantDependencies !== undefined) {
+          state.relevantDependencies = payload.relevantDependencies as EmbeddedDependency[];
+        }
+        if (payload.relevantComponents !== undefined) {
+          state.relevantComponents = payload.relevantComponents as EmbeddedComponent[];
+        }
+        if (payload.architecture !== undefined) {
+          state.architecture = payload.architecture as EmbeddedArchitecture;
+        }
+        if (payload.filesToBeCreated !== undefined) {
+          state.filesToBeCreated = payload.filesToBeCreated as string[];
+        }
+        if (payload.filesToBeChanged !== undefined) {
+          state.filesToBeChanged = payload.filesToBeChanged as string[];
         }
         state.version = e.version;
         break;

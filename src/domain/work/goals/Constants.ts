@@ -49,7 +49,9 @@ export const GoalErrorMessages = {
   NOT_STARTED: 'Cannot complete a goal that has not been started',
   ALREADY_COMPLETED: 'Goal is already completed',
   CANNOT_RESET_BLOCKED: 'Cannot reset a blocked goal. Unblock it first to preserve blocker context.',
-  ALREADY_TODO: 'Goal is already in to-do status'
+  ALREADY_TODO: 'Goal is already in to-do status',
+  // Embedded context: file path errors
+  FILE_PATH_TOO_LONG: 'File path must be less than {max} characters'
 } as const;
 
 // Numeric limits
@@ -59,7 +61,9 @@ export const GoalLimits = {
   MAX_SUCCESS_CRITERIA: 20,
   SCOPE_ITEM_MAX_LENGTH: 200,
   MAX_SCOPE_ITEMS: 20,
-  NOTE_MAX_LENGTH: 500
+  NOTE_MAX_LENGTH: 500,
+  // Embedded context: file path limits (only validation needed - other fields pre-validated by source aggregates)
+  FILE_PATH_MAX_LENGTH: 500
 } as const;
 
 // Helper function for message formatting
