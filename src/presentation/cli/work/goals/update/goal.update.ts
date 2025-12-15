@@ -6,6 +6,15 @@
  *
  * Usage:
  *   jumbo goal update <goalId> [--objective "..."] [--criteria "..."] [--scope-in "..."] [--scope-out "..."] [--boundary "..."]
+ *
+ * Embedded context fields (JSON format - typically used programmatically):
+ *   --relevant-invariants <json>
+ *   --relevant-guidelines <json>
+ *   --relevant-dependencies <json>
+ *   --relevant-components <json>
+ *   --architecture <json>
+ *   --files-to-be-created <items...>
+ *   --files-to-be-changed <items...>
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
@@ -46,6 +55,34 @@ export const metadata: CommandMetadata = {
     {
       flags: "--boundary <items...>",
       description: "Updated boundaries"
+    },
+    {
+      flags: "--relevant-invariants <json>",
+      description: "Relevant invariants (JSON array)"
+    },
+    {
+      flags: "--relevant-guidelines <json>",
+      description: "Relevant guidelines (JSON array)"
+    },
+    {
+      flags: "--relevant-dependencies <json>",
+      description: "Relevant dependencies (JSON array)"
+    },
+    {
+      flags: "--relevant-components <json>",
+      description: "Relevant components (JSON array)"
+    },
+    {
+      flags: "--architecture <json>",
+      description: "Architecture context (JSON object)"
+    },
+    {
+      flags: "--files-to-be-created <items...>",
+      description: "Files to be created"
+    },
+    {
+      flags: "--files-to-be-changed <items...>",
+      description: "Files to be changed"
     }
   ],
   examples: [
@@ -77,6 +114,14 @@ export async function goalUpdate(
     scopeIn?: string[];
     scopeOut?: string[];
     boundary?: string[];
+    // Embedded context fields (JSON strings from CLI)
+    relevantInvariants?: string;
+    relevantGuidelines?: string;
+    relevantDependencies?: string;
+    relevantComponents?: string;
+    architecture?: string;
+    filesToBeCreated?: string[];
+    filesToBeChanged?: string[];
   },
   container: ApplicationContainer
 ) {
@@ -91,7 +136,17 @@ export async function goalUpdate(
       container.eventBus
     );
 
-    // 2. Build and execute command
+    // 2. Parse JSON fields if provided
+    const parseJson = (jsonStr: string | undefined, fieldName: string) => {
+      if (!jsonStr) return undefined;
+      try {
+        return JSON.parse(jsonStr);
+      } catch {
+        throw new Error(`Invalid JSON for ${fieldName}: ${jsonStr}`);
+      }
+    };
+
+    // 3. Build and execute command
     const command: UpdateGoalCommand = {
       goalId: options.goalId,
       objective: options.objective,
@@ -99,6 +154,14 @@ export async function goalUpdate(
       scopeIn: options.scopeIn,
       scopeOut: options.scopeOut,
       boundaries: options.boundary,
+      // Embedded context fields
+      relevantInvariants: parseJson(options.relevantInvariants, "relevant-invariants"),
+      relevantGuidelines: parseJson(options.relevantGuidelines, "relevant-guidelines"),
+      relevantDependencies: parseJson(options.relevantDependencies, "relevant-dependencies"),
+      relevantComponents: parseJson(options.relevantComponents, "relevant-components"),
+      architecture: parseJson(options.architecture, "architecture"),
+      filesToBeCreated: options.filesToBeCreated,
+      filesToBeChanged: options.filesToBeChanged,
     };
 
     const result = await commandHandler.execute(command);
