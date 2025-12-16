@@ -27,26 +27,48 @@ export class GoalContextFormatter {
   /**
    * Format goal context as pure YAML
    *
+   * Prefers embedded context when available (from --interactive goal creation).
+   * Falls back to queried context for legacy goals.
+   *
    * @param context - GoalContextView to format
    * @returns YAML string with goal context
    */
   format(context: GoalContextView): string {
-    const goalContext: any = {
-      goalContext: {
-        // Category 1: Active Work
-        goal: {
-          goalId: context.goal.goalId,
-          objective: context.goal.objective,
-          status: context.goal.status,
-          successCriteria: context.goal.successCriteria,
-          scope: {
-            in: context.goal.scopeIn,
-            out: context.goal.scopeOut,
-          },
-          boundaries: context.goal.boundaries,
-        },
+    // Build goal section with scope
+    const goalSection: Record<string, unknown> = {
+      goalId: context.goal.goalId,
+      objective: context.goal.objective,
+      status: context.goal.status,
+      successCriteria: context.goal.successCriteria,
+      scope: {
+        in: context.goal.scopeIn,
+        out: context.goal.scopeOut,
       },
+      boundaries: context.goal.boundaries,
     };
+
+    // Add files to create/change when present (embedded context)
+    if (this.hasFilesToCreate(context)) {
+      goalSection.filesToCreate = context.goal.filesToBeCreated;
+    }
+    if (this.hasFilesToChange(context)) {
+      goalSection.filesToChange = context.goal.filesToBeChanged;
+    }
+
+    const inner: Record<string, unknown> = {
+      // Category 1: Active Work
+      goal: goalSection,
+    };
+
+    // Architecture section (embedded context from --interactive)
+    if (this.hasArchitecture(context)) {
+      inner.architecture = {
+        description: context.goal.architecture!.description,
+        organization: context.goal.architecture!.organization,
+        ...(context.goal.architecture!.patterns?.length && { patterns: context.goal.architecture!.patterns }),
+        ...(context.goal.architecture!.principles?.length && { principles: context.goal.architecture!.principles }),
+      };
+    }
 
     // Category 2: Solution Context (only if data exists)
     if (
@@ -54,10 +76,10 @@ export class GoalContextFormatter {
       context.dependencies.length > 0 ||
       context.decisions.length > 0
     ) {
-      goalContext.goalContext.solution = {};
+      const solution: Record<string, unknown> = {};
 
       if (context.components.length > 0) {
-        goalContext.goalContext.solution.components = context.components.map((c) => ({
+        solution.components = context.components.map((c) => ({
           name: c.name,
           description: c.description,
           status: c.status,
@@ -65,7 +87,7 @@ export class GoalContextFormatter {
       }
 
       if (context.dependencies.length > 0) {
-        goalContext.goalContext.solution.dependencies = context.dependencies.map((d) => ({
+        solution.dependencies = context.dependencies.map((d) => ({
           name: d.name,
           version: d.version,
           purpose: d.purpose,
@@ -73,17 +95,19 @@ export class GoalContextFormatter {
       }
 
       if (context.decisions.length > 0) {
-        goalContext.goalContext.solution.decisions = context.decisions.map((d) => ({
+        solution.decisions = context.decisions.map((d) => ({
           title: d.title,
           rationale: d.rationale,
           status: d.status,
         }));
       }
+
+      inner.solution = solution;
     }
 
     // Category 3: Constraints (only if data exists)
     if (context.invariants.length > 0) {
-      goalContext.goalContext.invariants = context.invariants.map((inv) => ({
+      inner.invariants = context.invariants.map((inv) => ({
         category: inv.category,
         description: inv.description,
       }));
@@ -91,7 +115,7 @@ export class GoalContextFormatter {
 
     // Category 4: Execution Guidelines (only if data exists)
     if (context.guidelines.length > 0) {
-      goalContext.goalContext.guidelines = context.guidelines.map((g) => ({
+      inner.guidelines = context.guidelines.map((g) => ({
         category: g.category,
         description: g.description,
       }));
@@ -99,7 +123,7 @@ export class GoalContextFormatter {
 
     // Category 5: Relations (only if data exists)
     if (context.relations.length > 0) {
-      goalContext.goalContext.relations = context.relations.map((r) => ({
+      inner.relations = context.relations.map((r) => ({
         from: r.fromEntityId,
         to: r.toEntityId,
         type: r.relationType,
@@ -107,6 +131,27 @@ export class GoalContextFormatter {
       }));
     }
 
-    return this.yamlFormatter.toYaml(goalContext);
+    return this.yamlFormatter.toYaml({ goalContext: inner });
+  }
+
+  /**
+   * Check if goal has embedded architecture
+   */
+  private hasArchitecture(context: GoalContextView): boolean {
+    return context.goal.architecture !== undefined && context.goal.architecture !== null;
+  }
+
+  /**
+   * Check if goal has files to create
+   */
+  private hasFilesToCreate(context: GoalContextView): boolean {
+    return Array.isArray(context.goal.filesToBeCreated) && context.goal.filesToBeCreated.length > 0;
+  }
+
+  /**
+   * Check if goal has files to change
+   */
+  private hasFilesToChange(context: GoalContextView): boolean {
+    return Array.isArray(context.goal.filesToBeChanged) && context.goal.filesToBeChanged.length > 0;
   }
 }
