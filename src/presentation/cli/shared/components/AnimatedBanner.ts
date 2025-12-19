@@ -10,6 +10,7 @@ import chalk from "chalk";
 import stripAnsi from "strip-ansi";
 import { centerText } from "../rendering/StyleConfig.js";
 import { playAnimation, createFadeInFrames, createElephantWalkFrames } from "../animations/FrameAnimator.js";
+import { getAnimationFrame, getFrameCount } from "./AnimationFrames.js";
 
 function termWidth(): number {
   return process.stdout.isTTY ? process.stdout.columns : 80;
@@ -249,9 +250,106 @@ function createWelcomeBox(projectName: string | null, width: number): string[] {
   return welcomeContent;
 }
 
+// Anchor colors for elephant gradient
+const ANCHOR_COLORS = [
+  { r: 0, g: 72, b: 182 },      // blue
+  { r: 1, g: 173, b: 97 },      // green
+  { r: 124, g: 197, b: 62 },    // light-green
+  { r: 255, g: 210, b: 61 },    // yellow
+  { r: 249, g: 124, b: 37 },    // orange
+  { r: 232, g: 44, b: 49 },     // red
+];
+
 /**
- * Show animated elephant walk banner
- * Elephant walks from left to right and back, transitioning through colors
+ * Get interpolated color from gradient based on progress (0-1)
+ */
+function getGradientColor(progress: number): { r: number; g: number; b: number } {
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+  const segmentCount = ANCHOR_COLORS.length - 1;
+  const segmentLength = 1 / segmentCount;
+  const segmentIndex = Math.min(Math.floor(clampedProgress / segmentLength), segmentCount - 1);
+  const segmentProgress = (clampedProgress - segmentIndex * segmentLength) / segmentLength;
+
+  const color1 = ANCHOR_COLORS[segmentIndex];
+  const color2 = ANCHOR_COLORS[segmentIndex + 1];
+  return {
+    r: Math.round(color1.r + (color2.r - color1.r) * segmentProgress),
+    g: Math.round(color1.g + (color2.g - color1.g) * segmentProgress),
+    b: Math.round(color1.b + (color2.b - color1.b) * segmentProgress),
+  };
+}
+
+/**
+ * Apply colors to a frame from AnimationFrames
+ * - Elephant shading characters (▓▒) get the gradient color with inverse
+ * - JUMBO text (█░) gets gray coloring
+ * - Box drawing characters get light blue
+ */
+function colorizeFrame(frameLines: string[], colorProgress: number): string[] {
+  const elephantColor = getGradientColor(colorProgress);
+  const elephantChalk = chalk.rgb(elephantColor.r, elephantColor.g, elephantColor.b);
+  const textChalk = chalk.rgb(200, 200, 200);
+  const boxChalk = chalk.rgb(155, 233, 248);
+  const taglineChalk = chalk.gray;
+
+  return frameLines.map((line) => {
+    let result = '';
+    let i = 0;
+
+    while (i < line.length) {
+      const char = line[i];
+
+      // Elephant shading characters - apply gradient with inverse
+      if (char === '▓' || char === '▒') {
+        // Find contiguous elephant characters
+        let elephantSegment = '';
+        while (i < line.length && (line[i] === '▓' || line[i] === '▒' || line[i] === '█')) {
+          // Check if this is elephant (near other shading) or JUMBO text
+          const nearbyContext = line.slice(Math.max(0, i - 3), Math.min(line.length, i + 4));
+          const hasShading = nearbyContext.includes('▓') || nearbyContext.includes('▒');
+
+          if (line[i] === '█' && !hasShading) {
+            break; // This is JUMBO text, not elephant
+          }
+          elephantSegment += line[i];
+          i++;
+        }
+        result += elephantChalk.inverse(elephantSegment);
+      }
+      // JUMBO text block characters
+      else if (char === '█' || char === '░') {
+        let textSegment = '';
+        while (i < line.length && (line[i] === '█' || line[i] === '░')) {
+          textSegment += line[i];
+          i++;
+        }
+        result += textChalk(textSegment);
+      }
+      // Box drawing characters
+      else if ('╭╮╰╯│─'.includes(char)) {
+        result += boxChalk(char);
+        i++;
+      }
+      // Detect start of tagline text
+      else if (char === 'A' && line.slice(i).startsWith('AI memory like an elephant')) {
+        const tagline = 'AI memory like an elephant';
+        result += taglineChalk(tagline);
+        i += tagline.length;
+      }
+      // Other characters (spaces, text)
+      else {
+        result += char;
+        i++;
+      }
+    }
+
+    return result;
+  });
+}
+
+/**
+ * Show animated elephant walk banner using pre-defined frames
+ * Elephant walks from left to right and back, "painting" JUMBO on return
  *
  * @param content - Content lines to display after animation completes
  * @param projectName - Optional project name to display in info box
@@ -264,73 +362,37 @@ export async function showElephantWalkBanner(content: string[], projectName: str
     return;
   }
 
-  const width = termWidth();
-  const elephant = getElephantLines();
-  const elephantWidth = Math.max(...elephant.map(line => line.length));
-  const maxOffset = Math.max(0, width - elephantWidth);
+  const totalFrames = getFrameCount();
+  const midPoint = Math.floor(totalFrames / 2); // ~73, where elephant reaches far right
 
-  // Generate frames going right (blue -> red gradient)
-  const stepCount = maxOffset;
-  const anchorColors = [
-    { r: 0, g: 72, b: 182 },      // blue
-    { r: 1, g: 173, b: 97 },      // green
-    { r: 124, g: 197, b: 62 },    // light-green
-    { r: 255, g: 210, b: 61 },    // yellow
-    { r: 249, g: 124, b: 37 },    // orange
-    { r: 232, g: 44, b: 49 },     // red
-  ];
+  // Build all animation frames with colors
+  const coloredFrames: string[][] = [];
 
-  // Forward journey frames
-  const forwardFrames: string[][] = [];
-  for (let step = 0; step < stepCount; step++) {
-    const spaces = " ".repeat(step);
-    const progress = step / Math.max(1, stepCount - 1);
+  for (let i = 0; i < totalFrames; i++) {
+    const rawFrame = getAnimationFrame(i);
 
-    // Interpolate color
-    const segmentCount = anchorColors.length - 1;
-    const segmentLength = 1 / segmentCount;
-    const segmentIndex = Math.min(Math.floor(progress / segmentLength), segmentCount - 1);
-    const segmentProgress = (progress - segmentIndex * segmentLength) / segmentLength;
+    // Calculate color progress:
+    // Forward (0 to midPoint): 0 -> 1 (blue to red)
+    // Return (midPoint to end): 1 -> 0 (red to blue)
+    let colorProgress: number;
+    if (i <= midPoint) {
+      colorProgress = i / midPoint;
+    } else {
+      colorProgress = 1 - (i - midPoint) / (totalFrames - midPoint - 1);
+    }
 
-    const color1 = anchorColors[segmentIndex];
-    const color2 = anchorColors[segmentIndex + 1];
-    const r = Math.round(color1.r + (color2.r - color1.r) * segmentProgress);
-    const g = Math.round(color1.g + (color2.g - color1.g) * segmentProgress);
-    const b = Math.round(color1.b + (color2.b - color1.b) * segmentProgress);
-
-    // Just elephant, no JUMBO text during forward journey
-    forwardFrames.push(elephant.map(line => spaces + chalk.rgb(r, g, b).inverse(line)));
+    const coloredFrame = colorizeFrame(rawFrame, colorProgress);
+    coloredFrames.push(coloredFrame);
   }
 
-  // Return journey frames (reverse of forward, back to blue)
-  const returnFrames = forwardFrames.slice().reverse();
-
-  // JUMBO text reveal frames (after elephant returns to origin)
-  const revealSteps = 30;
-  const finalElephant = elephant.map(line => chalk.rgb(0, 72, 182).inverse(line));
-  const revealFrames: string[][] = [];
-
-  // Use the projectName passed from caller for dynamic info box
-  for (let step = 0; step <= revealSteps; step++) {
-    const progress = step / revealSteps;
-    const combined = combineSideBySide(finalElephant, progress, 5, projectName, version);
-    revealFrames.push(combined);
-  }
-
-  const fullFrames = [...forwardFrames, ...returnFrames, ...revealFrames];
-
-  const hrTop = fullWidthLine(1, chalk.gray);
-  const hrBottom = fullWidthLine(width, chalk.gray);
-
-  // During animation: show only elephant frames
-  // After animation: add dynamic content to the final frame
-  const completeFrames = fullFrames.map((elephantFrame, frameIndex) => {
-    const isLastFrame = frameIndex === fullFrames.length - 1;
+  // Build complete frames with spacing and content
+  const completeFrames = coloredFrames.map((frame, frameIndex) => {
+    const isLastFrame = frameIndex === coloredFrames.length - 1;
 
     return [
       "", // Spacer line
       "", // Spacer line
-      ...elephantFrame,
+      ...frame,
       "", // Spacer line
       ...(isLastFrame ? content : []), // Only add content to the final frame
       "", // Spacer line
@@ -339,39 +401,32 @@ export async function showElephantWalkBanner(content: string[], projectName: str
   });
 
   // Optimized animation playback
-  if (process.stdout.isTTY) {
-    // Hide cursor and clear screen once
-    process.stdout.write('\x1b[?25l'); // Hide cursor
-    console.clear();
+  process.stdout.write('\x1b[?25l'); // Hide cursor
+  console.clear();
 
-    // Pre-compute all frame buffers as complete strings
-    const frameBuffers = completeFrames.map(frame => frame.join('\n'));
+  // Pre-compute all frame buffers as complete strings
+  const frameBuffers = completeFrames.map(frame => frame.join('\n'));
 
-    // Play animation with optimized rendering
-    const forwardFrameCount = forwardFrames.length;
-    const returnFrameCount = returnFrames.length;
-    const walkFrameCount = forwardFrameCount + returnFrameCount;
+  for (let i = 0; i < frameBuffers.length; i++) {
+    const buffer = frameBuffers[i];
 
-    for (let i = 0; i < frameBuffers.length; i++) {
-      const buffer = frameBuffers[i];
-      const currentFrameHeight = completeFrames[i].length;
+    process.stdout.write('\x1b[H'); // Move cursor to top
+    process.stdout.write(buffer);
 
-      process.stdout.write('\x1b[H'); // Move cursor to top
-      process.stdout.write(buffer);
-
-      // Different speeds: fast walk, slower reveal
-      const isReveal = i >= walkFrameCount;
-      const delay = isReveal ? 10 : 0.5;
-      await new Promise(resolve => setTimeout(resolve, delay));
+    // Sub-millisecond delay using busy-wait for smooth animation
+    const delayMicroseconds = 8000; // 8ms per frame
+    const start = performance.now();
+    while (performance.now() - start < delayMicroseconds / 1000) {
+      // busy wait
     }
-
-    // Use the actual height of the last frame (which includes content)
-    const finalFrameHeight = completeFrames[completeFrames.length - 1].length;
-    process.stdout.write(`\x1b[${finalFrameHeight}H`); // Move to last line
-    console.log(''); // Add newline at the end
-
-    // Show cursor again
-    process.stdout.write('\x1b[?25h'); // Show cursor
   }
+
+  // Position cursor at end
+  const finalFrameHeight = completeFrames[completeFrames.length - 1].length;
+  process.stdout.write(`\x1b[${finalFrameHeight}H`); // Move to last line
+  console.log(''); // Add newline at the end
+
+  // Show cursor again
+  process.stdout.write('\x1b[?25h'); // Show cursor
 }
 
