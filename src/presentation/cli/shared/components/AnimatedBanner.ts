@@ -414,7 +414,7 @@ export async function showElephantWalkBanner(content: string[], projectName: str
     process.stdout.write(buffer);
 
     // Sub-millisecond delay using busy-wait for smooth animation
-    const delayMicroseconds = 8000; // 8ms per frame
+    const delayMicroseconds = 9000; // 8ms per frame
     const start = performance.now();
     while (performance.now() - start < delayMicroseconds / 1000) {
       // busy wait
