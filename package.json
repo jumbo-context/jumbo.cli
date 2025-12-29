@@ -1,7 +1,7 @@
 {
   "name": "@jumbo-ctx/cli",
   "version": "1.0.0-alpha.8",
-  "description": "AI memory like and elephant for your coding agent.",
+  "description": "Memory for Coding Agents",
   "keywords": [
     "cli",
     "command-line",

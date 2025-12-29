@@ -17,8 +17,8 @@ import { createProgram } from "../program/ProgramFactory.js";
 import { attachGlobalOptions } from "../program/GlobalOptionsHandler.js";
 import { validateProjectRequirement } from "../guards/ProjectGuard.js";
 import {
-  detectBannerScenario,
-  orchestrateBanner,
+  isBareCommand,
+  showBanner,
 } from "../banner/BannerOrchestrator.js";
 import { Renderer } from "../rendering/Renderer.js";
 
@@ -34,9 +34,8 @@ type InvocationType = "banner" | "help" | "version" | "command";
  * @returns The invocation type
  */
 function classifyInvocation(argv: string[]): InvocationType {
-  // Check for banner scenarios first
-  const bannerScenario = detectBannerScenario(argv);
-  if (bannerScenario !== "none") {
+  // Bare 'jumbo' command shows banner
+  if (isBareCommand(argv)) {
     return "banner";
   }
 
@@ -48,7 +47,7 @@ function classifyInvocation(argv: string[]): InvocationType {
   }
 
   // Check for version request
-  if (argv.includes("--version") || argv.includes("-V")) {
+  if (argv.includes("--version") || argv.includes("-v")) {
     return "version";
   }
 
@@ -65,11 +64,10 @@ export async function route(version: string): Promise<void> {
   const argv = process.argv;
   const invocationType = classifyInvocation(argv);
 
-  // Handle banner scenarios (exits internally)
+  // Handle bare 'jumbo' command - show banner and exit
   if (invocationType === "banner") {
-    const scenario = detectBannerScenario(argv);
-    await orchestrateBanner(scenario, version);
-    return; // orchestrateBanner calls process.exit
+    await showBanner(version);
+    return; // showBanner calls process.exit
   }
 
   // Create program with categorized help

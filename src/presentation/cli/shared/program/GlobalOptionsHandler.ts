@@ -2,7 +2,7 @@
  * Global Options Handler
  *
  * Attaches global CLI options and configures the Renderer based on user flags.
- * Handles --format, --quiet, --verbose, and --show-banner options.
+ * Handles --format, --quiet, and --verbose options.
  */
 
 import { Command } from "commander";
@@ -17,7 +17,6 @@ import { OutputFormat, VerbosityLevel } from "../rendering/types.js";
  * - --format <format>: Output format (text, json, yaml, ndjson)
  * - --quiet: Minimal output (suppress info messages)
  * - --verbose: Verbose output (show detailed info)
- * - --show-banner: Show the animated elephant banner
  *
  * @param program - Commander program instance
  */
@@ -29,7 +28,6 @@ export function attachGlobalOptions(program: Command): void {
     )
     .option("--quiet", "Minimal output (suppress info messages)")
     .option("--verbose", "Verbose output (show detailed info)")
-    .option("--show-banner", "Show the animated elephant banner")
     .hook("preAction", (thisCommand) => {
       configureRendererFromOptions(thisCommand);
     });
