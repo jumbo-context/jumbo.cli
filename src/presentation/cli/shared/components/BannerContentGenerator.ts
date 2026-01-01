@@ -59,7 +59,7 @@ function generateWelcomeContent(): string[] {
 
     "Memory for Coding Agents",
     "",
-    "Stop repeating yourself. Use Jumbo.",
+    "Use Jumbo.",
     "Focus on goals, not context.",
     "",
     "Portable: switch models, tools, or IDEs—context follows.",
