@@ -30,4 +30,5 @@ export interface GoalView {
   readonly architecture?: EmbeddedArchitecture;
   readonly filesToBeCreated?: string[];
   readonly filesToBeChanged?: string[];
+  readonly nextGoalId?: string;
 }

@@ -21,6 +21,7 @@ import { ProjectLimits } from "../../../../../domain/project-knowledge/project/C
 export const metadata: CommandMetadata = {
   description: "Initialize a new Jumbo project with AI assistant hook configuration",
   category: "project-knowledge",
+  topLevelAliases: ["init"],
   options: [
     {
       flags: "--name <name>",
@@ -49,7 +50,8 @@ export const metadata: CommandMetadata = {
       description: "Initialize without prompts using command line options"
     }
   ],
-  related: ["project update"]
+  related: ["project update"],
+  requiresProject: false
 };
 
 /**

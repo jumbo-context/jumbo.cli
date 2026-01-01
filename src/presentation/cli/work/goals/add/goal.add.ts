@@ -29,7 +29,7 @@ import {
  * Command metadata for auto-registration
  */
 export const metadata: CommandMetadata = {
-  description: "Define a new goal with objective, success criteria, and scope",
+  description: "Define a new goal with objective, criteria, and scope",
   category: "work",
   requiredOptions: [],
   options: [
@@ -84,6 +84,14 @@ export const metadata: CommandMetadata = {
     {
       flags: "--files-to-change <files...>",
       description: "Existing files this goal will modify"
+    },
+    {
+      flags: "--next-goal <goalId>",
+      description: "Set the NextGoal property on this new goal (chains to specified goal after completion)"
+    },
+    {
+      flags: "--previous-goal <goalId>",
+      description: "Updates the specified goal's NextGoal to point to this new goal (chains from specified goal)"
     }
   ],
   examples: [
@@ -318,6 +326,8 @@ export async function goalAdd(
     architecture?: string;
     filesToCreate?: string[];
     filesToChange?: string[];
+    nextGoal?: string;
+    previousGoal?: string;
   },
   container: ApplicationContainer
 ) {
@@ -328,8 +338,14 @@ export async function goalAdd(
     if (options.interactive) {
       const inputs = await runInteractiveFlow(container);
 
-      // Create command handler
-      const commandHandler = new AddGoalCommandHandler(container.goalAddedEventStore, container.eventBus);
+      // Create command handler with optional update dependencies for goal chaining
+      const commandHandler = new AddGoalCommandHandler(
+        container.goalAddedEventStore,
+        container.eventBus,
+        options.previousGoal ? container.goalUpdatedEventStore : undefined,
+        options.previousGoal ? container.goalUpdatedEventStore : undefined,
+        options.previousGoal ? container.goalUpdatedProjector : undefined
+      );
 
       // Execute command with collected inputs
       const command: AddGoalCommand = {
@@ -345,6 +361,8 @@ export async function goalAdd(
         architecture: inputs.architecture,
         filesToBeCreated: inputs.filesToCreate.length > 0 ? inputs.filesToCreate : undefined,
         filesToBeChanged: inputs.filesToChange.length > 0 ? inputs.filesToChange : undefined,
+        nextGoalId: options.nextGoal,
+        previousGoalId: options.previousGoal,
       };
 
       const result = await commandHandler.execute(command);
@@ -374,8 +392,14 @@ export async function goalAdd(
       }
     };
 
-    // Create command handler
-    const commandHandler = new AddGoalCommandHandler(container.goalAddedEventStore, container.eventBus);
+    // Create command handler with optional update dependencies for goal chaining
+    const commandHandler = new AddGoalCommandHandler(
+      container.goalAddedEventStore,
+      container.eventBus,
+      options.previousGoal ? container.goalUpdatedEventStore : undefined,
+      options.previousGoal ? container.goalUpdatedEventStore : undefined,
+      options.previousGoal ? container.goalUpdatedProjector : undefined
+    );
 
     // Execute command (handler generates goalId)
     const command: AddGoalCommand = {
@@ -391,6 +415,8 @@ export async function goalAdd(
       architecture: parseJson(options.architecture, "architecture"),
       filesToBeCreated: options.filesToCreate,
       filesToBeChanged: options.filesToChange,
+      nextGoalId: options.nextGoal,
+      previousGoalId: options.previousGoal,
     };
 
     const result = await commandHandler.execute(command);

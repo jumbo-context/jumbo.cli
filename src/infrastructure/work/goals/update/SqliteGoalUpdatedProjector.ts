@@ -70,6 +70,10 @@ export class SqliteGoalUpdatedProjector
       updates.push("filesToBeChanged = ?");
       values.push(JSON.stringify(event.payload.filesToBeChanged));
     }
+    if (event.payload.nextGoalId !== undefined) {
+      updates.push("nextGoalId = ?");
+      values.push(event.payload.nextGoalId);
+    }
 
     // Always update version and updatedAt
     updates.push("version = ?", "updatedAt = ?");
@@ -115,6 +119,7 @@ export class SqliteGoalUpdatedProjector
       architecture: row.architecture ? JSON.parse(row.architecture) : undefined,
       filesToBeCreated: row.filesToBeCreated ? JSON.parse(row.filesToBeCreated) : undefined,
       filesToBeChanged: row.filesToBeChanged ? JSON.parse(row.filesToBeChanged) : undefined,
+      nextGoalId: row.nextGoalId || undefined,
     };
   }
 }

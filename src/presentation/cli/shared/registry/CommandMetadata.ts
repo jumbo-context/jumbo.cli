@@ -66,6 +66,16 @@ export interface CommandMetadata {
 
   /** Hide from main help (for deprecated/experimental commands) */
   hidden?: boolean;
+
+  /** Top-level command aliases (e.g., ["init"] makes "jumbo init" work like "jumbo project init") */
+  topLevelAliases?: string[];
+
+  /**
+   * Whether this command requires an initialized Jumbo project to run.
+   * @default true - Most commands require project context
+   * Set to false for commands like "project init" that bootstrap a new project.
+   */
+  requiresProject?: boolean;
 }
 
 /**

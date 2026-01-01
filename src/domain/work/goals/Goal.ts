@@ -45,6 +45,7 @@ export interface GoalState extends AggregateState {
   architecture?: EmbeddedArchitecture;
   filesToBeCreated?: string[];
   filesToBeChanged?: string[];
+  nextGoalId?: UUID;
 }
 
 export class Goal extends BaseAggregate<GoalState, GoalEvent> {
@@ -87,6 +88,9 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         }
         if (e.payload.filesToBeChanged !== undefined) {
           state.filesToBeChanged = e.payload.filesToBeChanged;
+        }
+        if (e.payload.nextGoalId !== undefined) {
+          state.nextGoalId = e.payload.nextGoalId;
         }
         state.version = e.version;
         break;
@@ -138,6 +142,9 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         }
         if (e.payload.filesToBeChanged !== undefined) {
           state.filesToBeChanged = e.payload.filesToBeChanged;
+        }
+        if (e.payload.nextGoalId !== undefined) {
+          state.nextGoalId = e.payload.nextGoalId;
         }
         state.version = e.version;
         break;
@@ -234,6 +241,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       architecture?: EmbeddedArchitecture;
       filesToBeCreated?: string[];
       filesToBeChanged?: string[];
+      nextGoalId?: UUID;
     }
   ): GoalAddedEvent {
     // State validation: goal can only be defined once (version must be 0)
@@ -266,6 +274,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         ...(embeddedContext?.architecture && { architecture: embeddedContext.architecture }),
         ...(embeddedContext?.filesToBeCreated && { filesToBeCreated: embeddedContext.filesToBeCreated }),
         ...(embeddedContext?.filesToBeChanged && { filesToBeChanged: embeddedContext.filesToBeChanged }),
+        ...(embeddedContext?.nextGoalId && { nextGoalId: embeddedContext.nextGoalId }),
       },
       Goal.apply
     ) as GoalAddedEvent;
@@ -321,6 +330,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       architecture?: EmbeddedArchitecture;
       filesToBeCreated?: string[];
       filesToBeChanged?: string[];
+      nextGoalId?: UUID;
     }
   ): GoalUpdatedEvent {
     // 1. State validation - cannot update completed goals
@@ -336,7 +346,8 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       embeddedContext.relevantComponents !== undefined ||
       embeddedContext.architecture !== undefined ||
       embeddedContext.filesToBeCreated !== undefined ||
-      embeddedContext.filesToBeChanged !== undefined
+      embeddedContext.filesToBeChanged !== undefined ||
+      embeddedContext.nextGoalId !== undefined
     );
 
     // 3. Input validation using rules (validates at least one field and validates provided fields)
@@ -371,6 +382,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         ...(embeddedContext?.architecture && { architecture: embeddedContext.architecture }),
         ...(embeddedContext?.filesToBeCreated && { filesToBeCreated: embeddedContext.filesToBeCreated }),
         ...(embeddedContext?.filesToBeChanged && { filesToBeChanged: embeddedContext.filesToBeChanged }),
+        ...(embeddedContext?.nextGoalId && { nextGoalId: embeddedContext.nextGoalId }),
       },
       Goal.apply
     ) as GoalUpdatedEvent;

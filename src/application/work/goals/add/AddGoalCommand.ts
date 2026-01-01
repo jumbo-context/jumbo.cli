@@ -27,4 +27,7 @@ export interface AddGoalCommand {
   readonly architecture?: EmbeddedArchitecture;
   readonly filesToBeCreated?: string[];
   readonly filesToBeChanged?: string[];
+  // Goal chaining fields
+  readonly nextGoalId?: string;      // Sets NextGoal on this new goal
+  readonly previousGoalId?: string;  // Updates the referenced goal's NextGoal to point to this new goal
 }

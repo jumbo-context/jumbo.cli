@@ -1,4 +1,4 @@
-import { BaseEvent } from "../../../shared/BaseEvent.js";
+import { BaseEvent, UUID } from "../../../shared/BaseEvent.js";
 import { GoalStatusType } from "../Constants.js";
 import {
   EmbeddedInvariant,
@@ -30,5 +30,6 @@ export interface GoalAddedEvent extends BaseEvent {
     readonly architecture?: EmbeddedArchitecture;
     readonly filesToBeCreated?: string[];
     readonly filesToBeChanged?: string[];
+    readonly nextGoalId?: UUID;
   };
 }

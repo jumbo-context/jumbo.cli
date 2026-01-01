@@ -53,6 +53,7 @@ export class SqliteGoalStartedProjector
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       note: row.note || undefined,
+      nextGoalId: row.nextGoalId || undefined,
     };
   }
 }

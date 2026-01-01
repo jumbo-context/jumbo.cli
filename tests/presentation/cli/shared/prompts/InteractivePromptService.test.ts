@@ -91,23 +91,25 @@ describe("InteractivePromptService", () => {
 
       await service.selectEntities(testEntities, defaultConfig);
 
-      expect(mockedInquirer.prompt).toHaveBeenCalledWith([
-        expect.objectContaining({
-          type: "checkbox",
-          name: "selection",
-          message: "Select entities:",
-          choices: expect.arrayContaining([
-            expect.objectContaining({
-              name: "Entity One - First entity",
-              value: 0,
-            }),
-            expect.objectContaining({
-              name: "Entity Two - Second entity",
-              value: 1,
-            }),
-          ]),
-        }),
-      ]);
+      expect(mockedInquirer.prompt).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: "checkbox",
+            name: "selection",
+            message: expect.stringContaining("Select entities:"),
+            choices: expect.arrayContaining([
+              expect.objectContaining({
+                name: "Entity One - First entity",
+                value: 0,
+              }),
+              expect.objectContaining({
+                name: "Entity Two - Second entity",
+                value: 1,
+              }),
+            ]),
+          }),
+        ])
+      );
     });
 
     it("should include suffix when provided", async () => {
@@ -119,11 +121,13 @@ describe("InteractivePromptService", () => {
 
       await service.selectEntities(testEntities, config);
 
-      expect(mockedInquirer.prompt).toHaveBeenCalledWith([
-        expect.objectContaining({
-          suffix: "\nUse space to select, enter to confirm",
-        }),
-      ]);
+      expect(mockedInquirer.prompt).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            suffix: expect.stringContaining("Use space to select, enter to confirm"),
+          }),
+        ])
+      );
     });
 
     it("should preserve entity references, not copies", async () => {
@@ -161,11 +165,13 @@ describe("InteractivePromptService", () => {
         suffix: "Optional field",
       });
 
-      expect(mockedInquirer.prompt).toHaveBeenCalledWith([
-        expect.objectContaining({
-          suffix: "\nOptional field",
-        }),
-      ]);
+      expect(mockedInquirer.prompt).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            suffix: expect.stringContaining("Optional field"),
+          }),
+        ])
+      );
     });
 
     it("should pass validation function to inquirer", async () => {

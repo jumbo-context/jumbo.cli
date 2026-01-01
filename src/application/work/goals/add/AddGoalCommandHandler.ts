@@ -1,19 +1,28 @@
 import { randomUUID } from "crypto";
 import { AddGoalCommand } from "./AddGoalCommand.js";
 import { IGoalAddedEventWriter } from "./IGoalAddedEventWriter.js";
+import { IGoalUpdatedEventWriter } from "../update/IGoalUpdatedEventWriter.js";
+import { IGoalUpdatedEventReader } from "../update/IGoalUpdatedEventReader.js";
+import { IGoalUpdateReader } from "../update/IGoalUpdateReader.js";
 import { IEventBus } from "../../../shared/messaging/IEventBus.js";
 import { Goal } from "../../../../domain/work/goals/Goal.js";
+import { GoalErrorMessages, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
 
 /**
  * Command handler for AddGoalCommand.
  * Orchestrates the creation of a new goal aggregate and event publication.
  *
  * Handler owns ID generation as part of orchestration (Clean Architecture).
+ * Also handles goal chaining via nextGoalId and previousGoalId.
  */
 export class AddGoalCommandHandler {
   constructor(
     private readonly eventWriter: IGoalAddedEventWriter,
-    private readonly eventBus: IEventBus
+    private readonly eventBus: IEventBus,
+    // Optional dependencies for goal chaining (updating previous goal)
+    private readonly updateEventWriter?: IGoalUpdatedEventWriter,
+    private readonly updateEventReader?: IGoalUpdatedEventReader,
+    private readonly goalReader?: IGoalUpdateReader
   ) {}
 
   async execute(command: AddGoalCommand): Promise<{ goalId: string }> {
@@ -24,15 +33,18 @@ export class AddGoalCommandHandler {
     const goal = Goal.create(goalId);
 
     // Build embedded context if any fields are provided
-    const embeddedContext = (
+    const hasEmbeddedContext = (
       command.relevantInvariants ||
       command.relevantGuidelines ||
       command.relevantDependencies ||
       command.relevantComponents ||
       command.architecture ||
       command.filesToBeCreated ||
-      command.filesToBeChanged
-    ) ? {
+      command.filesToBeChanged ||
+      command.nextGoalId
+    );
+
+    const embeddedContext = hasEmbeddedContext ? {
       relevantInvariants: command.relevantInvariants,
       relevantGuidelines: command.relevantGuidelines,
       relevantDependencies: command.relevantDependencies,
@@ -40,6 +52,7 @@ export class AddGoalCommandHandler {
       architecture: command.architecture,
       filesToBeCreated: command.filesToBeCreated,
       filesToBeChanged: command.filesToBeChanged,
+      nextGoalId: command.nextGoalId,
     } : undefined;
 
     // Domain logic produces event
@@ -58,6 +71,51 @@ export class AddGoalCommandHandler {
     // Publish event to bus (projections will update via subscriptions)
     await this.eventBus.publish(event);
 
+    // Handle previousGoalId: update the previous goal's nextGoalId to point to this new goal
+    if (command.previousGoalId) {
+      await this.updatePreviousGoalNextGoalId(command.previousGoalId, goalId);
+    }
+
     return { goalId };
+  }
+
+  /**
+   * Updates the previous goal's nextGoalId to point to the new goal.
+   * This creates a chain: previousGoal -> newGoal
+   */
+  private async updatePreviousGoalNextGoalId(previousGoalId: string, newGoalId: string): Promise<void> {
+    if (!this.updateEventWriter || !this.updateEventReader || !this.goalReader) {
+      throw new Error("Goal chaining dependencies not configured");
+    }
+
+    // Check if previous goal exists
+    const existingGoal = await this.goalReader.findById(previousGoalId);
+    if (!existingGoal) {
+      throw new Error(
+        formatErrorMessage(GoalErrorMessages.NOT_FOUND, {
+          goalId: previousGoalId,
+        })
+      );
+    }
+
+    // Rehydrate the previous goal aggregate from event history
+    const history = await this.updateEventReader.readStream(previousGoalId);
+    const previousGoal = Goal.rehydrate(previousGoalId, history as any);
+
+    // Update the previous goal's nextGoalId
+    const updateEvent = previousGoal.update(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { nextGoalId: newGoalId }
+    );
+
+    // Persist the update event
+    await this.updateEventWriter.append(updateEvent);
+
+    // Publish the update event
+    await this.eventBus.publish(updateEvent);
   }
 }

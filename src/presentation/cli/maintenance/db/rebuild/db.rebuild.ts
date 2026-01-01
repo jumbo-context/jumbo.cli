@@ -17,7 +17,7 @@ import { RebuildDatabaseCommand } from "../../../../../application/maintenance/d
  * Command metadata for auto-registration
  */
 export const metadata: CommandMetadata = {
-  description: "Rebuild database from event store (recovers from corruption)",
+  description: "Rebuild the database from the event store",
   options: [
     {
       flags: "--yes",
@@ -27,11 +27,11 @@ export const metadata: CommandMetadata = {
   examples: [
     {
       command: "jumbo db rebuild",
-      description: "Rebuild database with confirmation prompt",
+      description: "Rebuild the database with confirmation prompt",
     },
     {
       command: "jumbo db rebuild --yes",
-      description: "Rebuild database without confirmation",
+      description: "Rebuild the database without confirmation",
     },
   ],
   related: [],

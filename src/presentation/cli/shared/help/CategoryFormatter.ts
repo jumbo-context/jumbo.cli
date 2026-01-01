@@ -46,18 +46,19 @@ function groupByCategory(commands: RegisteredCommand[]): Map<CommandCategory | "
 }
 
 /**
- * Format a single command line with alignment
+ * Fixed column where descriptions start (0-indexed)
+ * This ensures consistent alignment across all categories
  */
-function formatCommandLine(path: string, description: string, maxPathLength: number): string {
-  const paddedPath = path.padEnd(maxPathLength + 3);
-  return `  ${paddedPath}${description}`;
-}
+const DESCRIPTION_START_COLUMN = 26;
 
 /**
- * Calculate the maximum path length for alignment
+ * Format a single command line with alignment
+ * Descriptions always start at column 26 for consistent alignment
  */
-function getMaxPathLength(commands: RegisteredCommand[]): number {
-  return Math.max(...commands.map(cmd => cmd.path.length));
+function formatCommandLine(path: string, description: string): string {
+  // 2 spaces indent + path padded to fill remaining space before description column
+  const paddedPath = path.padEnd(DESCRIPTION_START_COLUMN - 2);
+  return `  ${paddedPath}${description}`;
 }
 
 /**
@@ -66,9 +67,6 @@ function getMaxPathLength(commands: RegisteredCommand[]): number {
 function formatCategory(category: CommandCategory | "uncategorized", commands: RegisteredCommand[]): string {
   // Sort commands alphabetically by path
   const sorted = [...commands].sort((a, b) => a.path.localeCompare(b.path));
-
-  // Get max path length for alignment
-  const maxPathLength = getMaxPathLength(sorted);
 
   // Build output
   const lines: string[] = [];
@@ -79,7 +77,7 @@ function formatCategory(category: CommandCategory | "uncategorized", commands: R
 
   // Command list
   for (const command of sorted) {
-    lines.push(formatCommandLine(command.path, command.metadata.description, maxPathLength));
+    lines.push(formatCommandLine(command.path, command.metadata.description));
   }
 
   return lines.join("\n");

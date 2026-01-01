@@ -20,6 +20,18 @@ import { YamlFormatter } from "../../../shared/formatting/YamlFormatter.js";
 export class GoalContextFormatter {
   private readonly yamlFormatter: YamlFormatter;
 
+  private static readonly HEADER = `---
+@LLM: Please implement the goal below. All output should fulfill the objective and criteria. Work within scope and the operational boundaries presented.
+You will naturally have interactions with the developer as you work on completing the goal. Heed the user's prompts for changes to the solution 'architecture', 'components', or 'dependencies', or the introduction of new 'guidelines' or 'invariants' and suggest to register them with jumbo when you encounter them in your exchanges. Run the following for registration details:
+- 'jumbo architecture update --help'
+- 'jumbo component --help'
+- 'jumbo decision --help'
+- 'jumbo dependency --help'
+- 'jumbo guideline --help'
+- 'jumbo invariant --help'
+
+---`;
+
   constructor() {
     this.yamlFormatter = new YamlFormatter();
   }
@@ -39,7 +51,7 @@ export class GoalContextFormatter {
       goalId: context.goal.goalId,
       objective: context.goal.objective,
       status: context.goal.status,
-      successCriteria: context.goal.successCriteria,
+      criteria: context.goal.successCriteria,
       scope: {
         in: context.goal.scopeIn,
         out: context.goal.scopeOut,
@@ -82,7 +94,6 @@ export class GoalContextFormatter {
         solution.components = context.components.map((c) => ({
           name: c.name,
           description: c.description,
-          status: c.status,
         }));
       }
 
@@ -98,7 +109,6 @@ export class GoalContextFormatter {
         solution.decisions = context.decisions.map((d) => ({
           title: d.title,
           rationale: d.rationale,
-          status: d.status,
         }));
       }
 
@@ -108,7 +118,7 @@ export class GoalContextFormatter {
     // Category 3: Constraints (only if data exists)
     if (context.invariants.length > 0) {
       inner.invariants = context.invariants.map((inv) => ({
-        category: inv.category,
+        title: inv.category,
         description: inv.description,
       }));
     }
@@ -131,7 +141,42 @@ export class GoalContextFormatter {
       }));
     }
 
-    return this.yamlFormatter.toYaml({ goalContext: inner });
+    const yaml = this.yamlFormatter.toYaml({ goalContext: inner });
+    const yamlWithComments = this.injectLlmComments(yaml);
+
+    return `${GoalContextFormatter.HEADER}\n${yamlWithComments}`;
+  }
+
+  /**
+   * Inject inline @LLM comments into YAML for section guidance
+   */
+  private injectLlmComments(yaml: string): string {
+    const commentMap: Array<{ pattern: RegExp; comment: string }> = [
+      {
+        pattern: /^(  solution:)$/m,
+        comment: "  # @LLM: Below are the contextual details of the solution your outputs must fit into.",
+      },
+      {
+        pattern: /^(    components:)$/m,
+        comment:
+          "  # @LLM: These are the components relevant to this goal, but not necessarily all components comprising the solution.",
+      },
+      {
+        pattern: /^(  invariants:)$/m,
+        comment: "  # @LLM: The following are non-negotiable. Your outputs MUST adhere to each of the following invariants.",
+      },
+      {
+        pattern: /^(  guidelines:)$/m,
+        comment: "  # @LLM: Apply the following guidelines to your output where applicable.",
+      },
+    ];
+
+    let result = yaml;
+    for (const { pattern, comment } of commentMap) {
+      result = result.replace(pattern, `${comment}\n$1`);
+    }
+
+    return result;
   }
 
   /**

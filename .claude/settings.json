@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Run 'jumbo goal update --goal-id <GOAL_ID>'with a note about current progress. Then immediately after compaction run 'jumbo goal start --goal-id <GOAL_ID>', with the goal of the current goal id, to get the required context to complete the goal."
+          }
+        ]
+      }
     ]
   }
 }

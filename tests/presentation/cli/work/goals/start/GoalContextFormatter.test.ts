@@ -65,7 +65,7 @@ describe("GoalContextFormatter", () => {
       expect(result).toContain("goalId: goal_test123");
       expect(result).toContain("objective: Test objective");
       expect(result).toContain("status: doing");
-      expect(result).toContain("successCriteria:");
+      expect(result).toContain("criteria:");
       expect(result).toContain("- Criterion 1");
     });
 
@@ -266,7 +266,7 @@ describe("GoalContextFormatter", () => {
       const result = formatter.format(context);
 
       expect(result).toContain("invariants:");
-      expect(result).toContain("category: Single Responsibility");
+      expect(result).toContain("title: Single Responsibility");
     });
 
     it("should include guidelines when present", () => {

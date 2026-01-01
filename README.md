@@ -1,42 +1,91 @@
+<p style="width:100%; background-color:#F4D078; padding:9px 9px" align="center">
+  This project is in beta. Non-backward compatible changes could be introduced. Please post issues if you discover anything and contributions are welcome.
+</p>
+
 <p align="center">
   <img src="jumbo-logo.svg" alt="Jumbo" width="200">
 </p>
 
-<h1 align="center">Jumbo</h1>
+<h1 align="center">Jumbo - Memory for Coding Agents</h1>
 
 <p align="center">
-  <strong>AI memory like an elephant</strong><br>
-  Augmented context engineering across agents and IDEs
+  Use Jumbo. <br>
+  Focus on goals, not context.
 </p>
 
 <p align="center">
   <a href="#quick-start">Quick Start</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
-  <a href="#faq">FAQ</a>
+  <a href="#faqs">FAQs</a>
 </p>
 
 ---
 
-## The Problem
+## Can we address the elephant in the room?
 
-Coding agents forget everything between sessions. Context is lost, decisions are forgotten, instructions are repeated, and you never build on what you've done before. You waste tokens re-explaining the same things—or worse, hours curating .md files trying to keep the agent producing the same code you would (in 1/10th the time). Switch models or IDEs, and you're back to square one. The joy of building software is lost to the frustration of cleaning up after a messy intern.
+Face it, working with coding agents is not ALL fun.  
+One step back for every two forward is not a productivity boost.  
+It's a hassle.
 
-## The Solution
+Context engineering alleviates the pain, but has you focused on the wrong things.
 
-Jumbo gives your AI agents persistent memory. It captures all the information about your project necessary to keep agents implementing to the standard you define—then surfaces the right information at the right time—trim & concise. Your agents 'remember' what matters.
 
----
+## How does Jumbo help?
 
-## Table of Contents
+Jumbo is a CLI tool that gives your coding agent memory like an... well, <span style="font-size: 1.5rem;">🐘</span>. <br>
+It keeps your agent on track, and you focused on what you want to build.
 
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Initializing a Project](#initializing-a-project)
-- [Usage](#usage)
-- [Dependencies](#dependencies)
-- [FAQ](#faq)
-- [License](#license)
+- **Tracks project details**  
+Important aspects of you project are stored, retrievable, and mutable.  
+<sub>(see below)</sub>
+
+- **Delivers optimized context**  
+Agents receive the context they need to work aligned with YOUR criteria.
+
+- **Portable**  
+Switch models, or move from CLI to IDE, without interruption. Jumbo stays with you project and knows exactly where you left off.
+
+- **Extends context windows**  
+Optimal context delivery lets agents work longer.
+
+- **Automatic**  
+Hooks into your agent session and orchestrates the flow. It just works.
+
+- **Full control**  
+Jumbo's memories are yours. Stay in control and manage your data directly from the terminal.
+
+- **Private**  
+All data stays local. Nothing leaves your machine.
+
+- **Fast**  
+No network calls. No lag. Works instantaneously.  
+
+
+## What's in the trunk?  
+Jumbo models memories as the following aggregates:
+
+- **Project**  
+What you are building and who it's for.
+- **Architecture**  
+Your solution design, structure and patterns applied.
+- **Components**  
+The parts comprising your solution and their roles.
+- **Dependencies**  
+What your project relies on.
+- **Decisions**  
+A history of why you chose what you chose.
+- **Guidelines**  
+The preferences, best practices, and the standards you adhere to.
+- **Invariants**  
+The rules you simply won't compromise on.
+- **Goals**  
+What you're working on—now, next and later.
+- **Sessions**  
+The state of the project.
+- **Context Packets**  
+Optimized context packets delivered to your AI agents.
+
 
 ---
 
@@ -44,7 +93,7 @@ Jumbo gives your AI agents persistent memory. It captures all the information ab
 
 ```bash
 # Install globally
-npm install -g @jumbo/cli
+npm install -g jumbo-cli
 
 # Initialize in your project
 jumbo project init
@@ -54,45 +103,17 @@ That's it. Fire up your coding agent. Work flows. Memories stick. Momentum build
 
 ---
 
-## Installation
-
-**Requirements:** Node.js >= 18.18.0
-
-```bash
-npm install -g @jumbo/cli
-```
-
-Verify installation:
-
-```bash
-jumbo
-```
-
----
-
 ## Initializing a Project
 
-Run `jumbo project init` in your project root. This creates a `.jumbo/` directory with:
+Run `jumbo init` in your project root. This creates a `.jumbo/` directory with:
 
 - **Event store** — Append-only log of all project-knowledge
-- **Projections** — Read-optimized views for fast querying
+- **FSDB** — Read-optimized views for fast querying
 - **Hook configuration** — Integration points for your AI tools
-
-### Init Options
-
-```bash
-jumbo project init
-```
-
-The init wizard walks you through:
-
-1. **Project name** — What you're building. *Orients your agent from the start.*
-2. **Problem statement** — The core problem you're solving. *Keeps decisions aligned.*
-3. **Solution summary** — Your approach in one line. *Prevents scope creep.*
 
 ### Hook Integration
 
-`jumbo project init` automatically configures hooks for popular AI agents. At session start, your agent receives project status—recently completed, active, and planned goals. When you start a goal, a comprehensive context packet is delivered with the details necessary for implementation.
+Hooks for popular AI agents are configured for session start, your agent receives a tiny project status—recently completed, active, and planned goals. When you start a goal, a comprehensive context packet is delivered with the details necessary for your agent to execute the implementation.
 
 ---
 
@@ -139,7 +160,6 @@ jumbo component add --name "AuthService" --description "Handles user authenticat
 ```
 PROJECT
   audience add/remove/update    Manage target audiences
-  audiencePain add/resolve      Track audience pain points
   project init/update           Initialize and configure
   value add/remove/update       Value propositions
 
@@ -176,7 +196,7 @@ Jumbo is built with:
 
 ---
 
-## FAQ
+## FAQs
 
 **How does jumbo integrate with my AI agent?**
 
@@ -188,7 +208,7 @@ Change agents and models at will. `jumbo` just picks up where you left off.
 
 **What coding agents does jumbo work with?**
 
-`jumbo` has been tested with Claude Code CLI, Gemini CLI, and Copilot CLI. More to be verified soon...
+`jumbo` has been battle tested with Claude Code CLI, Gemini CLI, and Copilot CLI. More to be verified soon...
 
 **What IDEs are supported?**
 
@@ -197,6 +217,22 @@ Theoretically, any IDE with an integrated coding agent should work. VS Code runn
 **Where is data stored?**
 
 Locally, in `.jumbo/` within your project. Nothing leaves your machine unless you want it to.
+
+**Can I control what data Jumbo captures?**  
+
+Absolutely. You control how you want your agent to interact with Jumbo. Stay in-the-loop by approving each command, or run with pre-approved Jumbo commands for an automated experience.
+
+**Is Jumbo going to hijack my agent?**  
+
+Not at all. Jumbo prescribes an opinionated workflow that you can always bypass. It works alongside your agent to enhance its capabilities.  
+
+**Why not just use markdown files?**  
+
+Jumbo goes beyond static markdown files. It's an immutable event stream—capturing your entire project history, always current and auditable. You stay in your flow, never repeat yourself—only add new information when you need to. Markdown is a snapshot in time, Jumbo is your project's living memory.
+
+**Is there documentation?**
+It's on it's way...  
+In the meantime, the CLI will guide you in getting started. In addition, the help command <code>jumbo --help</code> provides a comprehensive overview of all available commands and options with examples.
 
 **Can I share context across a team?**
 

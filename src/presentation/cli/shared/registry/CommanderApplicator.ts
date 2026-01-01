@@ -18,9 +18,11 @@ import { ApplicationContainer } from "../../../../infrastructure/composition/boo
 export class CommanderApplicator {
   private parentCommands: Map<string, Command> = new Map();
   private container?: ApplicationContainer;
+  private program?: Command;
 
   apply(program: Command, commands: RegisteredCommand[], container?: ApplicationContainer): void {
     this.container = container;
+    this.program = program;
     const grouped = this.groupByParent(commands);
 
     for (const parent of grouped.keys()) {
@@ -29,6 +31,7 @@ export class CommanderApplicator {
 
     for (const command of commands) {
       this.registerCommand(command);
+      this.registerTopLevelAliases(command);
     }
   }
 
@@ -107,5 +110,63 @@ export class CommanderApplicator {
 
   private formatRelated(related: string[]): string {
     return `Related commands:\n  ${related.map(cmd => `jumbo ${cmd}`).join('\n  ')}\n`;
+  }
+
+  /**
+   * Registers top-level aliases for a command
+   * e.g., "init" as alias for "project init"
+   */
+  private registerTopLevelAliases(registeredCommand: RegisteredCommand): void {
+    const aliases = registeredCommand.metadata.topLevelAliases;
+    if (!aliases?.length || !this.program) return;
+
+    const { parent, subcommand } = extractParts(registeredCommand.path);
+
+    for (const alias of aliases) {
+      const cmd = this.program
+        .command(alias)
+        .description(`${registeredCommand.metadata.description} (alias for "${parent} ${subcommand}")`);
+
+      // Add options (same as original command)
+      registeredCommand.metadata.requiredOptions?.forEach(opt => {
+        if (opt.default !== undefined) {
+          cmd.requiredOption(opt.flags, chalk.gray(opt.description), opt.default as any);
+        } else {
+          cmd.requiredOption(opt.flags, chalk.gray(opt.description));
+        }
+      });
+
+      registeredCommand.metadata.options?.forEach(opt => {
+        if (opt.default !== undefined) {
+          cmd.option(opt.flags, chalk.gray(opt.description), opt.default as any);
+        } else {
+          cmd.option(opt.flags, chalk.gray(opt.description));
+        }
+      });
+
+      // Add examples with alias command name
+      if (registeredCommand.metadata.examples) {
+        const aliasExamples = registeredCommand.metadata.examples.map(ex => ({
+          command: ex.command.replace(`${parent} ${subcommand}`, alias),
+          description: ex.description
+        }));
+        cmd.addHelpText('after', '\n' + this.formatExamples(aliasExamples));
+      }
+
+      if (registeredCommand.metadata.related?.length) {
+        cmd.addHelpText('after', '\n' + this.formatRelated(registeredCommand.metadata.related));
+      }
+
+      // Same action handler
+      cmd.action(async (options) => {
+        try {
+          await registeredCommand.handler(options, this.container);
+        } catch (error) {
+          const renderer = Renderer.getInstance();
+          renderer.error("Command failed", error instanceof Error ? error : String(error));
+          process.exit(1);
+        }
+      });
+    }
   }
 }

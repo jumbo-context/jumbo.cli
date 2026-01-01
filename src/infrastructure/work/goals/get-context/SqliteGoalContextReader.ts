@@ -40,6 +40,7 @@ export class SqliteGoalContextReader implements IGoalContextReader {
       architecture: row.architecture ? JSON.parse(row.architecture) : undefined,
       filesToBeCreated: row.filesToBeCreated ? JSON.parse(row.filesToBeCreated) : undefined,
       filesToBeChanged: row.filesToBeChanged ? JSON.parse(row.filesToBeChanged) : undefined,
+      nextGoalId: row.nextGoalId || undefined,
     };
   }
 }
