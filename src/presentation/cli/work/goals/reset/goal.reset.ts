@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { ResetGoalCommandHandler } from "../../../../../application/work/goals/reset/ResetGoalCommandHandler.js";
 import { ResetGoalCommand } from "../../../../../application/work/goals/reset/ResetGoalCommand.js";

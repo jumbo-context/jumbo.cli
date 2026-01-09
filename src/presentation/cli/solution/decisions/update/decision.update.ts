@@ -1,5 +1,5 @@
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { UpdateDecisionCommandHandler } from "../../../../../application/solution/decisions/update/UpdateDecisionCommandHandler.js";
 import { UpdateDecisionCommand } from "../../../../../application/solution/decisions/update/UpdateDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

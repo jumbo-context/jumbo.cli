@@ -8,7 +8,7 @@
  * for display and queries stores directly via the container.
  */
 
-import { ApplicationContainer } from "../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../composition/bootstrap.js";
 import { GoalStatus } from "../../../../domain/work/goals/Constants.js";
 
 /**

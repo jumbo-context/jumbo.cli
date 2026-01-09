@@ -2,13 +2,21 @@ import { BaseAggregate, AggregateState } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
 import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent } from "./EventIndex.js";
-import { GoalEventType, GoalStatus, GoalStatusType, GoalErrorMessages } from "./Constants.js";
+import { GoalEventType, GoalStatus, GoalStatusType } from "./Constants.js";
 import { OBJECTIVE_RULES } from "./rules/ObjectiveRules.js";
 import { SUCCESS_CRITERIA_RULES } from "./rules/SuccessCriteriaRules.js";
 import { SCOPE_RULES } from "./rules/ScopeRules.js";
 import { UPDATE_RULES } from "./rules/UpdateRules.js";
 import { NOTE_RULES, OPTIONAL_NOTE_RULES } from "./rules/NoteRules.js";
-import { CanBlockRule, CanUnblockRule } from "./rules/StateTransitionRules.js";
+import {
+  CanAddRule,
+  CanStartRule,
+  CanUpdateRule,
+  CanCompleteRule,
+  CanResetRule,
+  CanBlockRule,
+  CanUnblockRule,
+} from "./rules/StateTransitionRules.js";
 import {
   EmbeddedInvariant,
   EmbeddedGuideline,
@@ -245,9 +253,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
     }
   ): GoalAddedEvent {
     // State validation: goal can only be defined once (version must be 0)
-    if (this.state.version > 0) {
-      throw new Error('Goal has already been defined');
-    }
+    ValidationRuleSet.ensure(this.state, [new CanAddRule()]);
 
     // Input validation using rules
     ValidationRuleSet.ensure(objective, OBJECTIVE_RULES);
@@ -288,19 +294,9 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
    * @throws Error if goal is blocked or completed
    */
   start(): GoalStartedEvent {
-    // State validation: check current status
-    if (this.state.status === GoalStatus.DOING) {
-      // Idempotent: already doing is success
-      // Still emit event for consistency
-    }
-
-    if (this.state.status === GoalStatus.BLOCKED) {
-      throw new Error(GoalErrorMessages.CANNOT_START_BLOCKED);
-    }
-
-    if (this.state.status === GoalStatus.COMPLETED) {
-      throw new Error(GoalErrorMessages.CANNOT_START_COMPLETED);
-    }
+    // State validation using rules
+    // Note: CanStartRule allows 'doing' status (idempotent) and 'to-do' status
+    ValidationRuleSet.ensure(this.state, [new CanStartRule()]);
 
     // Create and return event using BaseAggregate.makeEvent
     return this.makeEvent(
@@ -333,10 +329,8 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       nextGoalId?: UUID;
     }
   ): GoalUpdatedEvent {
-    // 1. State validation - cannot update completed goals
-    if (this.state.status === GoalStatus.COMPLETED) {
-      throw new Error(GoalErrorMessages.CANNOT_UPDATE_COMPLETED);
-    }
+    // 1. State validation using rules - cannot update completed goals
+    ValidationRuleSet.ensure(this.state, [new CanUpdateRule()]);
 
     // 2. Check if any update is provided (including embedded context)
     const hasEmbeddedContextUpdate = embeddedContext && (
@@ -451,16 +445,8 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
    * @throws Error if goal is not yet started or already completed
    */
   complete(): GoalCompletedEvent {
-    // State validation - must be in valid state to complete
-    if (this.state.status === GoalStatus.TODO) {
-      throw new Error(GoalErrorMessages.NOT_STARTED);
-    }
-
-    if (this.state.status === GoalStatus.COMPLETED) {
-      throw new Error(GoalErrorMessages.ALREADY_COMPLETED);
-    }
-
-    // No additional input validation needed (no parameters)
+    // State validation using rules
+    ValidationRuleSet.ensure(this.state, [new CanCompleteRule()]);
 
     // Create and return event
     return this.makeEvent(
@@ -480,15 +466,8 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
    * @throws Error if goal is blocked or already in 'to-do' status
    */
   reset(): GoalResetEvent {
-    // State validation - cannot reset blocked goals (preserve blocker context)
-    if (this.state.status === GoalStatus.BLOCKED) {
-      throw new Error(GoalErrorMessages.CANNOT_RESET_BLOCKED);
-    }
-
-    // Idempotent - already in to-do is acceptable
-    if (this.state.status === GoalStatus.TODO) {
-      throw new Error(GoalErrorMessages.ALREADY_TODO);
-    }
+    // State validation using rules
+    ValidationRuleSet.ensure(this.state, [new CanResetRule()]);
 
     // Create and return event
     return this.makeEvent(

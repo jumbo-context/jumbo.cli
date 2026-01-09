@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { AddAudienceCommandHandler } from "../../../../../application/project-knowledge/audiences/add/AddAudienceCommandHandler.js";
 import { AddAudienceCommand } from "../../../../../application/project-knowledge/audiences/add/AddAudienceCommand.js";
 import { AudiencePriorityType } from "../../../../../domain/project-knowledge/audiences/Constants.js";

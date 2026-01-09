@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { UpdateProjectCommandHandler } from "../../../../../application/project-knowledge/project/update/UpdateProjectCommandHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 

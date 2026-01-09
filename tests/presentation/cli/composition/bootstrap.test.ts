@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import fs from "fs-extra";
 import path from "path";
-import { bootstrap, ApplicationContainer } from "../../../src/infrastructure/composition/bootstrap.js";
+import { bootstrap, ApplicationContainer } from "../../../../src/presentation/cli/composition/bootstrap.js";
 
 describe("bootstrap", () => {
   const testRoot = path.join(process.cwd(), ".jumbo-test-bootstrap");
@@ -19,9 +19,14 @@ describe("bootstrap", () => {
   });
 
   afterEach(async () => {
-    // Close database connection properly using RAII dispose
+    // LocalInfrastructureModule handles cleanup via signal handlers in production.
+    // For tests, we need to manually close the db connection since the process doesn't exit.
     if (container) {
-      await container.dbConnectionManager.dispose();
+      const db = container.db;
+      if (db && db.open) {
+        db.pragma("wal_checkpoint(TRUNCATE)");
+        db.close();
+      }
       container = null;
     }
     // Wait for Windows to release file locks on WAL files
@@ -151,6 +156,14 @@ describe("bootstrap", () => {
     expect(container.relationRemovedEventStore).toBeDefined();
     expect(container.relationAddedProjector).toBeDefined();
     expect(container.relationRemovedProjector).toBeDefined();
+  });
+
+  it("should NOT expose dbConnectionManager (lifecycle managed by LocalInfrastructureModule)", () => {
+    container = bootstrap(testRoot);
+
+    // Verify dbConnectionManager is NOT part of the container
+    // This ensures presentation layer cannot call dispose()
+    expect((container as any).dbConnectionManager).toBeUndefined();
   });
 
   it("should register all projection handlers with event bus", async () => {

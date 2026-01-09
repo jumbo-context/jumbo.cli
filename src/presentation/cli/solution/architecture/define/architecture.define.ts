@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { DefineArchitectureCommandHandler } from "../../../../../application/solution/architecture/define/DefineArchitectureCommandHandler.js";
 import { DefineArchitectureCommand } from "../../../../../application/solution/architecture/define/DefineArchitectureCommand.js";
 import { DataStore } from "../../../../../domain/solution/architecture/define/ArchitectureDefinedEvent.js";

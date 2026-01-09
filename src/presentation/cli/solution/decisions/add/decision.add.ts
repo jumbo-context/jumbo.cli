@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { AddDecisionCommandHandler } from "../../../../../application/solution/decisions/add/AddDecisionCommandHandler.js";
 import { AddDecisionCommand } from "../../../../../application/solution/decisions/add/AddDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

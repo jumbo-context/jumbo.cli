@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { StartGoalCommandHandler } from "../../../../../application/work/goals/start/StartGoalCommandHandler.js";
 import { StartGoalCommand } from "../../../../../application/work/goals/start/StartGoalCommand.js";

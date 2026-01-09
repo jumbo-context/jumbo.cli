@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { ReverseDecisionCommandHandler } from "../../../../../application/solution/decisions/reverse/ReverseDecisionCommandHandler.js";
 import { ReverseDecisionCommand } from "../../../../../application/solution/decisions/reverse/ReverseDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

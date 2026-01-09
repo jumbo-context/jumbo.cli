@@ -29,6 +29,7 @@ export type GoalStatusType = typeof GoalStatus[keyof typeof GoalStatus];
 
 // Error messages
 export const GoalErrorMessages = {
+  ALREADY_DEFINED: 'Goal has already been defined',
   OBJECTIVE_REQUIRED: 'Goal objective must be provided',
   OBJECTIVE_TOO_LONG: 'Objective must be less than {max} characters',
   SUCCESS_CRITERIA_REQUIRED: 'At least one success criterion must be provided',

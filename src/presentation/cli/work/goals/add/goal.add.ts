@@ -9,7 +9,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { AddGoalCommandHandler } from "../../../../../application/work/goals/add/AddGoalCommandHandler.js";
 import { AddGoalCommand } from "../../../../../application/work/goals/add/AddGoalCommand.js";

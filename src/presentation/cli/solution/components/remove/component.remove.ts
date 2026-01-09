@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { RemoveComponentCommandHandler } from "../../../../../application/solution/components/remove/RemoveComponentCommandHandler.js";
 import { RemoveComponentCommand } from "../../../../../application/solution/components/remove/RemoveComponentCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

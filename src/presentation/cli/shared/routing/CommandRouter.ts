@@ -10,7 +10,7 @@ import fs from "fs-extra";
 import {
   bootstrap,
   ApplicationContainer,
-} from "../../../../infrastructure/composition/bootstrap.js";
+} from "../../composition/bootstrap.js";
 import { commands } from "../registry/generated-commands.js";
 import { CommanderApplicator } from "../registry/CommanderApplicator.js";
 import { createProgram } from "../program/ProgramFactory.js";
@@ -145,10 +145,8 @@ async function executeCommand(
       error instanceof Error ? error : String(error)
     );
     process.exit(1);
-  } finally {
-    // RAII: Release resources on application exit
-    if (container) {
-      await container.dbConnectionManager.dispose();
-    }
   }
+  // Note: No finally block needed for cleanup.
+  // LocalInfrastructureModule handles resource disposal via process signal handlers.
 }
+

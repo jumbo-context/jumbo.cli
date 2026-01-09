@@ -8,7 +8,7 @@
 
 import inquirer from "inquirer";
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { InitializeProjectCommand } from "../../../../../application/project-knowledge/project/init/InitializeProjectCommand.js";
 import { InitializeProjectCommandHandler } from "../../../../../application/project-knowledge/project/init/InitializeProjectCommandHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

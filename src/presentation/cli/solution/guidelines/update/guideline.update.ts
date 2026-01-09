@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { UpdateGuidelineCommandHandler } from "../../../../../application/solution/guidelines/update/UpdateGuidelineCommandHandler.js";
 import { UpdateGuidelineCommand } from "../../../../../application/solution/guidelines/update/UpdateGuidelineCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

@@ -1,0 +1,254 @@
+/**
+ * Tests for State Transition validation rules
+ */
+
+import {
+  CanAddRule,
+  CanStartRule,
+  CanUpdateRule,
+  CanCompleteRule,
+  CanResetRule,
+  CanBlockRule,
+  CanUnblockRule,
+} from "../../../../../src/domain/work/goals/rules/StateTransitionRules";
+import { GoalState } from "../../../../../src/domain/work/goals/Goal";
+import { GoalStatus } from "../../../../../src/domain/work/goals/Constants";
+
+// Helper to create a minimal GoalState for testing
+function createGoalState(overrides: Partial<GoalState> = {}): GoalState {
+  return {
+    id: "goal_test123",
+    objective: "Test objective",
+    successCriteria: ["Test criterion"],
+    scopeIn: [],
+    scopeOut: [],
+    boundaries: [],
+    status: GoalStatus.TODO,
+    version: 0,
+    ...overrides,
+  };
+}
+
+describe("StateTransitionRules", () => {
+  describe("CanAddRule", () => {
+    it("should pass when version is 0", () => {
+      const rule = new CanAddRule();
+      const state = createGoalState({ version: 0 });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when version is greater than 0", () => {
+      const rule = new CanAddRule();
+      const state = createGoalState({ version: 1 });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Goal has already been defined");
+    });
+  });
+
+  describe("CanStartRule", () => {
+    it("should pass when status is to-do", () => {
+      const rule = new CanStartRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is doing (idempotent)", () => {
+      const rule = new CanStartRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is blocked", () => {
+      const rule = new CanStartRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot start a blocked goal. Unblock it first.");
+    });
+
+    it("should fail when status is completed", () => {
+      const rule = new CanStartRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot start a completed goal.");
+    });
+  });
+
+  describe("CanUpdateRule", () => {
+    it("should pass when status is to-do", () => {
+      const rule = new CanUpdateRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is doing", () => {
+      const rule = new CanUpdateRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is blocked", () => {
+      const rule = new CanUpdateRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is completed", () => {
+      const rule = new CanUpdateRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot update a completed goal");
+    });
+  });
+
+  describe("CanCompleteRule", () => {
+    it("should pass when status is doing", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is blocked", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is to-do", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot complete a goal that has not been started");
+    });
+
+    it("should fail when status is already completed", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Goal is already completed");
+    });
+  });
+
+  describe("CanResetRule", () => {
+    it("should pass when status is doing", () => {
+      const rule = new CanResetRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is completed", () => {
+      const rule = new CanResetRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is blocked", () => {
+      const rule = new CanResetRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot reset a blocked goal. Unblock it first to preserve blocker context.");
+    });
+
+    it("should fail when status is already to-do", () => {
+      const rule = new CanResetRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Goal is already in to-do status");
+    });
+  });
+
+  describe("CanBlockRule", () => {
+    it("should pass when status is to-do", () => {
+      const rule = new CanBlockRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should pass when status is doing", () => {
+      const rule = new CanBlockRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is blocked", () => {
+      const rule = new CanBlockRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toContain("Cannot block goal in blocked status");
+    });
+
+    it("should fail when status is completed", () => {
+      const rule = new CanBlockRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toContain("Cannot block goal in completed status");
+    });
+  });
+
+  describe("CanUnblockRule", () => {
+    it("should pass when status is blocked", () => {
+      const rule = new CanUnblockRule();
+      const state = createGoalState({ status: GoalStatus.BLOCKED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("should fail when status is to-do", () => {
+      const rule = new CanUnblockRule();
+      const state = createGoalState({ status: GoalStatus.TODO });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toContain("Cannot unblock goal in to-do status");
+    });
+
+    it("should fail when status is doing", () => {
+      const rule = new CanUnblockRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toContain("Cannot unblock goal in doing status");
+    });
+
+    it("should fail when status is completed", () => {
+      const rule = new CanUnblockRule();
+      const state = createGoalState({ status: GoalStatus.COMPLETED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors[0]).toContain("Cannot unblock goal in completed status");
+    });
+  });
+});

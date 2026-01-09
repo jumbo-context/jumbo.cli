@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../composition/bootstrap.js";
 import { AddRelationCommandHandler } from "../../../../application/relations/add/AddRelationCommandHandler.js";
 import { AddRelationCommand } from "../../../../application/relations/add/AddRelationCommand.js";
 import { EntityTypeValue, RelationStrengthValue } from "../../../../domain/relations/Constants.js";

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { UnblockGoalCommandHandler } from "../../../../../application/work/goals/unblock/UnblockGoalCommandHandler.js";
 import { UnblockGoalCommand } from "../../../../../application/work/goals/unblock/UnblockGoalCommand.js";

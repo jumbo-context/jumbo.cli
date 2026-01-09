@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { RemoveInvariantCommandHandler } from "../../../../../application/solution/invariants/remove/RemoveInvariantCommandHandler.js";
 import { RemoveInvariantCommand } from "../../../../../application/solution/invariants/remove/RemoveInvariantCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

@@ -3,7 +3,7 @@ import * as path from "path";
 import {
   bootstrap,
   ApplicationContainer,
-} from "../../src/infrastructure/composition/bootstrap.js";
+} from "../../src/presentation/cli/composition/bootstrap.js";
 import { BaseEvent } from "../../src/domain/shared/BaseEvent.js";
 
 describe("Infrastructure Wiring Integration", () => {
@@ -16,8 +16,13 @@ describe("Infrastructure Wiring Integration", () => {
   });
 
   afterEach(async () => {
-    // Close database connection properly using RAII dispose
-    await container.dbConnectionManager.dispose();
+    // LocalInfrastructureModule handles cleanup via signal handlers in production.
+    // For tests, we need to manually close the db connection since the process doesn't exit.
+    const db = container.db;
+    if (db && db.open) {
+      db.pragma("wal_checkpoint(TRUNCATE)");
+      db.close();
+    }
     // Wait for Windows to release file locks on WAL files
     await new Promise((resolve) => setTimeout(resolve, 100));
     await fs.remove(tmpDir);

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { EndSessionCommandHandler } from "../../../../../application/work/sessions/end/EndSessionCommandHandler.js";
 import { EndSessionCommand } from "../../../../../application/work/sessions/end/EndSessionCommand.js";

@@ -3,15 +3,17 @@
  *
  * Rebuilds the materialized views (SQLite database) by replaying all events
  * from the event store. Useful for recovering from database corruption.
+ *
+ * This command delegates to the application layer for the rebuild operation.
+ * All infrastructure concerns (closing connections, deleting files) are
+ * handled by the infrastructure layer via dependency inversion.
  */
 
 import fs from "fs-extra";
 import path from "path";
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer, bootstrap } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
-import { RebuildDatabaseCommandHandler } from "../../../../../application/maintenance/db/rebuild/RebuildDatabaseCommandHandler.js";
-import { RebuildDatabaseCommand } from "../../../../../application/maintenance/db/rebuild/RebuildDatabaseCommand.js";
 
 /**
  * Command metadata for auto-registration
@@ -58,8 +60,6 @@ export async function dbRebuild(options: RebuildOptions, container: ApplicationC
       process.exit(1);
     }
 
-    const dbPath = path.join(jumboRoot, "jumbo.db");
-
     // Confirm destructive operation
     if (!options.yes) {
       renderer.info(
@@ -72,35 +72,9 @@ export async function dbRebuild(options: RebuildOptions, container: ApplicationC
 
     renderer.info("Starting database rebuild...\n");
 
-    // Step 1: Close existing database connection
-    renderer.info("Closing database connection...");
-    await container.dbConnectionManager.dispose();
-
-    // Step 2: Delete the database file
-    renderer.info("Deleting old database...");
-    if (await fs.pathExists(dbPath)) {
-      await fs.remove(dbPath);
-    }
-
-    // Step 3: Reinitialize container (creates new database with migrations)
-    renderer.info("Reinitializing database...");
-    const newContainer = bootstrap(jumboRoot);
-
-    // Step 4: Replay all events
-    renderer.info("Replaying events from event store...\n");
-    const handler = new RebuildDatabaseCommandHandler(
-      newContainer.eventStore,
-      newContainer.eventBus
-    );
-
-    const command: RebuildDatabaseCommand = {
-      skipConfirmation: true,
-    };
-
-    const result = await handler.handle(command);
-
-    // Step 5: Cleanup new container
-    await newContainer.dbConnectionManager.dispose();
+    // Delegate to infrastructure via application layer abstraction
+    // All db lifecycle concerns (close, delete, reinitialize) are handled internally
+    const result = await container.databaseRebuildService.rebuild();
 
     // Success output
     renderer.success("Database rebuilt successfully", {

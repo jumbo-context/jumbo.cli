@@ -7,7 +7,7 @@
 
 import path from "path";
 import fs from "fs-extra";
-import { ApplicationContainer, bootstrap } from "../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer, bootstrap } from "../../composition/bootstrap.js";
 import { GetProjectSummaryQueryHandler } from "../../../../application/project-knowledge/project/query/GetProjectSummaryQueryHandler.js";
 import { GetWorkSummaryQueryHandler } from "../../../../application/work/query/GetWorkSummaryQueryHandler.js";
 import {
@@ -75,17 +75,13 @@ export async function showBanner(version: string): Promise<void> {
     container = bootstrap(jumboRoot);
   }
 
-  try {
-    const displayContext = await gatherDisplayContext(container);
-    const projectName = displayContext.project?.name ?? null;
-    const content = generateBannerContent(displayContext);
+  const displayContext = await gatherDisplayContext(container);
+  const projectName = displayContext.project?.name ?? null;
+  const content = generateBannerContent(displayContext);
 
-    await showAnimatedBanner(content, projectName, version);
-  } finally {
-    if (container) {
-      await container.dbConnectionManager.dispose();
-    }
-  }
+  await showAnimatedBanner(content, projectName, version);
 
+  // No explicit cleanup needed - LocalInfrastructureModule handles
+  // resource disposal via process signal handlers when process.exit fires
   process.exit(0);
 }

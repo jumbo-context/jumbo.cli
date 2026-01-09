@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { ResolveAudiencePainCommandHandler } from "../../../../../application/project-knowledge/audience-pains/resolve/ResolveAudiencePainCommandHandler.js";
 import { ResolveAudiencePainCommand } from "../../../../../application/project-knowledge/audience-pains/resolve/ResolveAudiencePainCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

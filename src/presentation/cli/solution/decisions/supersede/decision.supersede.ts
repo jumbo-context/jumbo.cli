@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { SupersedeDecisionCommandHandler } from "../../../../../application/solution/decisions/supersede/SupersedeDecisionCommandHandler.js";
 import { SupersedeDecisionCommand } from "../../../../../application/solution/decisions/supersede/SupersedeDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

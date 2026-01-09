@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { UpdateValuePropositionCommandHandler } from "../../../../../application/project-knowledge/value-propositions/update/UpdateValuePropositionCommandHandler.js";
 import { UpdateValuePropositionCommand } from "../../../../../application/project-knowledge/value-propositions/update/UpdateValuePropositionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

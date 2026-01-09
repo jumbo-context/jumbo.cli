@@ -15,7 +15,7 @@ import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import fs from "fs-extra";
 import path from "path";
 import Database from "better-sqlite3";
-import { bootstrap, ApplicationContainer } from "../../src/infrastructure/composition/bootstrap.js";
+import { bootstrap, ApplicationContainer } from "../../src/presentation/cli/composition/bootstrap.js";
 import { GetLatestSessionSummaryQueryHandler } from "../../src/application/work/sessions/get-context/GetLatestSessionSummaryQueryHandler.js";
 
 describe("Integration: Session Context Rendering", () => {
@@ -30,9 +30,14 @@ describe("Integration: Session Context Rendering", () => {
   });
 
   afterEach(async () => {
-    // Close database connection properly using RAII dispose
+    // LocalInfrastructureModule handles cleanup via signal handlers in production.
+    // For tests, we need to manually close the db connection since the process doesn't exit.
     if (container) {
-      await container.dbConnectionManager.dispose();
+      const db = container.db;
+      if (db && db.open) {
+        db.pragma("wal_checkpoint(TRUNCATE)");
+        db.close();
+      }
       container = null;
     }
     // Wait for Windows to release file locks on WAL files

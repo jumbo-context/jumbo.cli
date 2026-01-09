@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { UpdateComponentCommandHandler } from "../../../../../application/solution/components/update/UpdateComponentCommandHandler.js";
 import { UpdateComponentCommand } from "../../../../../application/solution/components/update/UpdateComponentCommand.js";
 import { ComponentTypeValue } from "../../../../../domain/solution/components/Constants.js";

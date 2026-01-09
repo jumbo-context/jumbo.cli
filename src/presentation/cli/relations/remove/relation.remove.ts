@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../composition/bootstrap.js";
 import { RemoveRelationCommandHandler } from "../../../../application/relations/remove/RemoveRelationCommandHandler.js";
 import { RemoveRelationCommand } from "../../../../application/relations/remove/RemoveRelationCommand.js";
 import { Renderer } from "../../shared/rendering/Renderer.js";

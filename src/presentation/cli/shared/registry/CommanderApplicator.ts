@@ -10,7 +10,7 @@ import chalk from "chalk";
 import { RegisteredCommand } from "./CommandMetadata.js";
 import { normalizePath, extractParts } from "./PathNormalizer.js";
 import { Renderer } from "../rendering/Renderer.js";
-import { ApplicationContainer } from "../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../composition/bootstrap.js";
 
 /**
  * Applies registered commands to Commander.js

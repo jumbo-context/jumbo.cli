@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { DeprecateComponentCommandHandler } from "../../../../../application/solution/components/deprecate/DeprecateComponentCommandHandler.js";
 import { DeprecateComponentCommand } from "../../../../../application/solution/components/deprecate/DeprecateComponentCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";

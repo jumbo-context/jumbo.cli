@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../../../infrastructure/composition/bootstrap.js";
+import { ApplicationContainer } from "../../../composition/bootstrap.js";
 import { RemoveAudienceCommandHandler } from "../../../../../application/project-knowledge/audiences/remove/RemoveAudienceCommandHandler.js";
 import { RemoveAudienceCommand } from "../../../../../application/project-knowledge/audiences/remove/RemoveAudienceCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
