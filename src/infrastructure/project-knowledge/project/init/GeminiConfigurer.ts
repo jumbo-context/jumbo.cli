@@ -58,12 +58,12 @@ export class GeminiConfigurer {
   }
 
   /**
-   * Ensure Gemini CLI SessionStart hook is configured in .gemini/settings.json
+   * Ensure Gemini CLI hooks are configured in .gemini/settings.json
    */
   private async ensureGeminiSettings(projectRoot: string): Promise<void> {
     try {
-      // Define the SessionStart hook for Jumbo
-      const jumboHook = {
+      // Define all Jumbo hooks for Gemini CLI
+      const jumboHooks = {
         hooks: {
           SessionStart: [
             {
@@ -76,15 +76,38 @@ export class GeminiConfigurer {
               ],
             },
           ],
+          PreCompress: [
+            {
+              matcher: "auto" as const,
+              hooks: [
+                {
+                  type: "prompt" as const,
+                  prompt:
+                    "When you are finished compressing context then run 'jumbo goal resume --goal-id <GOAL_ID>'with the goal of the current goal id, to get the required context to complete the goal.",
+                },
+              ],
+            },
+          ],
+          SessionEnd: [
+            {
+              matcher: "exit" as const,
+              hooks: [
+                {
+                  type: "command" as const,
+                  command: "jumbo session end --focus {focus} --summary {summary}",
+                },
+              ],
+            },
+          ],
         },
       };
 
       // Merge into existing settings (or create new)
-      await SafeGeminiSettingsMerger.mergeSettings(projectRoot, jumboHook);
+      await SafeGeminiSettingsMerger.mergeSettings(projectRoot, jumboHooks);
     } catch (error) {
       // Graceful degradation - log but don't throw
       console.warn(
-        `Warning: Failed to configure Gemini CLI hook: ${error instanceof Error ? error.message : String(error)}`
+        `Warning: Failed to configure Gemini CLI hooks: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }

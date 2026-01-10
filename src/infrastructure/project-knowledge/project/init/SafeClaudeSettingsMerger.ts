@@ -3,21 +3,31 @@ import * as path from "path";
 
 /**
  * Claude Code settings structure
- * Based on: https://code.claude.com/docs/en/hooks
+ * Based on: https://docs.anthropic.com/en/docs/claude-code/hooks
  */
-export interface ClaudeHook {
+export interface ClaudeCommandHook {
   type: "command";
   command: string;
 }
 
-export interface ClaudeSessionStartMatcher {
-  matcher: "startup" | "resume" | "clear" | "compact";
+export interface ClaudePromptHook {
+  type: "prompt";
+  prompt: string;
+}
+
+export type ClaudeHook = ClaudeCommandHook | ClaudePromptHook;
+
+export interface ClaudeHookMatcher {
+  matcher: string;
   hooks: ClaudeHook[];
 }
 
 export interface ClaudeSettings {
   hooks?: {
-    SessionStart?: ClaudeSessionStartMatcher[];
+    SessionStart?: ClaudeHookMatcher[];
+    PreCompact?: ClaudeHookMatcher[];
+    SessionEnd?: ClaudeHookMatcher[];
+    [key: string]: ClaudeHookMatcher[] | undefined;
   };
   permissions?: {
     allow?: string[];
@@ -71,19 +81,22 @@ export class SafeClaudeSettingsMerger {
 
     try {
       // STEP 2: Read existing or use empty object
+      // Be lenient with existing user content - only parse JSON, don't validate structure
+      // User's config may have extensions or typos we shouldn't reject
       let existing: ClaudeSettings = {};
       if (await fs.pathExists(settingsPath)) {
         const content = await fs.readFile(settingsPath, "utf-8");
-        existing = this.parseAndValidate(content);
+        // Handle empty file case - treat as empty config
+        if (content.trim()) {
+          existing = JSON.parse(content);
+        }
       }
 
       // STEP 3: Merge safely
       const merged = this.deepMerge(existing, newSettings);
 
-      // STEP 4: Validate merged config
-      this.validateSettings(merged);
-
-      // STEP 5: Write back with formatting
+      // STEP 4: Write back with formatting
+      // Skip validation - user's config may have extensions or typos we should preserve
       await fs.writeFile(
         settingsPath,
         JSON.stringify(merged, null, 2) + "\n",
@@ -113,19 +126,19 @@ export class SafeClaudeSettingsMerger {
   ): ClaudeSettings {
     const result: ClaudeSettings = { ...existing };
 
-    // Merge hooks
+    // Merge hooks - handle all event types generically
     if (newSettings.hooks) {
       result.hooks = result.hooks ?? {};
 
-      // Merge SessionStart hooks
-      if (newSettings.hooks.SessionStart) {
-        const existingSessionStart = existing.hooks?.SessionStart ?? [];
-        const newSessionStart = newSettings.hooks.SessionStart;
-
-        result.hooks.SessionStart = this.mergeSessionStartHooks(
-          existingSessionStart,
-          newSessionStart
-        );
+      for (const eventType of Object.keys(newSettings.hooks)) {
+        const newHooks = newSettings.hooks[eventType];
+        if (newHooks) {
+          const existingHooks = existing.hooks?.[eventType] ?? [];
+          result.hooks[eventType] = this.mergeHookMatchers(
+            existingHooks,
+            newHooks
+          );
+        }
       }
     }
 
@@ -159,12 +172,12 @@ export class SafeClaudeSettingsMerger {
   }
 
   /**
-   * Merges SessionStart hook arrays, deduplicating by command
+   * Merges hook matcher arrays, deduplicating by hook content
    */
-  private static mergeSessionStartHooks(
-    existing: ClaudeSessionStartMatcher[],
-    additions: ClaudeSessionStartMatcher[]
-  ): ClaudeSessionStartMatcher[] {
+  private static mergeHookMatchers(
+    existing: ClaudeHookMatcher[],
+    additions: ClaudeHookMatcher[]
+  ): ClaudeHookMatcher[] {
     const merged = [...existing];
 
     for (const newMatcher of additions) {
@@ -174,18 +187,18 @@ export class SafeClaudeSettingsMerger {
       );
 
       if (existingIndex >= 0) {
-        // Merge hooks within the same matcher, deduplicating by command
+        // Merge hooks within the same matcher, deduplicating by content
         const existingMatcher = merged[existingIndex];
         const hookMap = new Map<string, ClaudeHook>();
 
-        // Add existing hooks
+        // Add existing hooks - key by unique content
         for (const hook of existingMatcher.hooks) {
-          hookMap.set(hook.command, hook);
+          hookMap.set(this.getHookKey(hook), hook);
         }
 
-        // Add new hooks (overwrites if same command)
+        // Add new hooks (overwrites if same key)
         for (const hook of newMatcher.hooks) {
-          hookMap.set(hook.command, hook);
+          hookMap.set(this.getHookKey(hook), hook);
         }
 
         merged[existingIndex] = {
@@ -199,6 +212,23 @@ export class SafeClaudeSettingsMerger {
     }
 
     return merged;
+  }
+
+  /**
+   * Generate a unique key for a hook based on its type and content
+   * Handles malformed hooks gracefully by including all available properties
+   */
+  private static getHookKey(hook: ClaudeHook): string {
+    // Handle malformed hooks that might have mismatched type/content
+    const anyHook = hook as unknown as Record<string, unknown>;
+    if (hook.type === "command" && typeof anyHook.command === "string") {
+      return `command:${anyHook.command}`;
+    } else if (hook.type === "prompt" && typeof anyHook.prompt === "string") {
+      return `prompt:${anyHook.prompt}`;
+    } else {
+      // Fallback for malformed hooks - use JSON serialization for uniqueness
+      return `unknown:${JSON.stringify(hook)}`;
+    }
   }
 
   /**
@@ -231,27 +261,36 @@ export class SafeClaudeSettingsMerger {
         throw new Error("hooks must be an object");
       }
 
-      if (settings.hooks.SessionStart !== undefined) {
-        if (!Array.isArray(settings.hooks.SessionStart)) {
-          throw new Error("hooks.SessionStart must be an array");
+      // Validate all hook event types generically
+      for (const [eventType, matchers] of Object.entries(settings.hooks)) {
+        if (matchers === undefined) continue;
+
+        if (!Array.isArray(matchers)) {
+          throw new Error(`hooks.${eventType} must be an array`);
         }
 
-        for (const matcher of settings.hooks.SessionStart) {
+        for (const matcher of matchers) {
           if (!matcher.matcher || typeof matcher.matcher !== "string") {
-            throw new Error("SessionStart matcher must have a matcher property");
+            throw new Error(`${eventType} matcher must have a matcher property`);
           }
 
           if (!Array.isArray(matcher.hooks)) {
-            throw new Error("SessionStart matcher.hooks must be an array");
+            throw new Error(`${eventType} matcher.hooks must be an array`);
           }
 
           for (const hook of matcher.hooks) {
-            if (hook.type !== "command") {
-              throw new Error("Hook type must be 'command'");
-            }
-
-            if (typeof hook.command !== "string") {
-              throw new Error("Hook command must be a string");
+            if (hook.type === "command") {
+              if (typeof hook.command !== "string") {
+                throw new Error("Hook command must be a string");
+              }
+            } else if (hook.type === "prompt") {
+              if (typeof hook.prompt !== "string") {
+                throw new Error("Hook prompt must be a string");
+              }
+            } else {
+              // Cast to unknown to access type for error message
+              const unknownHook = hook as unknown as { type?: string };
+              throw new Error(`Hook type must be 'command' or 'prompt', got '${unknownHook.type}'`);
             }
           }
         }

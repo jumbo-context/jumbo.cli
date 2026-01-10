@@ -5,19 +5,29 @@ import * as path from "path";
  * Gemini CLI settings structure
  * Based on Gemini CLI hooks configuration
  */
-export interface GeminiHook {
+export interface GeminiCommandHook {
   type: "command";
   command: string;
 }
 
-export interface GeminiSessionStartMatcher {
-  matcher: "startup" | "resume" | "clear" | "compact";
+export interface GeminiPromptHook {
+  type: "prompt";
+  prompt: string;
+}
+
+export type GeminiHook = GeminiCommandHook | GeminiPromptHook;
+
+export interface GeminiHookMatcher {
+  matcher: string;
   hooks: GeminiHook[];
 }
 
 export interface GeminiSettings {
   hooks?: {
-    SessionStart?: GeminiSessionStartMatcher[];
+    SessionStart?: GeminiHookMatcher[];
+    PreCompress?: GeminiHookMatcher[];
+    SessionEnd?: GeminiHookMatcher[];
+    [key: string]: GeminiHookMatcher[] | undefined;
   };
 }
 
@@ -27,7 +37,7 @@ export interface GeminiSettings {
  * Strategy:
  * - Creates backup before modification
  * - Deep merges objects, deduplicates arrays
- * - Validates JSON before and after merge
+ * - Lenient with existing user config (may have extensions or typos)
  * - Rolls back on error
  * - Idempotent (safe to run multiple times)
  *
@@ -47,7 +57,7 @@ export class SafeGeminiSettingsMerger {
    *
    * @param projectRoot - Root directory of the project
    * @param newSettings - Settings to merge in
-   * @throws Error if JSON is malformed or validation fails
+   * @throws Error if JSON is malformed
    */
   static async mergeSettings(
     projectRoot: string,
@@ -66,29 +76,32 @@ export class SafeGeminiSettingsMerger {
 
     try {
       // STEP 2: Read existing or use empty object
+      // Be lenient with existing user content - only parse JSON, don't validate structure
+      // User's config may have extensions or typos we shouldn't reject
       let existing: GeminiSettings = {};
       if (await fs.pathExists(settingsPath)) {
         const content = await fs.readFile(settingsPath, "utf-8");
-        existing = this.parseAndValidate(content);
+        // Handle empty file case - treat as empty config
+        if (content.trim()) {
+          existing = JSON.parse(content);
+        }
       }
 
       // STEP 3: Merge safely
       const merged = this.deepMerge(existing, newSettings);
 
-      // STEP 4: Validate merged config
-      this.validateSettings(merged);
-
-      // STEP 5: Write back with formatting
+      // STEP 4: Write back with formatting
+      // Skip validation - user's config may have extensions or typos we should preserve
       await fs.writeFile(
         settingsPath,
         JSON.stringify(merged, null, 2) + "\n",
         "utf-8"
       );
 
-      // STEP 6: Cleanup backup on success (optional - keep for audit trail)
+      // STEP 5: Cleanup backup on success (optional - keep for audit trail)
       // await fs.remove(backupPath);
     } catch (error) {
-      // STEP 7: Rollback on error
+      // STEP 6: Rollback on error
       if (await fs.pathExists(backupPath)) {
         await fs.copy(backupPath, settingsPath, { overwrite: true });
       }
@@ -108,19 +121,19 @@ export class SafeGeminiSettingsMerger {
   ): GeminiSettings {
     const result: GeminiSettings = { ...existing };
 
-    // Merge hooks
+    // Merge hooks - handle all event types generically
     if (newSettings.hooks) {
       result.hooks = result.hooks ?? {};
 
-      // Merge SessionStart hooks
-      if (newSettings.hooks.SessionStart) {
-        const existingSessionStart = existing.hooks?.SessionStart ?? [];
-        const newSessionStart = newSettings.hooks.SessionStart;
-
-        result.hooks.SessionStart = this.mergeSessionStartHooks(
-          existingSessionStart,
-          newSessionStart
-        );
+      for (const eventType of Object.keys(newSettings.hooks)) {
+        const newHooks = newSettings.hooks[eventType];
+        if (newHooks) {
+          const existingHooks = existing.hooks?.[eventType] ?? [];
+          result.hooks[eventType] = this.mergeHookMatchers(
+            existingHooks,
+            newHooks
+          );
+        }
       }
     }
 
@@ -128,12 +141,12 @@ export class SafeGeminiSettingsMerger {
   }
 
   /**
-   * Merges SessionStart hook arrays, deduplicating by command
+   * Merges hook matcher arrays, deduplicating by hook content
    */
-  private static mergeSessionStartHooks(
-    existing: GeminiSessionStartMatcher[],
-    additions: GeminiSessionStartMatcher[]
-  ): GeminiSessionStartMatcher[] {
+  private static mergeHookMatchers(
+    existing: GeminiHookMatcher[],
+    additions: GeminiHookMatcher[]
+  ): GeminiHookMatcher[] {
     const merged = [...existing];
 
     for (const newMatcher of additions) {
@@ -143,18 +156,18 @@ export class SafeGeminiSettingsMerger {
       );
 
       if (existingIndex >= 0) {
-        // Merge hooks within the same matcher, deduplicating by command
+        // Merge hooks within the same matcher, deduplicating by content
         const existingMatcher = merged[existingIndex];
         const hookMap = new Map<string, GeminiHook>();
 
-        // Add existing hooks
+        // Add existing hooks - key by unique content
         for (const hook of existingMatcher.hooks) {
-          hookMap.set(hook.command, hook);
+          hookMap.set(this.getHookKey(hook), hook);
         }
 
-        // Add new hooks (overwrites if same command)
+        // Add new hooks (overwrites if same key)
         for (const hook of newMatcher.hooks) {
-          hookMap.set(hook.command, hook);
+          hookMap.set(this.getHookKey(hook), hook);
         }
 
         merged[existingIndex] = {
@@ -171,69 +184,19 @@ export class SafeGeminiSettingsMerger {
   }
 
   /**
-   * Parses JSON string and validates structure
+   * Generate a unique key for a hook based on its type and content
+   * Handles malformed hooks gracefully by including all available properties
    */
-  private static parseAndValidate(jsonString: string): GeminiSettings {
-    try {
-      const parsed = JSON.parse(jsonString);
-      this.validateSettings(parsed);
-      return parsed;
-    } catch (error) {
-      throw new Error(
-        `Invalid settings.json: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  }
-
-  /**
-   * Validates settings structure
-   */
-  private static validateSettings(settings: GeminiSettings): void {
-    // Must be an object
-    if (typeof settings !== "object" || settings === null) {
-      throw new Error("Settings must be an object");
-    }
-
-    // Validate hooks structure if present
-    if (settings.hooks !== undefined) {
-      if (typeof settings.hooks !== "object" || settings.hooks === null) {
-        throw new Error("hooks must be an object");
-      }
-
-      if (settings.hooks.SessionStart !== undefined) {
-        if (!Array.isArray(settings.hooks.SessionStart)) {
-          throw new Error("hooks.SessionStart must be an array");
-        }
-
-        for (const matcher of settings.hooks.SessionStart) {
-          if (!matcher.matcher || typeof matcher.matcher !== "string") {
-            throw new Error("SessionStart matcher must have a matcher property");
-          }
-
-          if (!Array.isArray(matcher.hooks)) {
-            throw new Error("SessionStart matcher.hooks must be an array");
-          }
-
-          for (const hook of matcher.hooks) {
-            if (hook.type !== "command") {
-              throw new Error("Hook type must be 'command'");
-            }
-
-            if (typeof hook.command !== "string") {
-              throw new Error("Hook command must be a string");
-            }
-          }
-        }
-      }
-    }
-
-    // Ensure valid JSON serialization
-    try {
-      JSON.stringify(settings);
-    } catch (error) {
-      throw new Error(
-        `Settings cannot be serialized to JSON: ${error instanceof Error ? error.message : String(error)}`
-      );
+  private static getHookKey(hook: GeminiHook): string {
+    // Handle malformed hooks that might have mismatched type/content
+    const anyHook = hook as unknown as Record<string, unknown>;
+    if (hook.type === "command" && typeof anyHook.command === "string") {
+      return `command:${anyHook.command}`;
+    } else if (hook.type === "prompt" && typeof anyHook.prompt === "string") {
+      return `prompt:${anyHook.prompt}`;
+    } else {
+      // Fallback for malformed hooks - use JSON serialization for uniqueness
+      return `unknown:${JSON.stringify(hook)}`;
     }
   }
 }

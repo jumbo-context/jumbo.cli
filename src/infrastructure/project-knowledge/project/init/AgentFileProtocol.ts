@@ -5,9 +5,9 @@
  * Delegates agent-specific logic to dedicated Configurer classes.
  *
  * Extension:
- * To add a new agent, create a *Configurer class (e.g., CursorConfigurer)
- * that implements configure(projectRoot: string): Promise<void>, then add
- * it to the configurers array below. No changes to IAgentFileProtocol needed.
+ * To add a new agent, create a *Configurer class that implements
+ * configure(projectRoot: string): Promise<void>, then add it to the
+ * configurers array below. No changes to IAgentFileProtocol needed.
  *
  * Operations are idempotent and gracefully handle errors to avoid
  * failing project initialization if file writes fail.
@@ -20,14 +20,12 @@ import { AgentInstructions } from "../../../../domain/project-knowledge/project/
 import { ClaudeConfigurer } from "./ClaudeConfigurer.js";
 import { GeminiConfigurer } from "./GeminiConfigurer.js";
 import { CopilotConfigurer } from "./CopilotConfigurer.js";
-import { CursorConfigurer } from "./CursorConfigurer.js";
 
 export class AgentFileProtocol implements IAgentFileProtocol {
   private readonly configurers = [
     new ClaudeConfigurer(),
     new GeminiConfigurer(),
     new CopilotConfigurer(),
-    new CursorConfigurer(),
   ];
 
   /**

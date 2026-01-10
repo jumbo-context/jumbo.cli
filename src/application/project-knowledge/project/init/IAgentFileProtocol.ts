@@ -21,8 +21,8 @@ export interface IAgentFileProtocol {
    *
    * Behavior:
    * - If AGENTS.md doesn't exist: Create it with full content
-   * - If AGENTS.md exists without Jumbo section: Append Jumbo section
-   * - If AGENTS.md exists with Jumbo section: No-op
+   * - If AGENTS.md exists without Jumbo Instructions: Append Jumbo Instructions section
+   * - If AGENTS.md exists with Jumbo Instructions section: No-op
    *
    * @param projectRoot Absolute path to project root directory
    */
