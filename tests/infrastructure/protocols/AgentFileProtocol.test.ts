@@ -31,8 +31,8 @@ describe("AgentFileProtocol", () => {
       expect(exists).toBe(true);
 
       const content = await fs.readFile(agentsMdPath, "utf-8");
-      expect(content).toContain("# AI Agent Instructions");
-      expect(content).toContain("## Jumbo Context Management");
+      expect(content).toContain("# Agents.md");
+      expect(content).toContain("## Instructions for Jumbo");
     });
 
     it("should append Jumbo section if AGENTS.md exists without it", async () => {
@@ -50,7 +50,7 @@ describe("AgentFileProtocol", () => {
       // Assert
       const content = await fs.readFile(agentsMdPath, "utf-8");
       expect(content).toContain("Existing content here.");
-      expect(content).toContain("## Jumbo Context Management");
+      expect(content).toContain("## Instructions for Jumbo");
     });
 
     it("should not duplicate Jumbo section if already present", async () => {
@@ -64,7 +64,7 @@ describe("AgentFileProtocol", () => {
 
       // Assert
       const content = await fs.readFile(agentsMdPath, "utf-8");
-      const occurrences = (content.match(/## Jumbo Context Management/g) || []).length;
+      const occurrences = (content.match(/## Instructions for Jumbo/g) || []).length;
       expect(occurrences).toBe(1);
     });
 
@@ -149,33 +149,6 @@ describe("AgentFileProtocol", () => {
       expect(content).toContain("Jumbo");
     });
 
-    it("should create CURSOR.md with AGENTS.md reference", async () => {
-      // Act
-      await protocol.ensureAgentConfigurations(tmpDir);
-
-      // Assert
-      const cursorMdPath = path.join(tmpDir, "CURSOR.md");
-      const exists = await fs.pathExists(cursorMdPath);
-      expect(exists).toBe(true);
-
-      const content = await fs.readFile(cursorMdPath, "utf-8");
-      expect(content).toContain("AGENTS.md");
-    });
-
-    it("should create .cursor/rules/jumbo/RULE.md with Jumbo instructions", async () => {
-      // Act
-      await protocol.ensureAgentConfigurations(tmpDir);
-
-      // Assert
-      const rulePath = path.join(tmpDir, ".cursor", "rules", "jumbo", "RULE.md");
-      const exists = await fs.pathExists(rulePath);
-      expect(exists).toBe(true);
-
-      const content = await fs.readFile(rulePath, "utf-8");
-      expect(content).toContain("alwaysApply: true");
-      expect(content).toContain("Jumbo");
-    });
-
     it("should append reference if CLAUDE.md exists without it", async () => {
       // Arrange
       const claudeMdPath = path.join(tmpDir, "CLAUDE.md");
@@ -240,16 +213,6 @@ describe("AgentFileProtocol", () => {
       const copilotPath = path.join(tmpDir, ".github", "copilot-instructions.md");
       const copilotExists = await fs.pathExists(copilotPath);
       expect(copilotExists).toBe(true);
-
-      // Assert - CURSOR.md created
-      const cursorMdPath = path.join(tmpDir, "CURSOR.md");
-      const cursorMdExists = await fs.pathExists(cursorMdPath);
-      expect(cursorMdExists).toBe(true);
-
-      // Assert - .cursor/rules/jumbo/RULE.md created
-      const cursorRulePath = path.join(tmpDir, ".cursor", "rules", "jumbo", "RULE.md");
-      const cursorRuleExists = await fs.pathExists(cursorRulePath);
-      expect(cursorRuleExists).toBe(true);
     });
   });
 
@@ -263,7 +226,7 @@ describe("AgentFileProtocol", () => {
       // Assert
       const agentsMdPath = path.join(tmpDir, "AGENTS.md");
       const content = await fs.readFile(agentsMdPath, "utf-8");
-      const occurrences = (content.match(/## Jumbo Context Management/g) || []).length;
+      const occurrences = (content.match(/## Instructions for Jumbo/g) || []).length;
       expect(occurrences).toBe(1);
     });
 
@@ -285,10 +248,12 @@ describe("AgentFileProtocol", () => {
       expect(geminiOccurrences).toBe(1);
 
       // Assert - settings.json not duplicating hooks
+      // ClaudeConfigurer adds 2 SessionStart entries (startup and compact)
       const claudeSettingsPath = path.join(tmpDir, ".claude", "settings.json");
       const claudeSettings = JSON.parse(await fs.readFile(claudeSettingsPath, "utf-8"));
-      expect(claudeSettings.hooks.SessionStart.length).toBe(1);
+      expect(claudeSettings.hooks.SessionStart.length).toBe(2);
       expect(claudeSettings.hooks.SessionStart[0].hooks.length).toBe(1);
+      expect(claudeSettings.hooks.SessionStart[1].hooks.length).toBe(1);
     });
   });
 });

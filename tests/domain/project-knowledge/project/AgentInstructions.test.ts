@@ -11,39 +11,33 @@ describe("AgentInstructions Value Object", () => {
       const content = AgentInstructions.getJumboSection();
 
       // Assert
-      expect(content).toContain("## Jumbo Context Management");
-      expect(content).toContain("**CRITICAL: This project uses Jumbo for AI context management.**");
+      expect(content).toContain("## Instructions for Jumbo");
+      expect(content).toContain("**IMPORTANT: This project uses Jumbo CLI for agent orchestration and context management.**");
       expect(content).toContain("jumbo session start");
       expect(content).toContain("jumbo goal start");
       expect(content).toContain("jumbo component add");
       expect(content).toContain("jumbo decision add");
       expect(content).toContain("jumbo guideline add");
       expect(content).toContain("jumbo invariant add");
-      expect(content).toContain("jumbo relation add");
-      expect(content).toContain("jumbo --help");
-      expect(content).toContain("jumbo capabilities");
     });
 
-    it("should include Working with Jumbo section", () => {
+    it("should include available commands section", () => {
       // Act
       const content = AgentInstructions.getJumboSection();
 
       // Assert
-      expect(content).toContain("### Working with Jumbo");
-      expect(content).toContain("1. **Start each session**");
-      expect(content).toContain("2. **Start a goal**");
-      expect(content).toContain("3. **Capture memories**");
+      expect(content).toContain("### Available Commands");
+      expect(content).toContain("jumbo goal add --help");
+      expect(content).toContain("jumbo session start --help");
     });
 
-    it("should include Philosophy section", () => {
+    it("should include proactive section", () => {
       // Act
       const content = AgentInstructions.getJumboSection();
 
       // Assert
-      expect(content).toContain("### Philosophy");
-      expect(content).toContain("Context determines output quality");
-      expect(content).toContain("Guidance over querying");
-      expect(content).toContain("Proactive capture");
+      expect(content).toContain("### Be Proactive");
+      expect(content).toContain("Be vigilant in identifying insights");
     });
   });
 
@@ -53,9 +47,8 @@ describe("AgentInstructions Value Object", () => {
       const content = AgentInstructions.getFullContent();
 
       // Assert
-      expect(content).toContain("# AI Agent Instructions");
-      expect(content).toContain("This file contains instructions for AI coding agents");
-      expect(content).toContain("## Jumbo Context Management");
+      expect(content).toContain("# Agents.md");
+      expect(content).toContain("## Instructions for Jumbo");
     });
 
     it("should include Jumbo section in full content", () => {
@@ -95,7 +88,7 @@ describe("AgentInstructions Value Object", () => {
       const marker = AgentInstructions.getJumboSectionMarker();
 
       // Assert
-      expect(marker).toBe("## Jumbo Context Management");
+      expect(marker).toBe("## Instructions for Jumbo");
     });
 
     it("should match the marker in getJumboSection()", () => {

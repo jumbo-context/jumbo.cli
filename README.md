@@ -1,7 +1,3 @@
-<p style="width:100%; background-color:#F4D078; padding:9px 9px" align="center">
-  Jumbo is in beta. Non-backward compatible changes could be introduced. Please post issues if you discover anything and contributions are welcome.
-</p>
-
 <p align="center">
   <img src="jumbo-logo.svg" alt="Jumbo" width="200">
 </p>
