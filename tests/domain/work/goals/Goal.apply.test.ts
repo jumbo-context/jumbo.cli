@@ -4,7 +4,7 @@
  */
 
 import { Goal, GoalState } from "../../../../src/domain/work/goals/Goal";
-import { GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent } from "../../../../src/domain/work/goals/EventIndex";
+import { GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent, GoalPausedEvent, GoalResumedEvent } from "../../../../src/domain/work/goals/EventIndex";
 import { GoalEventType, GoalStatus } from "../../../../src/domain/work/goals/Constants";
 
 function createEmptyGoalState(id: string): GoalState {
@@ -279,6 +279,150 @@ describe("Goal", () => {
       expect(state.objective).toBe("Implement authentication");
       expect(state.status).toBe(GoalStatus.DOING);
       expect(state.version).toBe(2);
+    });
+  });
+
+  describe("apply() - GoalPausedEvent", () => {
+    it("should apply GoalPausedEvent event correctly", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: ["AuthController"],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.DOING,
+        version: 2,
+        note: undefined,
+      };
+
+      const event: GoalPausedEvent = {
+        type: GoalEventType.PAUSED,
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.PAUSED,
+          reason: "ContextCompressed",
+          note: "Pausing to compress context",
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.PAUSED);
+      expect(state.note).toBe("Pausing to compress context");
+      expect(state.version).toBe(3);
+      // Other fields should remain unchanged
+      expect(state.objective).toBe("Implement authentication");
+    });
+
+    it("should apply GoalPausedEvent event without note", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.DOING,
+        version: 2,
+        note: undefined,
+      };
+
+      const event: GoalPausedEvent = {
+        type: GoalEventType.PAUSED,
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.PAUSED,
+          reason: "Other",
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.PAUSED);
+      expect(state.note).toBeUndefined();
+      expect(state.version).toBe(3);
+    });
+  });
+
+  describe("apply() - GoalResumedEvent", () => {
+    it("should apply GoalResumedEvent event correctly", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: ["AuthController"],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.PAUSED,
+        version: 3,
+        note: undefined,
+      };
+
+      const event: GoalResumedEvent = {
+        type: GoalEventType.RESUMED,
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.DOING,
+          note: "Ready to continue",
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.DOING);
+      expect(state.note).toBe("Ready to continue");
+      expect(state.version).toBe(4);
+      // Other fields should remain unchanged
+      expect(state.objective).toBe("Implement authentication");
+    });
+
+    it("should apply GoalResumedEvent event without note", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.PAUSED,
+        version: 3,
+        note: undefined,
+      };
+
+      const event: GoalResumedEvent = {
+        type: GoalEventType.RESUMED,
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.DOING,
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.DOING);
+      expect(state.note).toBeUndefined();
+      expect(state.version).toBe(4);
     });
   });
 });

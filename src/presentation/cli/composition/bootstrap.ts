@@ -37,6 +37,8 @@ import { FsGoalStartedEventStore } from "../../../infrastructure/work/goals/star
 import { FsGoalUpdatedEventStore } from "../../../infrastructure/work/goals/update/FsGoalUpdatedEventStore.js";
 import { FsGoalBlockedEventStore } from "../../../infrastructure/work/goals/block/FsGoalBlockedEventStore.js";
 import { FsGoalUnblockedEventStore } from "../../../infrastructure/work/goals/unblock/FsGoalUnblockedEventStore.js";
+import { FsGoalPausedEventStore } from "../../../infrastructure/work/goals/pause/FsGoalPausedEventStore.js";
+import { FsGoalResumedEventStore } from "../../../infrastructure/work/goals/resume/FsGoalResumedEventStore.js";
 import { FsGoalCompletedEventStore } from "../../../infrastructure/work/goals/complete/FsGoalCompletedEventStore.js";
 import { FsGoalResetEventStore } from "../../../infrastructure/work/goals/reset/FsGoalResetEventStore.js";
 import { FsGoalRemovedEventStore } from "../../../infrastructure/work/goals/remove/FsGoalRemovedEventStore.js";
@@ -99,6 +101,8 @@ import { SqliteGoalStartedProjector } from "../../../infrastructure/work/goals/s
 import { SqliteGoalUpdatedProjector } from "../../../infrastructure/work/goals/update/SqliteGoalUpdatedProjector.js";
 import { SqliteGoalBlockedProjector } from "../../../infrastructure/work/goals/block/SqliteGoalBlockedProjector.js";
 import { SqliteGoalUnblockedProjector } from "../../../infrastructure/work/goals/unblock/SqliteGoalUnblockedProjector.js";
+import { SqliteGoalPausedProjector } from "../../../infrastructure/work/goals/pause/SqliteGoalPausedProjector.js";
+import { SqliteGoalResumedProjector } from "../../../infrastructure/work/goals/resume/SqliteGoalResumedProjector.js";
 import { SqliteGoalCompletedProjector } from "../../../infrastructure/work/goals/complete/SqliteGoalCompletedProjector.js";
 import { SqliteGoalResetProjector } from "../../../infrastructure/work/goals/reset/SqliteGoalResetProjector.js";
 import { SqliteGoalRemovedProjector } from "../../../infrastructure/work/goals/remove/SqliteGoalRemovedProjector.js";
@@ -184,6 +188,8 @@ import { GoalStartedEventHandler } from "../../../application/work/goals/start/G
 import { GoalUpdatedEventHandler } from "../../../application/work/goals/update/GoalUpdatedEventHandler.js";
 import { GoalBlockedEventHandler } from "../../../application/work/goals/block/GoalBlockedEventHandler.js";
 import { GoalUnblockedEventHandler } from "../../../application/work/goals/unblock/GoalUnblockedEventHandler.js";
+import { GoalPausedEventHandler } from "../../../application/work/goals/pause/GoalPausedEventHandler.js";
+import { GoalResumedEventHandler } from "../../../application/work/goals/resume/GoalResumedEventHandler.js";
 import { GoalCompletedEventHandler } from "../../../application/work/goals/complete/GoalCompletedEventHandler.js";
 import { GoalResetEventHandler } from "../../../application/work/goals/reset/GoalResetEventHandler.js";
 import { GoalRemovedEventHandler } from "../../../application/work/goals/remove/GoalRemovedEventHandler.js";
@@ -247,6 +253,8 @@ import { IGoalUpdatedProjector } from "../../../application/work/goals/update/IG
 import { IGoalUpdateReader } from "../../../application/work/goals/update/IGoalUpdateReader.js";
 import { IGoalBlockedProjector } from "../../../application/work/goals/block/IGoalBlockedProjector.js";
 import { IGoalUnblockedProjector } from "../../../application/work/goals/unblock/IGoalUnblockedProjector.js";
+import { IGoalPausedProjector } from "../../../application/work/goals/pause/IGoalPausedProjector.js";
+import { IGoalResumedProjector } from "../../../application/work/goals/resume/IGoalResumedProjector.js";
 import { IGoalCompletedProjector } from "../../../application/work/goals/complete/IGoalCompletedProjector.js";
 import { IGoalCompleteReader } from "../../../application/work/goals/complete/IGoalCompleteReader.js";
 import { IGoalResetProjector } from "../../../application/work/goals/reset/IGoalResetProjector.js";
@@ -360,6 +368,10 @@ import { IGoalBlockedEventWriter } from "../../../application/work/goals/block/I
 import { IGoalBlockedEventReader } from "../../../application/work/goals/block/IGoalBlockedEventReader.js";
 import { IGoalUnblockedEventWriter } from "../../../application/work/goals/unblock/IGoalUnblockedEventWriter.js";
 import { IGoalUnblockedEventReader } from "../../../application/work/goals/unblock/IGoalUnblockedEventReader.js";
+import { IGoalPausedEventWriter } from "../../../application/work/goals/pause/IGoalPausedEventWriter.js";
+import { IGoalPausedEventReader } from "../../../application/work/goals/pause/IGoalPausedEventReader.js";
+import { IGoalResumedEventWriter } from "../../../application/work/goals/resume/IGoalResumedEventWriter.js";
+import { IGoalResumedEventReader } from "../../../application/work/goals/resume/IGoalResumedEventReader.js";
 import { IGoalCompletedEventWriter } from "../../../application/work/goals/complete/IGoalCompletedEventWriter.js";
 import { IGoalCompletedEventReader } from "../../../application/work/goals/complete/IGoalCompletedEventReader.js";
 import { IGoalResetEventWriter } from "../../../application/work/goals/reset/IGoalResetEventWriter.js";
@@ -444,6 +456,8 @@ export interface ApplicationContainer {
   goalUpdatedEventStore: IGoalUpdatedEventWriter & IGoalUpdatedEventReader;
   goalBlockedEventStore: IGoalBlockedEventWriter & IGoalBlockedEventReader;
   goalUnblockedEventStore: IGoalUnblockedEventWriter & IGoalUnblockedEventReader;
+  goalPausedEventStore: IGoalPausedEventWriter & IGoalPausedEventReader;
+  goalResumedEventStore: IGoalResumedEventWriter & IGoalResumedEventReader;
   goalCompletedEventStore: IGoalCompletedEventWriter & IGoalCompletedEventReader;
   goalResetEventStore: IGoalResetEventWriter & IGoalResetEventReader;
   goalRemovedEventStore: IGoalRemovedEventWriter & IGoalRemovedEventReader;
@@ -463,6 +477,8 @@ export interface ApplicationContainer {
   goalUpdatedProjector: IGoalUpdatedProjector & IGoalUpdateReader;
   goalBlockedProjector: IGoalBlockedProjector;
   goalUnblockedProjector: IGoalUnblockedProjector;
+  goalPausedProjector: IGoalPausedProjector & IGoalReader;
+  goalResumedProjector: IGoalResumedProjector & IGoalReader;
   goalCompletedProjector: IGoalCompletedProjector & IGoalCompleteReader;
   goalResetProjector: IGoalResetProjector & IGoalResetReader;
   goalRemovedProjector: IGoalRemovedProjector & IGoalRemoveReader;
@@ -645,6 +661,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const goalUpdatedEventStore = new FsGoalUpdatedEventStore(jumboRoot);
   const goalBlockedEventStore = new FsGoalBlockedEventStore(jumboRoot);
   const goalUnblockedEventStore = new FsGoalUnblockedEventStore(jumboRoot);
+  const goalPausedEventStore = new FsGoalPausedEventStore(jumboRoot);
+  const goalResumedEventStore = new FsGoalResumedEventStore(jumboRoot);
   const goalCompletedEventStore = new FsGoalCompletedEventStore(jumboRoot);
   const goalResetEventStore = new FsGoalResetEventStore(jumboRoot);
   const goalRemovedEventStore = new FsGoalRemovedEventStore(jumboRoot);
@@ -718,6 +736,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const goalUpdatedProjector = new SqliteGoalUpdatedProjector(db);
   const goalBlockedProjector = new SqliteGoalBlockedProjector(db);
   const goalUnblockedProjector = new SqliteGoalUnblockedProjector(db);
+  const goalPausedProjector = new SqliteGoalPausedProjector(db);
+  const goalResumedProjector = new SqliteGoalResumedProjector(db);
   const goalCompletedProjector = new SqliteGoalCompletedProjector(db);
   const goalResetProjector = new SqliteGoalResetProjector(db);
   const goalRemovedProjector = new SqliteGoalRemovedProjector(db);
@@ -811,6 +831,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const goalUpdatedEventHandler = new GoalUpdatedEventHandler(goalUpdatedProjector);
   const goalBlockedEventHandler = new GoalBlockedEventHandler(goalBlockedProjector);
   const goalUnblockedEventHandler = new GoalUnblockedEventHandler(goalUnblockedProjector);
+  const goalPausedEventHandler = new GoalPausedEventHandler(goalPausedProjector);
+  const goalResumedEventHandler = new GoalResumedEventHandler(goalResumedProjector);
   const goalCompletedEventHandler = new GoalCompletedEventHandler(goalCompletedProjector);
   const goalResetEventHandler = new GoalResetEventHandler(goalResetProjector);
   const goalRemovedEventHandler = new GoalRemovedEventHandler(goalRemovedProjector);
@@ -882,6 +904,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   eventBus.subscribe("GoalUpdatedEvent", goalUpdatedEventHandler);
   eventBus.subscribe("GoalBlockedEvent", goalBlockedEventHandler);
   eventBus.subscribe("GoalUnblockedEvent", goalUnblockedEventHandler);
+  eventBus.subscribe("GoalPausedEvent", goalPausedEventHandler);
+  eventBus.subscribe("GoalResumedEvent", goalResumedEventHandler);
   eventBus.subscribe("GoalCompletedEvent", goalCompletedEventHandler);
   eventBus.subscribe("GoalResetEvent", goalResetEventHandler);
   eventBus.subscribe("GoalRemovedEvent", goalRemovedEventHandler);
@@ -968,6 +992,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     goalUpdatedEventStore,
     goalBlockedEventStore,
     goalUnblockedEventStore,
+    goalPausedEventStore,
+    goalResumedEventStore,
     goalCompletedEventStore,
     goalResetEventStore,
     goalRemovedEventStore,
@@ -986,6 +1012,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     goalUpdatedProjector,
     goalBlockedProjector,
     goalUnblockedProjector,
+    goalPausedProjector,
+    goalResumedProjector,
     goalCompletedProjector,
     goalResetProjector,
     goalRemovedProjector,

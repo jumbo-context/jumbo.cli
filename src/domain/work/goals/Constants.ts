@@ -10,6 +10,8 @@ export const GoalEventType = {
   UPDATED: 'GoalUpdatedEvent',
   BLOCKED: 'GoalBlockedEvent',
   UNBLOCKED: 'GoalUnblockedEvent',
+  PAUSED: 'GoalPausedEvent',
+  RESUMED: 'GoalResumedEvent',
   COMPLETED: 'GoalCompletedEvent',
   RESET: 'GoalResetEvent',
   REMOVED: 'GoalRemovedEvent'
@@ -22,6 +24,7 @@ export const GoalStatus = {
   TODO: 'to-do',
   DOING: 'doing',
   BLOCKED: 'blocked',
+  PAUSED: 'paused',
   COMPLETED: 'completed'
 } as const;
 
@@ -51,6 +54,8 @@ export const GoalErrorMessages = {
   ALREADY_COMPLETED: 'Goal is already completed',
   CANNOT_RESET_BLOCKED: 'Cannot reset a blocked goal. Unblock it first to preserve blocker context.',
   ALREADY_TODO: 'Goal is already in to-do status',
+  CANNOT_PAUSE_IN_STATUS: 'Cannot pause goal in {status} status. Goal must be in doing status.',
+  CANNOT_RESUME_IN_STATUS: 'Cannot resume goal in {status} status. Goal must be paused.',
   // Embedded context: file path errors
   FILE_PATH_TOO_LONG: 'File path must be less than {max} characters'
 } as const;

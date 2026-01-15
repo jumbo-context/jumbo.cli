@@ -797,4 +797,166 @@ describe("Goal Aggregate", () => {
       expect(snapshot.version).toBe(3);
     });
   });
+
+  describe("pause()", () => {
+    it("should create GoalPausedEvent event from doing status with reason", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act
+      const event = goal.pause("ContextCompressed");
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.PAUSED);
+      expect(event.aggregateId).toBe("goal_123");
+      expect(event.version).toBe(3);
+      expect(event.payload.status).toBe(GoalStatus.PAUSED);
+      expect(event.payload.reason).toBe("ContextCompressed");
+      expect(event.payload.note).toBeUndefined();
+      expect(event.timestamp).toBeDefined();
+    });
+
+    it("should create GoalPausedEvent event with optional note", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act
+      const event = goal.pause("Other", "Need to switch priorities");
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.PAUSED);
+      expect(event.payload.status).toBe(GoalStatus.PAUSED);
+      expect(event.payload.reason).toBe("Other");
+      expect(event.payload.note).toBe("Need to switch priorities");
+      expect(event.version).toBe(3);
+    });
+
+    it("should throw error if goal is not in doing status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+
+      // Act & Assert
+      expect(() => goal.pause("ContextCompressed")).toThrow(
+        "Cannot pause goal in to-do status. Goal must be in doing status."
+      );
+    });
+
+    it("should throw error if goal is already paused", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act & Assert
+      expect(() => goal.pause("Other")).toThrow(
+        "Cannot pause goal in paused status. Goal must be in doing status."
+      );
+    });
+
+    it("should throw error if note is too long", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      const longNote = "a".repeat(501); // Max is 500
+
+      // Act & Assert
+      expect(() => goal.pause("Other", longNote)).toThrow("Note must be less than 500 characters");
+    });
+
+    it("should sanitize empty note to undefined", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act
+      const event = goal.pause("ContextCompressed", "");
+
+      // Assert
+      expect(event.payload.note).toBeUndefined();
+    });
+  });
+
+  describe("resume()", () => {
+    it("should create GoalResumedEvent event from paused status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act
+      const event = goal.resume();
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.RESUMED);
+      expect(event.aggregateId).toBe("goal_123");
+      expect(event.version).toBe(4);
+      expect(event.payload.status).toBe(GoalStatus.DOING);
+      expect(event.payload.note).toBeUndefined();
+      expect(event.timestamp).toBeDefined();
+    });
+
+    it("should create GoalResumedEvent event with optional note", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act
+      const event = goal.resume("Ready to continue");
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.RESUMED);
+      expect(event.payload.status).toBe(GoalStatus.DOING);
+      expect(event.payload.note).toBe("Ready to continue");
+      expect(event.version).toBe(4);
+    });
+
+    it("should throw error if goal is not paused", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act & Assert
+      expect(() => goal.resume()).toThrow(
+        "Cannot resume goal in doing status. Goal must be paused."
+      );
+    });
+
+    it("should throw error if note is too long", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+      const longNote = "a".repeat(501); // Max is 500
+
+      // Act & Assert
+      expect(() => goal.resume(longNote)).toThrow("Note must be less than 500 characters");
+    });
+
+    it("should sanitize empty note to undefined", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act
+      const event = goal.resume("");
+
+      // Assert
+      expect(event.payload.note).toBeUndefined();
+    });
+  });
 });

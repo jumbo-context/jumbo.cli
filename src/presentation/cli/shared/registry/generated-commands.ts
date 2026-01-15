@@ -13,6 +13,7 @@ import { goalAdd, metadata as goalAddMeta } from '../../work/goals/add/goal.add.
 import { goalBlock, metadata as goalBlockMeta } from '../../work/goals/block/goal.block.js';
 import { goalComplete, metadata as goalCompleteMeta } from '../../work/goals/complete/goal.complete.js';
 import { goalsList, metadata as goalsListMeta } from '../../work/goals/list/goals.list.js';
+import { goalPause, metadata as goalPauseMeta } from '../../work/goals/pause/goal.pause.js';
 import { goalRemove, metadata as goalRemoveMeta } from '../../work/goals/remove/goal.remove.js';
 import { goalReset, metadata as goalResetMeta } from '../../work/goals/reset/goal.reset.js';
 import { goalResume, metadata as goalResumeMeta } from '../../work/goals/resume/goal.resume.js';
@@ -88,6 +89,11 @@ export const commands: RegisteredCommand[] = [
     path: 'goals list',
     metadata: goalsListMeta,
     handler: goalsList
+  },
+  {
+    path: 'goal pause',
+    metadata: goalPauseMeta,
+    handler: goalPause
   },
   {
     path: 'goal remove',

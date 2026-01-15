@@ -1,8 +1,9 @@
 import { BaseAggregate, AggregateState } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
-import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent } from "./EventIndex.js";
+import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent } from "./EventIndex.js";
 import { GoalEventType, GoalStatus, GoalStatusType } from "./Constants.js";
+import { GoalPausedReasonsType } from "./GoalPausedReasons.js";
 import { OBJECTIVE_RULES } from "./rules/ObjectiveRules.js";
 import { SUCCESS_CRITERIA_RULES } from "./rules/SuccessCriteriaRules.js";
 import { SCOPE_RULES } from "./rules/ScopeRules.js";
@@ -16,6 +17,8 @@ import {
   CanResetRule,
   CanBlockRule,
   CanUnblockRule,
+  CanPauseRule,
+  CanResumeRule,
 } from "./rules/StateTransitionRules.js";
 import {
   EmbeddedInvariant,
@@ -170,6 +173,22 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         const e = event as GoalUnblockedEvent;
         state.status = e.payload.status;  // 'doing'
         state.note = e.payload.note;       // Optional resolution note
+        state.version = e.version;
+        break;
+      }
+
+      case GoalEventType.PAUSED: {
+        const e = event as GoalPausedEvent;
+        state.status = e.payload.status;  // 'paused'
+        state.note = e.payload.note;       // Optional note about pausing
+        state.version = e.version;
+        break;
+      }
+
+      case GoalEventType.RESUMED: {
+        const e = event as GoalResumedEvent;
+        state.status = e.payload.status;  // 'doing'
+        state.note = e.payload.note;       // Optional note about resuming
         state.version = e.version;
         break;
       }
@@ -495,5 +514,69 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       },
       Goal.apply
     ) as GoalRemovedEvent;
+  }
+
+  /**
+   * Pauses a goal.
+   * Transitions status from "doing" to "paused".
+   *
+   * @param reason - Reason why the goal is being paused
+   * @param note - Optional additional context about the pause
+   * @returns GoalPaused event
+   * @throws Error if goal is not in 'doing' status, or if note is invalid
+   */
+  pause(reason: GoalPausedReasonsType, note?: string): GoalPausedEvent {
+    // 1. State validation: can only pause from doing status
+    ValidationRuleSet.ensure(this.state, [new CanPauseRule()]);
+
+    // 2. Input validation: note is optional but must be valid if provided
+    // Sanitize note (trim whitespace, convert empty string to undefined)
+    const sanitizedNote = note && note.trim() !== '' ? note.trim() : undefined;
+
+    if (sanitizedNote) {
+      ValidationRuleSet.ensure(sanitizedNote, OPTIONAL_NOTE_RULES);
+    }
+
+    // 3. Create and return event using BaseAggregate.makeEvent
+    return this.makeEvent(
+      GoalEventType.PAUSED,
+      {
+        status: GoalStatus.PAUSED,
+        reason,
+        note: sanitizedNote,
+      },
+      Goal.apply
+    ) as GoalPausedEvent;
+  }
+
+  /**
+   * Resumes a paused goal.
+   * Transitions status from "paused" to "doing".
+   *
+   * @param note - Optional note explaining the resumption
+   * @returns GoalResumed event
+   * @throws Error if goal is not paused, or if note is invalid
+   */
+  resume(note?: string): GoalResumedEvent {
+    // 1. State validation: can only resume from paused status
+    ValidationRuleSet.ensure(this.state, [new CanResumeRule()]);
+
+    // 2. Input validation: note is optional but must be valid if provided
+    // Sanitize note (trim whitespace, convert empty string to undefined)
+    const sanitizedNote = note && note.trim() !== '' ? note.trim() : undefined;
+
+    if (sanitizedNote) {
+      ValidationRuleSet.ensure(sanitizedNote, OPTIONAL_NOTE_RULES);
+    }
+
+    // 3. Create and return event using BaseAggregate.makeEvent
+    return this.makeEvent(
+      GoalEventType.RESUMED,
+      {
+        status: GoalStatus.DOING,
+        note: sanitizedNote,
+      },
+      Goal.apply
+    ) as GoalResumedEvent;
   }
 }

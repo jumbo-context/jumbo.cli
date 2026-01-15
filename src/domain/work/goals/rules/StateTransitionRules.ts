@@ -153,3 +153,47 @@ export class CanUnblockRule implements ValidationRule<GoalState> {
     };
   }
 }
+
+/**
+ * Validates that a goal can be paused from its current status.
+ * A goal can only be paused if it's in 'doing' status.
+ * Cannot pause a goal that is not actively being worked on.
+ */
+export class CanPauseRule implements ValidationRule<GoalState> {
+  validate(state: GoalState): ValidationResult {
+    // Can only pause from DOING status
+    const isValid = state.status === GoalStatus.DOING;
+
+    return {
+      isValid,
+      errors: isValid
+        ? []
+        : [formatErrorMessage(
+            GoalErrorMessages.CANNOT_PAUSE_IN_STATUS,
+            { status: state.status }
+          )],
+    };
+  }
+}
+
+/**
+ * Validates that a goal can be resumed from its current status.
+ * A goal can only be resumed if it's in 'paused' status.
+ * Cannot resume a goal that is not paused.
+ */
+export class CanResumeRule implements ValidationRule<GoalState> {
+  validate(state: GoalState): ValidationResult {
+    // Can only resume from PAUSED status
+    const isValid = state.status === GoalStatus.PAUSED;
+
+    return {
+      isValid,
+      errors: isValid
+        ? []
+        : [formatErrorMessage(
+            GoalErrorMessages.CANNOT_RESUME_IN_STATUS,
+            { status: state.status }
+          )],
+    };
+  }
+}
