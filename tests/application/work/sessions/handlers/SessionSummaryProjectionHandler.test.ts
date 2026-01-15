@@ -33,6 +33,9 @@ describe("SessionSummaryProjectionHandler", () => {
       addCompletedGoal: jest.fn(),
       addBlocker: jest.fn(),
       addDecision: jest.fn(),
+      addStartedGoal: jest.fn(),
+      addPausedGoal: jest.fn(),
+      addResumedGoal: jest.fn(),
       findLatest: jest.fn(),
       findByOriginalId: jest.fn(),
     } as any;
@@ -83,6 +86,18 @@ describe("SessionSummaryProjectionHandler", () => {
         expect.any(Object)
       );
       expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        "GoalStartedEvent",
+        expect.any(Object)
+      );
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        "GoalPausedEvent",
+        expect.any(Object)
+      );
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        "GoalResumedEvent",
+        expect.any(Object)
+      );
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
         "DecisionAddedEvent",
         expect.any(Object)
       );
@@ -125,6 +140,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T10:00:00Z",
       });
@@ -180,6 +198,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T10:00:00Z",
       };
@@ -260,6 +281,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T12:00:00Z",
       };
@@ -297,6 +321,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T10:00:00Z",
       };
@@ -338,6 +365,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T10:00:00Z",
       };
@@ -400,6 +430,9 @@ describe("SessionSummaryProjectionHandler", () => {
         completedGoals: [],
         blockersEncountered: [],
         decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
         createdAt: "2025-01-01T10:00:00Z",
         updatedAt: "2025-01-01T10:00:00Z",
       };
@@ -436,6 +469,346 @@ describe("SessionSummaryProjectionHandler", () => {
         title: "Use TypeScript",
         rationale: "Type safety and better tooling",
       });
+    });
+  });
+
+  describe("handleGoalStarted", () => {
+    it("should append enriched goal to goalsStarted when LATEST is active", async () => {
+      const goalStartedEvent = {
+        type: "GoalStartedEvent",
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T10:30:00Z",
+        payload: {
+          status: "doing",
+        },
+      };
+
+      const mockLatest: SessionSummaryProjection = {
+        sessionId: "LATEST",
+        originalSessionId: "session_123",
+        focus: "Test session",
+        status: "active",
+        contextSnapshot: null,
+        completedGoals: [],
+        blockersEncountered: [],
+        decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
+        createdAt: "2025-01-01T10:00:00Z",
+        updatedAt: "2025-01-01T10:00:00Z",
+      };
+
+      const mockGoal: GoalView = {
+        goalId: "goal_123",
+        objective: "Implement feature X",
+        successCriteria: [],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: "doing",
+        version: 1,
+        createdAt: "2025-01-01T09:00:00Z",
+        updatedAt: "2025-01-01T10:30:00Z",
+      };
+
+      mockStore.findLatest.mockResolvedValue(mockLatest);
+      mockGoalReader.findById.mockResolvedValue(mockGoal);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalStartedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalStartedEvent);
+
+      expect(mockStore.addStartedGoal).toHaveBeenCalledWith({
+        goalId: "goal_123",
+        objective: "Implement feature X",
+        startedAt: "2025-01-01T10:30:00Z",
+      });
+    });
+
+    it("should skip when no LATEST exists", async () => {
+      const goalStartedEvent = {
+        type: "GoalStartedEvent",
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T10:30:00Z",
+        payload: {
+          status: "doing",
+        },
+      };
+
+      mockStore.findLatest.mockResolvedValue(null);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalStartedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalStartedEvent);
+
+      expect(mockStore.addStartedGoal).not.toHaveBeenCalled();
+    });
+
+    it("should skip when LATEST is not active", async () => {
+      const goalStartedEvent = {
+        type: "GoalStartedEvent",
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T10:30:00Z",
+        payload: {
+          status: "doing",
+        },
+      };
+
+      const mockLatest: SessionSummaryProjection = {
+        sessionId: "LATEST",
+        originalSessionId: "session_123",
+        focus: "Test session",
+        status: "ended",
+        contextSnapshot: null,
+        completedGoals: [],
+        blockersEncountered: [],
+        decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
+        createdAt: "2025-01-01T10:00:00Z",
+        updatedAt: "2025-01-01T12:00:00Z",
+      };
+
+      mockStore.findLatest.mockResolvedValue(mockLatest);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalStartedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalStartedEvent);
+
+      expect(mockStore.addStartedGoal).not.toHaveBeenCalled();
+    });
+
+    it("should skip when goal not found in projection store", async () => {
+      const goalStartedEvent = {
+        type: "GoalStartedEvent",
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T10:30:00Z",
+        payload: {
+          status: "doing",
+        },
+      };
+
+      const mockLatest: SessionSummaryProjection = {
+        sessionId: "LATEST",
+        originalSessionId: "session_123",
+        focus: "Test session",
+        status: "active",
+        contextSnapshot: null,
+        completedGoals: [],
+        blockersEncountered: [],
+        decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
+        createdAt: "2025-01-01T10:00:00Z",
+        updatedAt: "2025-01-01T10:00:00Z",
+      };
+
+      mockStore.findLatest.mockResolvedValue(mockLatest);
+      mockGoalReader.findById.mockResolvedValue(null);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalStartedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalStartedEvent);
+
+      expect(mockStore.addStartedGoal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleGoalPaused", () => {
+    it("should append enriched goal to goalsPaused when LATEST is active", async () => {
+      const goalPausedEvent = {
+        type: "GoalPausedEvent",
+        aggregateId: "goal_456",
+        version: 1,
+        timestamp: "2025-01-01T11:15:00Z",
+        payload: {
+          status: "paused",
+          reason: "ContextCompressed",
+          note: "Need more information",
+        },
+      };
+
+      const mockLatest: SessionSummaryProjection = {
+        sessionId: "LATEST",
+        originalSessionId: "session_123",
+        focus: "Test session",
+        status: "active",
+        contextSnapshot: null,
+        completedGoals: [],
+        blockersEncountered: [],
+        decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
+        createdAt: "2025-01-01T10:00:00Z",
+        updatedAt: "2025-01-01T10:00:00Z",
+      };
+
+      const mockGoal: GoalView = {
+        goalId: "goal_456",
+        objective: "Research API options",
+        successCriteria: [],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: "paused",
+        version: 1,
+        createdAt: "2025-01-01T09:00:00Z",
+        updatedAt: "2025-01-01T11:15:00Z",
+      };
+
+      mockStore.findLatest.mockResolvedValue(mockLatest);
+      mockGoalReader.findById.mockResolvedValue(mockGoal);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalPausedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalPausedEvent);
+
+      expect(mockStore.addPausedGoal).toHaveBeenCalledWith({
+        goalId: "goal_456",
+        objective: "Research API options",
+        reason: "ContextCompressed",
+        note: "Need more information",
+        pausedAt: "2025-01-01T11:15:00Z",
+      });
+    });
+
+    it("should skip when no LATEST exists", async () => {
+      const goalPausedEvent = {
+        type: "GoalPausedEvent",
+        aggregateId: "goal_456",
+        version: 1,
+        timestamp: "2025-01-01T11:15:00Z",
+        payload: {
+          status: "paused",
+          reason: "ContextCompressed",
+        },
+      };
+
+      mockStore.findLatest.mockResolvedValue(null);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalPausedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalPausedEvent);
+
+      expect(mockStore.addPausedGoal).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("handleGoalResumed", () => {
+    it("should append enriched goal to goalsResumed when LATEST is active", async () => {
+      const goalResumedEvent = {
+        type: "GoalResumedEvent",
+        aggregateId: "goal_789",
+        version: 1,
+        timestamp: "2025-01-01T12:00:00Z",
+        payload: {
+          status: "doing",
+          note: "Got the info needed",
+        },
+      };
+
+      const mockLatest: SessionSummaryProjection = {
+        sessionId: "LATEST",
+        originalSessionId: "session_123",
+        focus: "Test session",
+        status: "active",
+        contextSnapshot: null,
+        completedGoals: [],
+        blockersEncountered: [],
+        decisions: [],
+        goalsStarted: [],
+        goalsPaused: [],
+        goalsResumed: [],
+        createdAt: "2025-01-01T10:00:00Z",
+        updatedAt: "2025-01-01T10:00:00Z",
+      };
+
+      const mockGoal: GoalView = {
+        goalId: "goal_789",
+        objective: "Complete documentation",
+        successCriteria: [],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: "doing",
+        version: 1,
+        createdAt: "2025-01-01T09:00:00Z",
+        updatedAt: "2025-01-01T12:00:00Z",
+      };
+
+      mockStore.findLatest.mockResolvedValue(mockLatest);
+      mockGoalReader.findById.mockResolvedValue(mockGoal);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalResumedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalResumedEvent);
+
+      expect(mockStore.addResumedGoal).toHaveBeenCalledWith({
+        goalId: "goal_789",
+        objective: "Complete documentation",
+        note: "Got the info needed",
+        resumedAt: "2025-01-01T12:00:00Z",
+      });
+    });
+
+    it("should skip when no LATEST exists", async () => {
+      const goalResumedEvent = {
+        type: "GoalResumedEvent",
+        aggregateId: "goal_789",
+        version: 1,
+        timestamp: "2025-01-01T12:00:00Z",
+        payload: {
+          status: "doing",
+        },
+      };
+
+      mockStore.findLatest.mockResolvedValue(null);
+
+      handler.subscribe();
+      const subscribeCall = (mockEventBus.subscribe as jest.Mock).mock.calls.find(
+        (call) => call[0] === "GoalResumedEvent"
+      );
+      const eventHandler = subscribeCall![1] as { handle: (event: any) => Promise<void> };
+
+      await eventHandler.handle(goalResumedEvent);
+
+      expect(mockStore.addResumedGoal).not.toHaveBeenCalled();
     });
   });
 });

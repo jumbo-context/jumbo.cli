@@ -47,12 +47,45 @@ export interface DecisionReference {
 }
 
 /**
+ * Reference to a goal that was started during the session
+ */
+export interface GoalStartedReference {
+  readonly goalId: UUID;
+  readonly objective: string;
+  readonly startedAt: ISO8601;
+}
+
+/**
+ * Reference to a goal that was paused during the session
+ */
+export interface GoalPausedReference {
+  readonly goalId: UUID;
+  readonly objective: string;
+  readonly reason: string;
+  readonly note?: string;
+  readonly pausedAt: ISO8601;
+}
+
+/**
+ * Reference to a goal that was resumed during the session
+ */
+export interface GoalResumedReference {
+  readonly goalId: UUID;
+  readonly objective: string;
+  readonly note?: string;
+  readonly resumedAt: ISO8601;
+}
+
+/**
  * SessionSummaryProjection - Materialized view of session activity
  *
- * This projection answers three key questions at session start:
+ * This projection answers key questions at session start:
  * 1. What was recently worked on? (completedGoals)
  * 2. What was the state of recent work? (blockersEncountered)
  * 3. What decisions were made? (decisions)
+ * 4. What goals were started? (goalsStarted)
+ * 5. What goals were paused? (goalsPaused)
+ * 6. What goals were resumed? (goalsResumed)
  *
  * Note: "What can we work on next?" is answered by querying current
  * goal_views with status='to-do' (not stored here - that's current state)
@@ -100,6 +133,24 @@ export interface SessionSummaryProjection {
    * Historical data - what was decided
    */
   readonly decisions: DecisionReference[];
+
+  /**
+   * Goals started during this session
+   * Historical data - what work was initiated
+   */
+  readonly goalsStarted: GoalStartedReference[];
+
+  /**
+   * Goals paused during this session
+   * Historical data - what work was paused
+   */
+  readonly goalsPaused: GoalPausedReference[];
+
+  /**
+   * Goals resumed during this session
+   * Historical data - what work was resumed
+   */
+  readonly goalsResumed: GoalResumedReference[];
 
   /**
    * Timestamp when session was created

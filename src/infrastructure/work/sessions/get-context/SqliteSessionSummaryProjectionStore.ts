@@ -14,6 +14,9 @@ import {
   GoalReference,
   BlockerReference,
   DecisionReference,
+  GoalStartedReference,
+  GoalPausedReference,
+  GoalResumedReference,
 } from "../../../../application/work/sessions/SessionSummaryView.js";
 
 export class SqliteSessionSummaryProjectionStore
@@ -26,8 +29,9 @@ export class SqliteSessionSummaryProjectionStore
       INSERT OR REPLACE INTO session_summary_views (
         session_id, original_session_id, focus, status, context_snapshot,
         completed_work, blockers_encountered, decisions,
+        goals_started, goals_paused, goals_resumed,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     upsertStatement.run(
@@ -39,6 +43,9 @@ export class SqliteSessionSummaryProjectionStore
       JSON.stringify(summary.completedGoals),
       JSON.stringify(summary.blockersEncountered),
       JSON.stringify(summary.decisions),
+      JSON.stringify(summary.goalsStarted),
+      JSON.stringify(summary.goalsPaused),
+      JSON.stringify(summary.goalsResumed),
       summary.createdAt,
       summary.updatedAt
     );
@@ -57,8 +64,9 @@ export class SqliteSessionSummaryProjectionStore
       INSERT OR IGNORE INTO session_summary_views (
         session_id, original_session_id, focus, status, context_snapshot,
         completed_work, blockers_encountered, decisions,
+        goals_started, goals_paused, goals_resumed,
         created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     insertStatement.run(
@@ -70,6 +78,9 @@ export class SqliteSessionSummaryProjectionStore
       JSON.stringify(latestSessionSummary.completedGoals),
       JSON.stringify(latestSessionSummary.blockersEncountered),
       JSON.stringify(latestSessionSummary.decisions),
+      JSON.stringify(latestSessionSummary.goalsStarted),
+      JSON.stringify(latestSessionSummary.goalsPaused),
+      JSON.stringify(latestSessionSummary.goalsResumed),
       latestSessionSummary.createdAt,
       latestSessionSummary.updatedAt
     );
@@ -177,6 +188,81 @@ export class SqliteSessionSummaryProjectionStore
     );
   }
 
+  async addStartedGoal(goalReference: GoalStartedReference): Promise<void> {
+    const latestSessionSummary = await this.findLatest();
+    if (!latestSessionSummary) {
+      // No LATEST session exists - skip
+      return;
+    }
+
+    // Append to goalsStarted array
+    const updatedGoalsStarted = [
+      ...latestSessionSummary.goalsStarted,
+      goalReference,
+    ];
+
+    const updateStatement = this.db.prepare(`
+      UPDATE session_summary_views
+      SET goals_started = ?, updated_at = ?
+      WHERE session_id = 'LATEST'
+    `);
+
+    updateStatement.run(
+      JSON.stringify(updatedGoalsStarted),
+      new Date().toISOString()
+    );
+  }
+
+  async addPausedGoal(goalReference: GoalPausedReference): Promise<void> {
+    const latestSessionSummary = await this.findLatest();
+    if (!latestSessionSummary) {
+      // No LATEST session exists - skip
+      return;
+    }
+
+    // Append to goalsPaused array
+    const updatedGoalsPaused = [
+      ...latestSessionSummary.goalsPaused,
+      goalReference,
+    ];
+
+    const updateStatement = this.db.prepare(`
+      UPDATE session_summary_views
+      SET goals_paused = ?, updated_at = ?
+      WHERE session_id = 'LATEST'
+    `);
+
+    updateStatement.run(
+      JSON.stringify(updatedGoalsPaused),
+      new Date().toISOString()
+    );
+  }
+
+  async addResumedGoal(goalReference: GoalResumedReference): Promise<void> {
+    const latestSessionSummary = await this.findLatest();
+    if (!latestSessionSummary) {
+      // No LATEST session exists - skip
+      return;
+    }
+
+    // Append to goalsResumed array
+    const updatedGoalsResumed = [
+      ...latestSessionSummary.goalsResumed,
+      goalReference,
+    ];
+
+    const updateStatement = this.db.prepare(`
+      UPDATE session_summary_views
+      SET goals_resumed = ?, updated_at = ?
+      WHERE session_id = 'LATEST'
+    `);
+
+    updateStatement.run(
+      JSON.stringify(updatedGoalsResumed),
+      new Date().toISOString()
+    );
+  }
+
   async findLatest(): Promise<SessionSummaryProjection | null> {
     // O(1) point-read via primary key
     const selectStatement = this.db.prepare(`
@@ -222,6 +308,9 @@ export class SqliteSessionSummaryProjectionStore
       completedGoals: JSON.parse(row.completed_work || "[]"),
       blockersEncountered: JSON.parse(row.blockers_encountered || "[]"),
       decisions: JSON.parse(row.decisions || "[]"),
+      goalsStarted: JSON.parse(row.goals_started || "[]"),
+      goalsPaused: JSON.parse(row.goals_paused || "[]"),
+      goalsResumed: JSON.parse(row.goals_resumed || "[]"),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

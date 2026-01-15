@@ -40,6 +40,9 @@ export class SqliteSessionSummaryReader implements ISessionSummaryReader {
       completedGoals: JSON.parse(row.completed_work || "[]"),
       blockersEncountered: JSON.parse(row.blockers_encountered || "[]"),
       decisions: JSON.parse(row.decisions || "[]"),
+      goalsStarted: JSON.parse(row.goals_started || "[]"),
+      goalsPaused: JSON.parse(row.goals_paused || "[]"),
+      goalsResumed: JSON.parse(row.goals_resumed || "[]"),
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
