@@ -8,6 +8,9 @@ import { SessionPausedEvent } from "../../../../domain/work/sessions/pause/Sessi
 import { SessionResumedEvent } from "../../../../domain/work/sessions/resume/SessionResumedEvent.js";
 import { GoalCompletedEvent } from "../../../../domain/work/goals/complete/GoalCompletedEvent.js";
 import { GoalBlockedEvent } from "../../../../domain/work/goals/block/GoalBlockedEvent.js";
+import { GoalStartedEvent } from "../../../../domain/work/goals/start/GoalStartedEvent.js";
+import { GoalPausedEvent } from "../../../../domain/work/goals/pause/GoalPausedEvent.js";
+import { GoalResumedEvent } from "../../../../domain/work/goals/resume/GoalResumedEvent.js";
 import { DecisionAddedEvent } from "../../../../domain/solution/decisions/add/DecisionAddedEvent.js";
 import { BaseEvent } from "../../../../domain/shared/BaseEvent.js";
 
@@ -20,7 +23,7 @@ import { BaseEvent } from "../../../../domain/shared/BaseEvent.js";
  *
  * Subscriptions:
  * - Session events: SessionStarted, SessionEnded, SessionPaused, SessionResumed
- * - Goal events: GoalCompletedEvent, GoalBlockedEvent
+ * - Goal events: GoalCompleted, GoalBlocked, GoalStarted, GoalPaused, GoalResumed
  * - Decision events: DecisionAdded
  *
  * Event Data Enrichment Pattern:
@@ -72,6 +75,18 @@ export class SessionSummaryProjectionHandler {
       "GoalBlockedEvent",
       { handle: this.handleGoalBlocked.bind(this) }
     );
+    this.eventBus.subscribe(
+      "GoalStartedEvent",
+      { handle: this.handleGoalStarted.bind(this) }
+    );
+    this.eventBus.subscribe(
+      "GoalPausedEvent",
+      { handle: this.handleGoalPaused.bind(this) }
+    );
+    this.eventBus.subscribe(
+      "GoalResumedEvent",
+      { handle: this.handleGoalResumed.bind(this) }
+    );
 
     // Decision events (cross-aggregate)
     this.eventBus.subscribe(
@@ -103,6 +118,9 @@ export class SessionSummaryProjectionHandler {
       completedGoals: [],
       blockersEncountered: [],
       decisions: [],
+      goalsStarted: [],
+      goalsPaused: [],
+      goalsResumed: [],
       createdAt: sessionStartedEvent.timestamp,
       updatedAt: sessionStartedEvent.timestamp,
     });
@@ -252,6 +270,111 @@ export class SessionSummaryProjectionHandler {
       decisionId: decisionAddedEvent.aggregateId,
       title: decision.title,
       rationale: decision.rationale || "",
+    });
+  }
+
+  /**
+   * GoalStartedEvent → Append to LATEST goalsStarted
+   *
+   * Data Enrichment:
+   * - Event only contains goalId
+   * - Query goal projection store to get objective
+   * - Append enriched reference to session summary
+   */
+  private async handleGoalStarted(event: BaseEvent): Promise<void> {
+    const goalStartedEvent = event as GoalStartedEvent;
+
+    // Defensive check: Only update if LATEST exists and is active
+    const latestSessionSummary = await this.store.findLatest();
+    if (!latestSessionSummary || latestSessionSummary.status !== "active") {
+      // No active session - skip
+      return;
+    }
+
+    // Enrich event data by querying goal projection for objective
+    const goal = await this.goalReader.findById(goalStartedEvent.aggregateId);
+
+    if (!goal) {
+      // Goal not found in projection store - skip gracefully
+      return;
+    }
+
+    // Append enriched goal reference to session summary
+    await this.store.addStartedGoal({
+      goalId: goalStartedEvent.aggregateId,
+      objective: goal.objective,
+      startedAt: goalStartedEvent.timestamp,
+    });
+  }
+
+  /**
+   * GoalPausedEvent → Append to LATEST goalsPaused
+   *
+   * Data Enrichment:
+   * - Event contains reason and optional note in payload
+   * - Query goal projection store to get objective
+   * - Append enriched reference to session summary
+   */
+  private async handleGoalPaused(event: BaseEvent): Promise<void> {
+    const goalPausedEvent = event as GoalPausedEvent;
+
+    // Defensive check: Only update if LATEST exists and is active
+    const latestSessionSummary = await this.store.findLatest();
+    if (!latestSessionSummary || latestSessionSummary.status !== "active") {
+      // No active session - skip
+      return;
+    }
+
+    // Enrich event data by querying goal projection for objective
+    const goal = await this.goalReader.findById(goalPausedEvent.aggregateId);
+
+    if (!goal) {
+      // Goal not found - skip gracefully
+      return;
+    }
+
+    // Append enriched paused goal reference to session summary
+    await this.store.addPausedGoal({
+      goalId: goalPausedEvent.aggregateId,
+      objective: goal.objective,
+      reason: goalPausedEvent.payload.reason,
+      note: goalPausedEvent.payload.note,
+      pausedAt: goalPausedEvent.timestamp,
+    });
+  }
+
+  /**
+   * GoalResumedEvent → Append to LATEST goalsResumed
+   *
+   * Data Enrichment:
+   * - Event contains optional note in payload
+   * - Query goal projection store to get objective
+   * - Append enriched reference to session summary
+   */
+  private async handleGoalResumed(event: BaseEvent): Promise<void> {
+    const goalResumedEvent = event as GoalResumedEvent;
+
+    // Defensive check: Only update if LATEST exists and is active
+    const latestSessionSummary = await this.store.findLatest();
+    if (!latestSessionSummary || latestSessionSummary.status !== "active") {
+      // No active session - skip
+      return;
+    }
+
+    // Enrich event data by querying goal projection for objective
+    const goal = await this.goalReader.findById(goalResumedEvent.aggregateId);
+
+    if (!goal) {
+      // Goal not found - skip gracefully
+      return;
+    }
+
+    // Append enriched resumed goal reference to session summary
+    await this.store.addResumedGoal({
+      goalId: goalResumedEvent.aggregateId,
+      objective: goal.objective,
+      note: goalResumedEvent.payload.note,
+      resumedAt: goalResumedEvent.timestamp,
     });
   }
 }

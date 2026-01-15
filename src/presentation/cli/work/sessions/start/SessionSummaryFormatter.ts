@@ -1,4 +1,9 @@
-import { SessionSummaryProjection } from "../../../../../application/work/sessions/SessionSummaryView.js";
+import {
+  SessionSummaryProjection,
+  GoalStartedReference,
+  GoalPausedReference,
+  GoalResumedReference,
+} from "../../../../../application/work/sessions/SessionSummaryView.js";
 import { YamlFormatter } from "../../../shared/formatting/YamlFormatter.js";
 
 /**
@@ -62,6 +67,43 @@ export class SessionSummaryFormatter {
       }));
     }
 
+    if (summary.goalsStarted.length > 0) {
+      contextData.sessionContext.goalsStarted = summary.goalsStarted.map((g) => ({
+        goalId: g.goalId,
+        objective: g.objective,
+        startedAt: g.startedAt,
+      }));
+    }
+
+    if (summary.goalsPaused.length > 0) {
+      contextData.sessionContext.goalsPaused = summary.goalsPaused.map((g) => {
+        const pausedGoal: any = {
+          goalId: g.goalId,
+          objective: g.objective,
+          reason: g.reason,
+          pausedAt: g.pausedAt,
+        };
+        if (g.note) {
+          pausedGoal.note = g.note;
+        }
+        return pausedGoal;
+      });
+    }
+
+    if (summary.goalsResumed.length > 0) {
+      contextData.sessionContext.goalsResumed = summary.goalsResumed.map((g) => {
+        const resumedGoal: any = {
+          goalId: g.goalId,
+          objective: g.objective,
+          resumedAt: g.resumedAt,
+        };
+        if (g.note) {
+          resumedGoal.note = g.note;
+        }
+        return resumedGoal;
+      });
+    }
+
     if (summary.blockersEncountered.length > 0) {
       contextData.sessionContext.blockersEncountered = summary.blockersEncountered.map((b) => ({
         goalId: b.goalId,
@@ -77,7 +119,15 @@ export class SessionSummaryFormatter {
       }));
     }
 
-    return this.yamlFormatter.toYaml(contextData);
+    let output = this.yamlFormatter.toYaml(contextData);
+
+    // Add explicit LLM prompt for paused goals with resume instructions
+    if (summary.goalsPaused.length > 0) {
+      output += "\n\n@LLM: Goals were paused in this session. To resume a paused goal, run:\n";
+      output += "  jumbo goal resume --goal-id <goal-id>";
+    }
+
+    return output;
   }
 
   /**

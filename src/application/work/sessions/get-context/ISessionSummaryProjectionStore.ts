@@ -3,6 +3,9 @@ import {
   GoalReference,
   BlockerReference,
   DecisionReference,
+  GoalStartedReference,
+  GoalPausedReference,
+  GoalResumedReference,
 } from "../SessionSummaryView.js";
 
 /**
@@ -66,6 +69,33 @@ export interface ISessionSummaryProjectionStore {
    * @param decision - Reference to decision with title and rationale
    */
   addDecision(decision: DecisionReference): Promise<void>;
+
+  /**
+   * Append a started goal to LATEST
+   *
+   * Called when GoalStartedEvent event fires.
+   *
+   * @param goalReference - Reference to started goal
+   */
+  addStartedGoal(goalReference: GoalStartedReference): Promise<void>;
+
+  /**
+   * Append a paused goal to LATEST
+   *
+   * Called when GoalPausedEvent event fires.
+   *
+   * @param goalReference - Reference to paused goal
+   */
+  addPausedGoal(goalReference: GoalPausedReference): Promise<void>;
+
+  /**
+   * Append a resumed goal to LATEST
+   *
+   * Called when GoalResumedEvent event fires.
+   *
+   * @param goalReference - Reference to resumed goal
+   */
+  addResumedGoal(goalReference: GoalResumedReference): Promise<void>;
 
   /**
    * Get the LATEST session summary (point-read, O(1) performance)
