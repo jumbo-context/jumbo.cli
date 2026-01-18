@@ -9,9 +9,9 @@
  */
 
 import { route } from "./presentation/cli/shared/routing/CommandRouter.js";
-import { BuildTimeCliMetadataReader } from "./infrastructure/cli-metadata/query/BuildTimeCliMetadataReader.js";
+import { getCliVersionReader } from "./presentation/cli/composition/bootstrap.js";
 
-const cliMetadataReader = new BuildTimeCliMetadataReader();
-const cliVersion = cliMetadataReader.getMetadata().version;
+const versionReader = getCliVersionReader();
+const cliVersion = versionReader.getVersion().version;
 
 route(cliVersion);

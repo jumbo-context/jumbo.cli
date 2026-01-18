@@ -16,9 +16,9 @@ export class CompleteGoalPromptService {
       "@LLM: Quality Assurance Check",
       "Review your work against the goal criteria below.",
       "REQUIRED ACTIONS:",
-      "  1. Verify each criterion is met",
-      "  2. If any criterion is not met, fix the issue immediately",
-      `  3. Only run 'jumbo goal complete --goal-id ${goalId} --commit' after ALL criteria are satisfied`,
+      "  1. Verify each criterion is met, guideline followed, and invariant upheld",
+      "  2. If any criterion is not met, guideline not followed, or invariant not upheld, then fix the issues immediately",
+      `  3. Only run 'jumbo goal complete --goal-id ${goalId} --commit' after ALL criteria, guidelines, and invariants are satisfied`,
       "",
       "This is a verification loop - you MUST ensure all criteria are met before committing.",
     ];
