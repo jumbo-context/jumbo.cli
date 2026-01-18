@@ -20,7 +20,9 @@
 
 import Database from "better-sqlite3";
 import { LocalInfrastructureModule } from "../../../infrastructure/local/LocalInfrastructureModule.js";
-import { LocalDatabaseRebuildService } from "../../../infrastructure/local/LocalDatabaseRebuildService.js";
+// TEMPORARY: Use sequential rebuild service to avoid race conditions
+// TODO: Swap back to LocalDatabaseRebuildService when Epic/Feature/Task redesign is complete
+import { TemporarySequentialDatabaseRebuildService } from "../../../infrastructure/local/TemporarySequentialDatabaseRebuildService.js";
 import { IEventStore } from "../../../application/shared/persistence/IEventStore.js";
 import { IEventBus } from "../../../application/shared/messaging/IEventBus.js";
 import { IClock } from "../../../application/shared/system/IClock.js";
@@ -630,20 +632,13 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const clock = infrastructureModule.getClock();
   const cliMetadataReader = new BuildTimeCliMetadataReader();
 
-  // Create database rebuild service with reinitialize callback
-  const databaseRebuildService = new LocalDatabaseRebuildService(
+  // Create database rebuild service
+  // TEMPORARY: Uses sequential event bus to avoid race conditions during rebuild
+  // TODO: Swap back to LocalDatabaseRebuildService when Epic/Feature/Task redesign is complete
+  const databaseRebuildService = new TemporarySequentialDatabaseRebuildService(
     jumboRoot,
     db,
-    eventStore,
-    eventBus,
-    () => {
-      // Reinitialize creates a fresh infrastructure module
-      const newModule = new LocalInfrastructureModule(jumboRoot);
-      return {
-        db: newModule.getConnection(),
-        eventBus: newModule.getEventBus(),
-      };
-    }
+    eventStore
   );
 
   // ============================================================
