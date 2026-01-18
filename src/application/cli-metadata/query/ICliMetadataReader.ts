@@ -1,15 +1,15 @@
 /**
- * Port interface for reading CLI metadata.
- * Provides access to build-time metadata about the CLI itself.
+ * Port interface for reading CLI version information.
+ * Provides access to runtime version information about the CLI itself.
  */
 
-export interface CliMetadataView {
+export interface CliVersion {
   version: string;
 }
 
-export interface ICliMetadataReader {
+export interface ICliVersionReader {
   /**
-   * Retrieves the CLI metadata including version.
+   * Retrieves the CLI version at runtime by reading from package.json.
    */
-  getMetadata(): CliMetadataView;
+  getVersion(): CliVersion;
 }

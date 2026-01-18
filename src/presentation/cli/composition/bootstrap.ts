@@ -174,8 +174,8 @@ import { SqliteAudienceContextReader } from "../../../infrastructure/project-kno
 import { SqliteAudiencePainContextReader } from "../../../infrastructure/project-knowledge/audience-pains/query/SqliteAudiencePainContextReader.js";
 // ValueProposition Context Reader
 import { SqliteValuePropositionContextReader } from "../../../infrastructure/project-knowledge/value-propositions/query/SqliteValuePropositionContextReader.js";
-// CLI Metadata Reader
-import { BuildTimeCliMetadataReader } from "../../../infrastructure/cli-metadata/query/BuildTimeCliMetadataReader.js";
+// CLI Version Reader
+import { CliVersionReader } from "../../../infrastructure/cli-metadata/query/CliVersionReader.js";
 // Solution Context Reader
 import { SqliteSolutionContextReader } from "../../../infrastructure/solution/SqliteSolutionContextReader.js";
 
@@ -352,7 +352,7 @@ import { IAgentFileProtocol } from "../../../application/project-knowledge/proje
 import { IAudienceContextReader } from "../../../application/project-knowledge/audiences/query/IAudienceContextReader.js";
 import { IAudiencePainContextReader } from "../../../application/project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
 import { IValuePropositionContextReader } from "../../../application/project-knowledge/value-propositions/query/IValuePropositionContextReader.js";
-import { ICliMetadataReader } from "../../../application/cli-metadata/query/ICliMetadataReader.js";
+import { ICliVersionReader } from "../../../application/cli-metadata/query/ICliMetadataReader.js";
 // Solution Context
 import { ISolutionContextReader } from "../../../application/solution/ISolutionContextReader.js";
 import { UnprimedBrownfieldQualifier } from "../../../application/solution/UnprimedBrownfieldQualifier.js";
@@ -449,8 +449,8 @@ export interface ApplicationContainer {
   // Maintenance Services
   databaseRebuildService: IDatabaseRebuildService;
 
-  // CLI Metadata
-  cliMetadataReader: ICliMetadataReader;
+  // CLI Version
+  cliVersionReader: ICliVersionReader;
 
   // Work Category - Session Event Stores - decomposed by use case
   sessionStartedEventStore: ISessionStartedEventWriter;
@@ -637,7 +637,7 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
   const eventStore = infrastructureModule.getEventStore();
   const eventBus = infrastructureModule.getEventBus();
   const clock = infrastructureModule.getClock();
-  const cliMetadataReader = new BuildTimeCliMetadataReader();
+  const cliVersionReader = new CliVersionReader();
 
   // Create database rebuild service
   // TEMPORARY: Uses sequential event bus to avoid race conditions during rebuild
@@ -1008,8 +1008,8 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     // Maintenance Services
     databaseRebuildService,
 
-    // CLI Metadata
-    cliMetadataReader,
+    // CLI Version
+    cliVersionReader,
 
     // Work Category - Session Event Stores - decomposed by use case
     sessionStartedEventStore,
@@ -1163,4 +1163,23 @@ export function bootstrap(jumboRoot: string): ApplicationContainer {
     relationRemovedProjector,
     relationListReader,
   };
+}
+
+/**
+ * Lightweight version reader provider - Returns ONLY the version reader
+ *
+ * This function provides access to the CLI version without requiring full
+ * bootstrap. Used by the CLI entry point for version display before
+ * full infrastructure initialization.
+ *
+ * Unlike bootstrap(), this function:
+ * - Does NOT require jumboRoot path
+ * - Does NOT initialize infrastructure (database, event store, etc.)
+ * - Creates ONLY the version reader
+ * - Allows lightweight version access for banners and help text
+ *
+ * @returns ICliVersionReader instance for reading CLI version at runtime
+ */
+export function getCliVersionReader(): ICliVersionReader {
+  return new CliVersionReader();
 }
