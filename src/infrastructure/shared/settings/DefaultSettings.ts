@@ -7,6 +7,5 @@ import { Settings } from "../../../application/shared/settings/Settings.js";
 export const DEFAULT_SETTINGS: Settings = {
   qa: {
     defaultTurnLimit: 3,
-    warnAtTurn: 2,
   },
 };

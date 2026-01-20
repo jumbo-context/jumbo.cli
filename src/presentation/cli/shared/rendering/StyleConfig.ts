@@ -12,15 +12,16 @@ import chalk from "chalk";
  */
 export const Colors = {
   // Primary colors
-  primary: chalk.cyan,
+  primary: chalk.rgb(235, 235, 235),
   secondary: chalk.gray,
-  accent: chalk.yellow,
+  accent: chalk.rgb(64, 200, 200),
+  headline: chalk.rgb(240, 192, 64),
 
   // Status colors
-  success: chalk.green,
-  error: chalk.red,
-  warning: chalk.yellow,
-  info: chalk.blue,
+  success: chalk.rgb(64, 200, 64),
+  error: chalk.rgb(229, 64, 64),
+  warning: chalk.rgb(240, 192, 64),
+  info: chalk.rgb(200, 192, 160),
 
   // Text styles
   muted: chalk.gray,
@@ -28,8 +29,8 @@ export const Colors = {
   dim: chalk.dim,
 
   // Special
-  brand: chalk.cyan,
-  highlight: chalk.bgCyan.black,
+  brand: chalk.rgb(64, 200, 200),
+  highlight: chalk.rgb(64, 128, 240),
 } as const;
 
 /**

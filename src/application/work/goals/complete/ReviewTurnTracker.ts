@@ -65,34 +65,4 @@ export class ReviewTurnTracker {
     const remaining = turnLimit - currentTurn;
     return Math.max(0, remaining);
   }
-
-  /**
-   * Get the warn-at-turn threshold from settings.
-   * Returns undefined if not configured.
-   *
-   * @returns Promise<number | undefined> - The warn threshold or undefined
-   */
-  async getWarnAtTurn(): Promise<number | undefined> {
-    const settings = await this.settingsReader.read();
-    return settings.qa.warnAtTurn;
-  }
-
-  /**
-   * Determine if a warning should be shown based on current turn count.
-   *
-   * @param goalId - The goal ID to check
-   * @returns Promise<boolean> - True if warning should be shown
-   */
-  async shouldShowWarning(goalId: string): Promise<boolean> {
-    const warnAtTurn = await this.getWarnAtTurn();
-    if (warnAtTurn === undefined) {
-      return false;
-    }
-
-    const currentTurn = await this.getCurrentTurnCount(goalId);
-    const turnLimit = await this.getTurnLimit();
-
-    // Show warning if current turn equals warn threshold and we haven't reached limit yet
-    return currentTurn === warnAtTurn && currentTurn < turnLimit;
-  }
 }

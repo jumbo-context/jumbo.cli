@@ -1,4 +1,5 @@
 import { GoalView } from "../GoalView.js";
+import { EmbeddedArchitecture } from "../../../../domain/work/goals/EmbeddedContextTypes.js";
 
 /**
  * ComponentContextView - Component information for goal context
@@ -63,7 +64,7 @@ export interface RelationContextView {
  *
  * Represents all context needed when starting a goal:
  * - Category 1: Work (Goal details)
- * - Category 2: Solution (Components, dependencies, decisions)
+ * - Category 2: Solution (Components, dependencies, decisions, architecture)
  * - Category 3: Invariants & Boundaries
  * - Category 4: Execution Guidelines
  * - Category 5: Relations
@@ -78,6 +79,7 @@ export interface GoalContextView {
   readonly components: ComponentContextView[];
   readonly dependencies: DependencyContextView[];
   readonly decisions: DecisionContextView[];
+  readonly architecture?: EmbeddedArchitecture;
 
   // Category 3: Invariants (boundaries already in goal.boundaries)
   readonly invariants: InvariantContextView[];

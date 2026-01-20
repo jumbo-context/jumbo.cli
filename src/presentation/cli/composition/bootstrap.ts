@@ -122,6 +122,7 @@ import { SqliteDecisionListReader } from "../../../infrastructure/solution/decis
 // Architecture Projection Stores - decomposed by use case
 import { SqliteArchitectureDefinedProjector } from "../../../infrastructure/solution/architecture/define/SqliteArchitectureDefinedProjector.js";
 import { SqliteArchitectureUpdatedProjector } from "../../../infrastructure/solution/architecture/update/SqliteArchitectureUpdatedProjector.js";
+import { SqliteArchitectureReader } from "../../../infrastructure/solution/architecture/SqliteArchitectureReader.js";
 // Component Projection Stores - decomposed by use case
 import { SqliteComponentAddedProjector } from "../../../infrastructure/solution/components/add/SqliteComponentAddedProjector.js";
 import { SqliteComponentUpdatedProjector } from "../../../infrastructure/solution/components/update/SqliteComponentUpdatedProjector.js";
@@ -270,7 +271,6 @@ import { IGoalReadForSessionSummary } from "../../../application/work/sessions/g
 // Goal Controllers
 import { CompleteGoalController } from "../../../application/work/goals/complete/CompleteGoalController.js";
 import { CompleteGoalCommandHandler } from "../../../application/work/goals/complete/CompleteGoalCommandHandler.js";
-import { CompleteGoalPromptService } from "../../../application/work/goals/complete/CompleteGoalPromptService.js";
 import { GetGoalContextQueryHandler } from "../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
 import { ReviewTurnTracker } from "../../../application/work/goals/complete/ReviewTurnTracker.js";
 import { IGoalReviewedEventWriter } from "../../../application/work/goals/complete/IGoalReviewedEventWriter.js";
@@ -293,6 +293,7 @@ import { IArchitectureDefinedProjector } from "../../../application/solution/arc
 import { IArchitectureDefineReader } from "../../../application/solution/architecture/define/IArchitectureDefineReader.js";
 import { IArchitectureUpdatedProjector } from "../../../application/solution/architecture/update/IArchitectureUpdatedProjector.js";
 import { IArchitectureUpdateReader } from "../../../application/solution/architecture/update/IArchitectureUpdateReader.js";
+import { IArchitectureReader } from "../../../application/solution/architecture/IArchitectureReader.js";
 import { IComponentAddedProjector } from "../../../application/solution/components/add/IComponentAddedProjector.js";
 import { IComponentAddReader } from "../../../application/solution/components/add/IComponentAddReader.js";
 import { IComponentUpdatedProjector } from "../../../application/solution/components/update/IComponentUpdatedProjector.js";
@@ -536,6 +537,7 @@ export interface ApplicationContainer {
   // Architecture Projection Stores - decomposed by use case
   architectureDefinedProjector: IArchitectureDefinedProjector & IArchitectureDefineReader;
   architectureUpdatedProjector: IArchitectureUpdatedProjector & IArchitectureUpdateReader;
+  architectureReader: IArchitectureReader;
   // Component Projection Stores - decomposed by use case
   componentAddedProjector: IComponentAddedProjector & IComponentAddReader;
   componentUpdatedProjector: IComponentUpdatedProjector & IComponentUpdateReader;
@@ -768,6 +770,7 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
   // Architecture Projection Stores - decomposed by use case
   const architectureDefinedProjector = new SqliteArchitectureDefinedProjector(db);
   const architectureUpdatedProjector = new SqliteArchitectureUpdatedProjector(db);
+  const architectureReader = new SqliteArchitectureReader(db);
   // Component Projection Stores - decomposed by use case
   const componentAddedProjector = new SqliteComponentAddedProjector(db);
   const componentUpdatedProjector = new SqliteComponentUpdatedProjector(db);
@@ -836,7 +839,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
   // ============================================================
 
   // Goal Controllers
-  const completeGoalPromptService = new CompleteGoalPromptService();
   const completeGoalCommandHandler = new CompleteGoalCommandHandler(
     goalCompletedEventStore,
     goalCompletedEventStore,
@@ -850,6 +852,7 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     decisionContextReader,
     invariantContextReader,
     guidelineContextReader,
+    architectureReader,
     relationRemovedProjector
   );
   const reviewTurnTracker = new ReviewTurnTracker(
@@ -860,7 +863,6 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     completeGoalCommandHandler,
     getGoalContextQueryHandler,
     goalCompletedProjector,
-    completeGoalPromptService,
     reviewTurnTracker,
     goalReviewedEventStore,
     goalReviewedEventStore,
@@ -1110,6 +1112,7 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     // Architecture Projection Stores - decomposed by use case
     architectureDefinedProjector,
     architectureUpdatedProjector,
+    architectureReader,
     // Component Projection Stores - decomposed by use case
     componentAddedProjector,
     componentUpdatedProjector,

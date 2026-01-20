@@ -78,7 +78,11 @@ export class TextRenderer implements IFormatRenderer {
       return; // No sections in quiet mode
     }
 
-    console.log(Templates.sectionHeader(title));
+    console.log(Templates.sectionHeader(`${Colors.info(title)}`));
+  }
+
+  headline(title: string): void {
+    console.log(Templates.sectionHeader(`${Colors.headline(title)}`));
   }
 
   banner(lines: string[]): void {
@@ -88,6 +92,23 @@ export class TextRenderer implements IFormatRenderer {
 
     // Banner is always shown in normal/verbose mode
     lines.forEach(line => console.log(line));
+  }
+
+  divider(): void {
+    if (this.verbosity === "quiet") {
+      return; // No divider in quiet mode
+    }
+
+    const width = Math.max(
+      1,
+      typeof process.stdout.columns === "number" && process.stdout.columns > 0
+        ? process.stdout.columns
+        : Layout.maxWidth,
+    );
+    console.log("\n");
+    console.log(Colors.dim("─".repeat(width)));
+    console.log("\n");
+
   }
 
   /**
@@ -108,7 +129,7 @@ export class TextRenderer implements IFormatRenderer {
     // If just 1-2 keys, show inline
     if (entries.length <= 2) {
       const formatted = entries
-        .map(([key, value]) => `${Colors.muted(key + ":")} ${this.formatValue(value)}`)
+        .map(([key, value]) => `${Colors.accent(key + ":")} ${this.formatValue(value)}`)
         .join(" ");
       console.log(Layout.indent.repeat(indentLevel) + formatted);
       return;

@@ -114,8 +114,16 @@ export class Renderer {
     this.renderer.section(title);
   }
 
+  headline(title: string): void {
+    this.renderer.headline(title);
+  }
+
   banner(lines: string[]): void {
     this.renderer.banner(lines);
+  }
+
+  divider(): void {
+    this.renderer.divider();
   }
 
   /**

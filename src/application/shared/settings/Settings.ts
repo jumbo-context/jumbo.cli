@@ -10,13 +10,6 @@ export interface QASettings {
    * Default: 3
    */
   defaultTurnLimit: number;
-
-  /**
-   * Optional: Warn user when approaching turn limit.
-   * If set, shows a warning at this turn number.
-   * Example: Setting to 2 warns at turn 2 of 3.
-   */
-  warnAtTurn?: number;
 }
 
 export interface Settings {

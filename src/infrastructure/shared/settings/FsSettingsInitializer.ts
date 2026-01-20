@@ -25,11 +25,7 @@ export class FsSettingsInitializer {
   "qa": {
     // Default turn limit for QA iterations on goal completion
     // When this limit is reached, the goal is automatically completed
-    "defaultTurnLimit": 3,
-
-    // Optional: Warn user when approaching turn limit
-    // Shows a warning at this turn number
-    "warnAtTurn": 2
+    "defaultTurnLimit": 3
   }
 }
 `;

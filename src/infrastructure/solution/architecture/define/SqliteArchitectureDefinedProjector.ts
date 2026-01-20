@@ -5,10 +5,11 @@
 import { Database } from "better-sqlite3";
 import { IArchitectureDefinedProjector } from "../../../../application/solution/architecture/define/IArchitectureDefinedProjector.js";
 import { IArchitectureDefineReader } from "../../../../application/solution/architecture/define/IArchitectureDefineReader.js";
+import { IArchitectureReader } from "../../../../application/solution/architecture/IArchitectureReader.js";
 import { ArchitectureDefinedEvent } from "../../../../domain/solution/architecture/define/ArchitectureDefinedEvent.js";
 import { ArchitectureView } from "../../../../application/solution/architecture/ArchitectureView.js";
 
-export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedProjector, IArchitectureDefineReader {
+export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedProjector, IArchitectureDefineReader, IArchitectureReader {
   constructor(private db: Database) {}
 
   async applyArchitectureDefined(event: ArchitectureDefinedEvent): Promise<void> {
@@ -36,6 +37,10 @@ export class SqliteArchitectureDefinedProjector implements IArchitectureDefinedP
   async findById(id: string): Promise<ArchitectureView | null> {
     const row = this.db.prepare('SELECT * FROM architecture_views WHERE architectureId = ?').get(id);
     return row ? this.mapRowToView(row as Record<string, unknown>) : null;
+  }
+
+  async find(): Promise<ArchitectureView | null> {
+    return this.findById("architecture");
   }
 
   private mapRowToView(row: Record<string, unknown>): ArchitectureView {

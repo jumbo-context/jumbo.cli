@@ -63,10 +63,6 @@ export class FsSettingsReader implements ISettingsReader {
     // Default turn limit for QA iterations on goal completion
     // When this limit is reached, the goal is automatically completed
     "defaultTurnLimit": 3,
-
-    // Optional: Warn user when approaching turn limit
-    // Shows a warning at this turn number
-    "warnAtTurn": 2
   }
 }
 `;
@@ -82,7 +78,6 @@ export class FsSettingsReader implements ISettingsReader {
       qa: {
         defaultTurnLimit:
           settings.qa?.defaultTurnLimit ?? DEFAULT_SETTINGS.qa.defaultTurnLimit,
-        warnAtTurn: settings.qa?.warnAtTurn ?? DEFAULT_SETTINGS.qa.warnAtTurn,
       },
     };
   }

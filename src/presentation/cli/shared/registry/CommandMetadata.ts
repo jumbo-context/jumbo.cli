@@ -20,6 +20,9 @@ export interface CommandOption {
 
   /** Default value if not provided (only for optional options) */
   default?: string | number | boolean;
+
+  /** Hide this option from help output (but still accept it) */
+  hidden?: boolean;
 }
 
 /**

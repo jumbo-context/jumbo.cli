@@ -59,7 +59,17 @@ export interface IFormatRenderer {
   section(title: string): void;
 
   /**
+   * Render a headline (text mode only, ignored in structured formats)
+   */
+  headline(title: string): void;
+
+  /**
    * Render the banner (text mode only, ignored in structured formats)
    */
   banner(lines: string[]): void;
+
+  /**
+   * Render a horizontal divider across the current viewport (text mode only, ignored in structured formats)
+   */
+  divider(): void;
 }

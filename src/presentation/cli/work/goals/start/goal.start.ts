@@ -64,6 +64,7 @@ export async function goalStart(options: { goalId: string }, container: Applicat
       container.decisionContextReader,
       container.invariantContextReader,
       container.guidelineContextReader,
+      container.architectureReader,
       container.relationRemovedProjector
     );
     const goalContextFormatter = new GoalContextFormatter();

@@ -5,7 +5,7 @@
  * This is ONE adapter - future: InkApplicator for React TUI.
  */
 
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import chalk from "chalk";
 import { RegisteredCommand } from "./CommandMetadata.js";
 import { normalizePath, extractParts } from "./PathNormalizer.js";
@@ -73,10 +73,19 @@ export class CommanderApplicator {
     });
 
     registeredCommand.metadata.options?.forEach(opt => {
-      if (opt.default !== undefined) {
-        cmd.option(opt.flags, chalk.gray(opt.description), opt.default as any);
+      if (opt.hidden) {
+        const option = new Option(opt.flags, chalk.gray(opt.description));
+        if (opt.default !== undefined) {
+          option.default(opt.default);
+        }
+        option.hideHelp();
+        cmd.addOption(option);
       } else {
-        cmd.option(opt.flags, chalk.gray(opt.description));
+        if (opt.default !== undefined) {
+          cmd.option(opt.flags, chalk.gray(opt.description), opt.default as any);
+        } else {
+          cmd.option(opt.flags, chalk.gray(opt.description));
+        }
       }
     });
 
@@ -137,10 +146,19 @@ export class CommanderApplicator {
       });
 
       registeredCommand.metadata.options?.forEach(opt => {
-        if (opt.default !== undefined) {
-          cmd.option(opt.flags, chalk.gray(opt.description), opt.default as any);
+        if (opt.hidden) {
+          const option = new Option(opt.flags, chalk.gray(opt.description));
+          if (opt.default !== undefined) {
+            option.default(opt.default);
+          }
+          option.hideHelp();
+          cmd.addOption(option);
         } else {
-          cmd.option(opt.flags, chalk.gray(opt.description));
+          if (opt.default !== undefined) {
+            cmd.option(opt.flags, chalk.gray(opt.description), opt.default as any);
+          } else {
+            cmd.option(opt.flags, chalk.gray(opt.description));
+          }
         }
       });
 

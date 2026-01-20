@@ -43,8 +43,16 @@ export class JsonRenderer implements IFormatRenderer {
     // Sections are not relevant in JSON output; ignored
   }
 
+  headline(_title: string): void {
+    // Sections are not relevant in JSON output; ignored
+  }
+
   banner(_lines: string[]): void {
     // Banners are not relevant in JSON output; ignored
+  }
+
+  divider(): void {
+    // Dividers are not relevant in JSON output; ignored
   }
 
   /**

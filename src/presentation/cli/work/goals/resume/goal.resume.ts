@@ -61,6 +61,7 @@ export async function goalResume(options: { goalId: string; note?: string }, con
       container.decisionContextReader,
       container.invariantContextReader,
       container.guidelineContextReader,
+      container.architectureReader,
       container.relationRemovedProjector
     );
 

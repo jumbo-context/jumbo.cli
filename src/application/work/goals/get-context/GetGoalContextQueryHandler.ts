@@ -11,6 +11,7 @@ import { IDependencyContextReader } from "./IDependencyContextReader.js";
 import { IDecisionContextReader } from "./IDecisionContextReader.js";
 import { IInvariantContextReader } from "./IInvariantContextReader.js";
 import { IGuidelineContextReader } from "./IGuidelineContextReader.js";
+import { IArchitectureReader } from "../../../solution/architecture/IArchitectureReader.js";
 import { IRelationReader } from "../../../relations/IRelationReader.js";
 import { InvariantView } from "../../../solution/invariants/InvariantView.js";
 import { GoalView } from "../GoalView.js";
@@ -35,6 +36,7 @@ export class GetGoalContextQueryHandler {
     private readonly decisionReader?: IDecisionContextReader,
     private readonly invariantReader?: IInvariantContextReader,
     private readonly guidelineReader?: IGuidelineContextReader,
+    private readonly architectureReader?: IArchitectureReader,
     private readonly relationReader?: IRelationReader
   ) {}
 
@@ -79,6 +81,11 @@ export class GetGoalContextQueryHandler {
       ? this.mapEmbeddedGuidelines(goal.relevantGuidelines!)
       : await this.getGuidelines();
 
+    // Phase 3: Get architecture - prefer embedded, else query global
+    const architecture = this.hasEmbeddedArchitecture(goal)
+      ? goal.architecture
+      : await this.getArchitecture();
+
     // Phase 4: Get relations (only when using queried components)
     const relations = this.hasEmbeddedComponents(goal)
       ? []
@@ -91,6 +98,7 @@ export class GetGoalContextQueryHandler {
       decisions,
       invariants,
       guidelines,
+      architecture,
       relations,
     };
   }
@@ -107,6 +115,13 @@ export class GetGoalContextQueryHandler {
    */
   private hasEmbeddedGuidelines(goal: GoalView): boolean {
     return Array.isArray(goal.relevantGuidelines) && goal.relevantGuidelines.length > 0;
+  }
+
+  /**
+   * Check if goal has embedded architecture
+   */
+  private hasEmbeddedArchitecture(goal: GoalView): boolean {
+    return goal.architecture !== undefined && goal.architecture !== null;
   }
 
   /**
@@ -308,6 +323,31 @@ export class GetGoalContextQueryHandler {
       category: g.category,
       description: g.description,
     }));
+  }
+
+  /**
+   * Get global architecture
+   *
+   * @returns Architecture view or undefined
+   */
+  private async getArchitecture(): Promise<any> {
+    if (!this.architectureReader) {
+      return undefined;
+    }
+
+    const architecture = await this.architectureReader.find();
+
+    if (!architecture) {
+      return undefined;
+    }
+
+    // Map to embedded architecture format for consistency
+    return {
+      description: architecture.description,
+      organization: architecture.organization,
+      patterns: architecture.patterns,
+      principles: architecture.principles,
+    };
   }
 
   /**

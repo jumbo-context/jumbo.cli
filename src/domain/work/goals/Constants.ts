@@ -26,7 +26,8 @@ export const GoalStatus = {
   DOING: 'doing',
   BLOCKED: 'blocked',
   PAUSED: 'paused',
-  COMPLETED: 'completed'
+  COMPLETED: 'completed',
+  INREVIEW: 'in-review',
 } as const;
 
 export type GoalStatusType = typeof GoalStatus[keyof typeof GoalStatus];
