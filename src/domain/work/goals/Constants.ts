@@ -54,6 +54,7 @@ export const GoalErrorMessages = {
   CANNOT_UNBLOCK_IN_STATUS: 'Cannot unblock goal in {status} status. Goal must be blocked.',
   NOT_STARTED: 'Cannot complete a goal that has not been started',
   ALREADY_COMPLETED: 'Goal is already completed',
+  QA_REVIEW_REQUIRED: 'At least one QA review is required before committing goal {goalId}.',
   CANNOT_RESET_BLOCKED: 'Cannot reset a blocked goal. Unblock it first to preserve blocker context.',
   ALREADY_TODO: 'Goal is already in to-do status',
   CANNOT_PAUSE_IN_STATUS: 'Cannot pause goal in {status} status. Goal must be in doing status.',

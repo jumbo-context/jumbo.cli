@@ -8,6 +8,7 @@ import { IGoalReviewedEventWriter } from "./IGoalReviewedEventWriter.js";
 import { IGoalReviewedEventReader } from "./IGoalReviewedEventReader.js";
 import { IEventBus } from "../../../shared/messaging/IEventBus.js";
 import { Goal } from "../../../../domain/work/goals/Goal.js";
+import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
 
 /**
  * CompleteGoalController
@@ -31,8 +32,16 @@ export class CompleteGoalController {
 
   async handle(request: CompleteGoalRequest): Promise<CompleteGoalResponse> {
     // Check if we should auto-commit due to turn limit
-    const shouldAutoCommit = await this.turnTracker.shouldAutoCommit(request.goalId);
-    const effectiveCommit = request.commit || shouldAutoCommit;
+    const gate = await this.turnTracker.getCommitGate(request.goalId);
+    const effectiveCommit = request.commit ? gate.current >= 1 : gate.canCommit;
+
+    if (request.commit && gate.current < 1) {
+      throw new Error(
+        formatErrorMessage(GoalErrorMessages.QA_REVIEW_REQUIRED, {
+          goalId: request.goalId,
+        })
+      );
+    }
 
     if (effectiveCommit) {
       return this.handleCommit(request.goalId);
@@ -51,24 +60,23 @@ export class CompleteGoalController {
       throw new Error(`Goal not found: ${goalId}`);
     }
 
-    // Record review (before incrementing count for next turn)
-    const currentTurnCount = await this.turnTracker.getCurrentTurnCount(goalId);
-    const nextTurnNumber = currentTurnCount + 1;
+    if (goalView.status === GoalStatus.DOING) {
+      // Record review (before incrementing count for next turn)
+      const currentTurnCount = await this.turnTracker.getCurrentTurnCount(goalId);
+      const nextTurnNumber = currentTurnCount + 1;
 
-    // Rehydrate goal to record review
-    const history = await this.goalEventReader.readStream(goalId);
-    const goal = Goal.rehydrate(goalId, history as any);
-    const reviewEvent = goal.recordReview(nextTurnNumber);
+      // Rehydrate goal to record review
+      const history = await this.goalEventReader.readStream(goalId);
+      const goal = Goal.rehydrate(goalId, history as any);
+      const reviewEvent = goal.recordReview(nextTurnNumber);
 
-    // Persist and publish review event
-    await this.reviewEventWriter.append(reviewEvent);
-    await this.eventBus.publish(reviewEvent);
+      // Persist and publish review event
+      await this.reviewEventWriter.append(reviewEvent);
+      await this.eventBus.publish(reviewEvent);
+    }
 
     // Get full goal context (criteria, components, invariants, etc.)
     const goalContext = await this.getGoalContextQueryHandler.execute(goalId);
-
-    // Calculate remaining turns (after recording this attempt)
-    const remainingTurns = await this.turnTracker.getRemainingTurns(goalId);
 
     return {
       goalId,

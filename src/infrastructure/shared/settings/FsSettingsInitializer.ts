@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
+import { ISettingsInitializer } from "../../../application/shared/settings/ISettingsInitializer.js";
 
 /**
  * FsSettingsInitializer - Creates settings file with defaults if it doesn't exist.
@@ -7,7 +8,7 @@ import path from "path";
  * Called during bootstrap to ensure settings infrastructure is ready.
  * Only creates the file if missing - doesn't overwrite existing settings.
  */
-export class FsSettingsInitializer {
+export class FsSettingsInitializer implements ISettingsInitializer {
   private readonly settingsFilePath: string;
 
   constructor(rootDir: string) {

@@ -16,6 +16,7 @@ import { IProjectInitializedEventWriter } from "./IProjectInitializedEventWriter
 import { IEventBus } from "../../../shared/messaging/IEventBus.js";
 import { IProjectInitReader } from "./IProjectInitReader.js";
 import { IAgentFileProtocol } from "./IAgentFileProtocol.js";
+import { ISettingsInitializer } from "../../../shared/settings/ISettingsInitializer.js";
 import { Project } from "../../../../domain/project-knowledge/project/Project.js";
 import { ProjectErrorMessages } from "../../../../domain/project-knowledge/project/Constants.js";
 
@@ -24,7 +25,8 @@ export class InitializeProjectCommandHandler {
     private readonly eventWriter: IProjectInitializedEventWriter,
     private readonly eventBus: IEventBus,
     private readonly reader: IProjectInitReader,
-    private readonly agentFileProtocol: IAgentFileProtocol
+    private readonly agentFileProtocol: IAgentFileProtocol,
+    private readonly settingsInitializer: ISettingsInitializer
   ) {}
 
   async execute(
@@ -59,6 +61,9 @@ export class InitializeProjectCommandHandler {
 
     // 6. Configure all supported agents (side effect)
     await this.agentFileProtocol.ensureAgentConfigurations(projectRoot);
+
+    // 7. Ensure default settings file exists (side effect)
+    await this.settingsInitializer.ensureSettingsFileExists();
 
     return { projectId };
   }

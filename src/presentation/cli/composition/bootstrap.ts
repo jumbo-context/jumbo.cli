@@ -269,6 +269,7 @@ import { IGoalReviewedEventWriter } from "../../../application/work/goals/comple
 import { IGoalReviewedEventReader } from "../../../application/work/goals/complete/IGoalReviewedEventReader.js";
 // Settings Infrastructure
 import { ISettingsReader } from "../../../application/shared/settings/ISettingsReader.js";
+import { ISettingsInitializer } from "../../../application/shared/settings/ISettingsInitializer.js";
 import { FsSettingsReader } from "../../../infrastructure/shared/settings/FsSettingsReader.js";
 import { FsSettingsInitializer } from "../../../infrastructure/shared/settings/FsSettingsInitializer.js";
 import { IDecisionAddedProjector } from "../../../application/solution/decisions/add/IDecisionAddedProjector.js";
@@ -443,6 +444,7 @@ export interface ApplicationContainer {
   clock: IClock;
   db: Database.Database;
   settingsReader: ISettingsReader;
+  settingsInitializer: ISettingsInitializer;
 
   // Maintenance Services
   databaseRebuildService: IDatabaseRebuildService;
@@ -1009,6 +1011,7 @@ export async function bootstrap(jumboRoot: string): Promise<ApplicationContainer
     clock,
     db,
     settingsReader,
+    settingsInitializer,
 
     // Maintenance Services
     databaseRebuildService,

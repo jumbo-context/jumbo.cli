@@ -162,7 +162,8 @@ export async function projectInit(
     container.projectInitializedEventStore,
     container.eventBus,
     container.projectInitializedProjector,
-    container.agentFileProtocol
+    container.agentFileProtocol,
+    container.settingsInitializer
   );
 
   // Execute command

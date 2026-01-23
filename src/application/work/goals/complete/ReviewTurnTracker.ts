@@ -40,6 +40,22 @@ export class ReviewTurnTracker {
   }
 
   /**
+   * Get the current QA gate status for a goal.
+   * Provides turn counts and whether commit is allowed.
+   *
+   * @param goalId - The goal ID to check
+   * @returns Promise<{ current, limit, remaining, canCommit }>
+   */
+  async getCommitGate(
+    goalId: string
+  ): Promise<{ current: number; limit: number; remaining: number; canCommit: boolean }> {
+    const current = await this.getCurrentTurnCount(goalId);
+    const limit = await this.getTurnLimit();
+    const remaining = Math.max(0, limit - current);
+    return { current, limit, remaining, canCommit: current >= limit };
+  }
+
+  /**
    * Determine if the goal should be auto-committed based on turn count.
    * Returns true if current turn count has reached or exceeded the limit.
    *
@@ -47,9 +63,8 @@ export class ReviewTurnTracker {
    * @returns Promise<boolean> - True if should auto-commit
    */
   async shouldAutoCommit(goalId: string): Promise<boolean> {
-    const currentTurn = await this.getCurrentTurnCount(goalId);
-    const turnLimit = await this.getTurnLimit();
-    return currentTurn >= turnLimit;
+    const gate = await this.getCommitGate(goalId);
+    return gate.canCommit;
   }
 
   /**
@@ -60,9 +75,7 @@ export class ReviewTurnTracker {
    * @returns Promise<number> - Number of remaining turns
    */
   async getRemainingTurns(goalId: string): Promise<number> {
-    const currentTurn = await this.getCurrentTurnCount(goalId);
-    const turnLimit = await this.getTurnLimit();
-    const remaining = turnLimit - currentTurn;
-    return Math.max(0, remaining);
+    const gate = await this.getCommitGate(goalId);
+    return gate.remaining;
   }
 }
