@@ -1,4 +1,5 @@
 import { BaseEvent, UUID } from "../../../shared/BaseEvent.js";
+import { GoalEventType } from "../Constants.js";
 import {
   EmbeddedInvariant,
   EmbeddedGuideline,
@@ -12,7 +13,7 @@ import {
  * Only fields provided in payload are updated; omitted fields remain unchanged.
  */
 export interface GoalUpdatedEvent extends BaseEvent {
-  readonly type: "GoalUpdatedEvent";
+  readonly type: typeof GoalEventType.UPDATED;
   readonly payload: {
     readonly objective?: string;
     readonly successCriteria?: string[];

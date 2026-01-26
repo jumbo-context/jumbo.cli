@@ -5,9 +5,10 @@
  */
 
 import { BaseEvent } from "../../../shared/BaseEvent.js";
+import { DecisionEventType } from "../Constants.js";
 
 export interface DecisionUpdatedEvent extends BaseEvent {
-  readonly type: "DecisionUpdatedEvent";
+  readonly type: typeof DecisionEventType.UPDATED;
   readonly payload: {
     readonly title?: string;
     readonly context?: string;

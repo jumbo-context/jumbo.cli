@@ -6,9 +6,10 @@
  */
 
 import { BaseEvent, UUID } from "../../../shared/BaseEvent.js";
+import { DecisionEventType } from "../Constants.js";
 
 export interface DecisionSupersededEvent extends BaseEvent {
-  readonly type: "DecisionSupersededEvent";
+  readonly type: typeof DecisionEventType.SUPERSEDED;
   readonly payload: {
     readonly supersededBy: UUID;
   };

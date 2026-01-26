@@ -1,4 +1,5 @@
 import { BaseEvent } from "../../../shared/BaseEvent.js";
+import { GoalEventType } from "../Constants.js";
 
 /**
  * Emitted when a goal completion is reviewed during the QA process.
@@ -6,7 +7,7 @@ import { BaseEvent } from "../../../shared/BaseEvent.js";
  * Does not change goal status - purely for tracking purposes.
  */
 export interface GoalReviewedEvent extends BaseEvent {
-  readonly type: "GoalReviewedEvent";
+  readonly type: typeof GoalEventType.REVIEWED;
   readonly payload: {
     readonly reviewedAt: string;  // ISO 8601 timestamp
     readonly turnNumber: number;    // The turn number for this review

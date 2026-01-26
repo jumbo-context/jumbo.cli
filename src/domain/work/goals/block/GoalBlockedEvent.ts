@@ -1,5 +1,5 @@
 import { BaseEvent } from "../../../shared/BaseEvent.js";
-import { GoalStatusType } from "../Constants.js";
+import { GoalEventType, GoalStatusType } from "../Constants.js";
 
 /**
  * Emitted when a goal is blocked.
@@ -7,7 +7,7 @@ import { GoalStatusType } from "../Constants.js";
  * Captures the reason for blocking in the note field.
  */
 export interface GoalBlockedEvent extends BaseEvent {
-  readonly type: "GoalBlockedEvent";
+  readonly type: typeof GoalEventType.BLOCKED;
   readonly payload: {
     readonly status: GoalStatusType;  // Will be 'blocked'
     readonly note: string;             // Reason for blocking

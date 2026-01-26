@@ -1,5 +1,5 @@
 import { BaseEvent, UUID } from "../../../shared/BaseEvent.js";
-import { GoalStatusType } from "../Constants.js";
+import { GoalEventType, GoalStatusType } from "../Constants.js";
 import {
   EmbeddedInvariant,
   EmbeddedGuideline,
@@ -14,7 +14,7 @@ import {
  * Goal starts in 'to-do' status.
  */
 export interface GoalAddedEvent extends BaseEvent {
-  readonly type: "GoalAddedEvent";
+  readonly type: typeof GoalEventType.ADDED;
   readonly payload: {
     readonly objective: string;
     readonly successCriteria: string[];

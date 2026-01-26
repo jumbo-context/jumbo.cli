@@ -1,3 +1,4 @@
 {
-    "search.useIgnoreFiles": false
+    "search.useIgnoreFiles": false,
+    "search.defaultViewMode": "tree"
 }
