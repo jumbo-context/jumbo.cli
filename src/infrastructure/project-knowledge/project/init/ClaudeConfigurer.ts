@@ -6,7 +6,7 @@
  * - .claude/settings.json with SessionStart hooks
  *
  * Use this as a reference when creating new agent Configurers.
- * Each Configurer must implement configure(projectRoot): Promise<void>.
+ * Each Configurer implements IConfigurer interface.
  *
  * Operations are idempotent and gracefully handle errors.
  */
@@ -15,8 +15,10 @@ import path from "path";
 import fs from "fs-extra";
 import { AgentInstructions } from "../../../../domain/project-knowledge/project/AgentInstructions.js";
 import { SafeClaudeSettingsMerger } from "./SafeClaudeSettingsMerger.js";
+import { IConfigurer } from "./IConfigurer.js";
+import { PlannedFileChange } from "../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 
-export class ClaudeConfigurer {
+export class ClaudeConfigurer implements IConfigurer {
   /**
    * Configure all Claude Code requirements for Jumbo
    *
@@ -122,5 +124,28 @@ export class ClaudeConfigurer {
         `Warning: Failed to configure Claude Code hooks: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  /**
+   * Return what changes this configurer will make without executing.
+   */
+  async getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]> {
+    const changes: PlannedFileChange[] = [];
+
+    const claudeMdPath = path.join(projectRoot, "CLAUDE.md");
+    changes.push({
+      path: "CLAUDE.md",
+      action: (await fs.pathExists(claudeMdPath)) ? "modify" : "create",
+      description: "Claude Code configuration",
+    });
+
+    const settingsPath = path.join(projectRoot, ".claude/settings.json");
+    changes.push({
+      path: ".claude/settings.json",
+      action: (await fs.pathExists(settingsPath)) ? "modify" : "create",
+      description: "Claude Code session hooks",
+    });
+
+    return changes;
   }
 }

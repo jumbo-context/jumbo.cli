@@ -169,6 +169,8 @@ import { SqliteProjectUpdatedProjector } from "../project-knowledge/project/upda
 import { SqliteProjectContextReader } from "../project-knowledge/project/query/SqliteProjectContextReader.js";
 // Project Services
 import { AgentFileProtocol } from "../project-knowledge/project/init/AgentFileProtocol.js";
+import { InitializationProtocol } from "../../application/project-knowledge/project/init/InitializationProtocol.js";
+import { InitializeProjectCommandHandler } from "../../application/project-knowledge/project/init/InitializeProjectCommandHandler.js";
 // Audience Context Reader
 import { SqliteAudienceContextReader } from "../project-knowledge/audiences/query/SqliteAudienceContextReader.js";
 // AudiencePain Context Reader
@@ -491,6 +493,20 @@ export class HostBuilder {
       eventBus
     );
 
+    // Project Initialization Protocol
+    const initializeProjectCommandHandler = new InitializeProjectCommandHandler(
+      projectInitializedEventStore,
+      eventBus,
+      projectInitializedProjector,
+      agentFileProtocol,
+      settingsInitializer
+    );
+    const initializationProtocol = new InitializationProtocol(
+      initializeProjectCommandHandler,
+      agentFileProtocol,
+      settingsInitializer
+    );
+
     // ============================================================
     // STEP 5: Create Projection Handlers (Event Subscribers)
     // ============================================================
@@ -771,6 +787,7 @@ export class HostBuilder {
       projectUpdatedEventStore,
       // Project Services
       agentFileProtocol,
+      initializationProtocol,
       // Audience Event Stores - decomposed by use case
       audienceAddedEventStore,
       audienceUpdatedEventStore,

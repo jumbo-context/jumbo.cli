@@ -136,6 +136,7 @@ import { IProjectContextReader } from "../project-knowledge/project/query/IProje
 import { IProjectInitializedEventWriter } from "../project-knowledge/project/init/IProjectInitializedEventWriter.js";
 import { IProjectUpdatedEventWriter } from "../project-knowledge/project/update/IProjectUpdatedEventWriter.js";
 import { IAgentFileProtocol } from "../project-knowledge/project/init/IAgentFileProtocol.js";
+import { IInitializationProtocol } from "../project-knowledge/project/init/IInitializationProtocol.js";
 import { IAudienceContextReader } from "../project-knowledge/audiences/query/IAudienceContextReader.js";
 import { IAudiencePainContextReader } from "../project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
 import { IValuePropositionContextReader } from "../project-knowledge/value-propositions/query/IValuePropositionContextReader.js";
@@ -352,6 +353,7 @@ export interface IApplicationContainer {
   projectUpdatedEventStore: IProjectUpdatedEventWriter;
   // Project Services
   agentFileProtocol: IAgentFileProtocol;
+  initializationProtocol: IInitializationProtocol;
   // Audience Event Stores - decomposed by use case
   audienceAddedEventStore: IAudienceAddedEventWriter;
   audienceUpdatedEventStore: IAudienceUpdatedEventWriter;

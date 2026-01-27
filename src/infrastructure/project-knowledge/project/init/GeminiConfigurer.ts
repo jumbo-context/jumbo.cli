@@ -12,8 +12,10 @@ import path from "path";
 import fs from "fs-extra";
 import { AgentInstructions } from "../../../../domain/project-knowledge/project/AgentInstructions.js";
 import { SafeGeminiSettingsMerger } from "./SafeGeminiSettingsMerger.js";
+import { IConfigurer } from "./IConfigurer.js";
+import { PlannedFileChange } from "../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 
-export class GeminiConfigurer {
+export class GeminiConfigurer implements IConfigurer {
   /**
    * Configure all Gemini CLI requirements for Jumbo
    *
@@ -110,5 +112,28 @@ export class GeminiConfigurer {
         `Warning: Failed to configure Gemini CLI hooks: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  /**
+   * Return what changes this configurer will make without executing.
+   */
+  async getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]> {
+    const changes: PlannedFileChange[] = [];
+
+    const geminiMdPath = path.join(projectRoot, "GEMINI.md");
+    changes.push({
+      path: "GEMINI.md",
+      action: (await fs.pathExists(geminiMdPath)) ? "modify" : "create",
+      description: "Gemini CLI configuration",
+    });
+
+    const settingsPath = path.join(projectRoot, ".gemini/settings.json");
+    changes.push({
+      path: ".gemini/settings.json",
+      action: (await fs.pathExists(settingsPath)) ? "modify" : "create",
+      description: "Gemini CLI session hooks",
+    });
+
+    return changes;
   }
 }

@@ -6,8 +6,8 @@
  *
  * Extension:
  * To add a new agent, create a *Configurer class that implements
- * configure(projectRoot: string): Promise<void>, then add it to the
- * configurers array below. No changes to IAgentFileProtocol needed.
+ * IConfigurer interface, then add it to the configurers array below.
+ * No changes to IAgentFileProtocol needed.
  *
  * Operations are idempotent and gracefully handle errors to avoid
  * failing project initialization if file writes fail.
@@ -16,13 +16,15 @@
 import path from "path";
 import fs from "fs-extra";
 import { IAgentFileProtocol } from "../../../../application/project-knowledge/project/init/IAgentFileProtocol.js";
+import { PlannedFileChange } from "../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 import { AgentInstructions } from "../../../../domain/project-knowledge/project/AgentInstructions.js";
+import { IConfigurer } from "./IConfigurer.js";
 import { ClaudeConfigurer } from "./ClaudeConfigurer.js";
 import { GeminiConfigurer } from "./GeminiConfigurer.js";
 import { CopilotConfigurer } from "./CopilotConfigurer.js";
 
 export class AgentFileProtocol implements IAgentFileProtocol {
-  private readonly configurers = [
+  private readonly configurers: IConfigurer[] = [
     new ClaudeConfigurer(),
     new GeminiConfigurer(),
     new CopilotConfigurer(),
@@ -66,5 +68,28 @@ export class AgentFileProtocol implements IAgentFileProtocol {
     for (const configurer of this.configurers) {
       await configurer.configure(projectRoot);
     }
+  }
+
+  /**
+   * Get all planned file changes without executing.
+   */
+  async getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]> {
+    const changes: PlannedFileChange[] = [];
+
+    // AGENTS.md change
+    const agentsMdPath = path.join(projectRoot, "AGENTS.md");
+    changes.push({
+      path: "AGENTS.md",
+      action: (await fs.pathExists(agentsMdPath)) ? "modify" : "create",
+      description: "Jumbo instructions for AI agents",
+    });
+
+    // Collect from all configurers
+    for (const configurer of this.configurers) {
+      const configurerChanges = await configurer.getPlannedFileChanges(projectRoot);
+      changes.push(...configurerChanges);
+    }
+
+    return changes;
   }
 }

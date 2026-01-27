@@ -63,10 +63,10 @@ async function needsInfrastructure(argv: string[]): Promise<boolean> {
     return false;
   }
 
-  // Commands that don't require project (like 'project init') 
-  // still need infrastructure
-  // for event stores and other services
-  return fs.pathExists(jumboRoot);
+  // All other commands need infrastructure.
+  // Commands like 'project init' need infrastructure even without
+  // an existing .jumbo directory - the Host will create it.
+  return true;
 }
 
 async function main(): Promise<void> {

@@ -7,6 +7,7 @@
  * Responsibilities:
  * - Ensure AGENTS.md exists with Jumbo instructions
  * - Ensure all supported agents are configured
+ * - Report planned file changes for preview before execution
  *
  * Design Notes:
  * - Operations are idempotent (safe to run multiple times)
@@ -14,6 +15,8 @@
  * - Errors logged but don't fail initialization (graceful degradation)
  * - Agent-specific knowledge is encapsulated in individual Configurer classes
  */
+
+import { PlannedFileChange } from "./PlannedFileChange.js";
 
 export interface IAgentFileProtocol {
   /**
@@ -43,4 +46,17 @@ export interface IAgentFileProtocol {
    * @param projectRoot Absolute path to project root directory
    */
   ensureAgentConfigurations(projectRoot: string): Promise<void>;
+
+  /**
+   * Get all planned file changes without executing.
+   * Use this for preview before user confirmation.
+   *
+   * Includes:
+   * - AGENTS.md (create or modify)
+   * - All agent-specific files from configurers
+   *
+   * @param projectRoot Absolute path to project root directory
+   * @returns List of planned file changes
+   */
+  getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]>;
 }

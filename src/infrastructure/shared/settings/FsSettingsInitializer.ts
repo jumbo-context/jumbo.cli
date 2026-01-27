@@ -1,6 +1,7 @@
 import fs from "fs-extra";
 import path from "path";
 import { ISettingsInitializer } from "../../../application/shared/settings/ISettingsInitializer.js";
+import { PlannedFileChange } from "../../../application/project-knowledge/project/init/PlannedFileChange.js";
 
 /**
  * FsSettingsInitializer - Creates settings file with defaults if it doesn't exist.
@@ -32,5 +33,16 @@ export class FsSettingsInitializer implements ISettingsInitializer {
 `;
 
     await fs.writeFile(this.settingsFilePath, content, "utf-8");
+  }
+
+  async getPlannedFileChange(): Promise<PlannedFileChange | null> {
+    if (await fs.pathExists(this.settingsFilePath)) {
+      return null; // No change needed
+    }
+    return {
+      path: ".jumbo/settings.jsonc",
+      action: "create",
+      description: "Jumbo configuration settings",
+    };
   }
 }
