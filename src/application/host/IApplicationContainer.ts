@@ -144,6 +144,12 @@ import { IValuePropositionContextReader } from "../project-knowledge/value-propo
 import { ISolutionContextReader } from "../solution/ISolutionContextReader.js";
 import { UnprimedBrownfieldQualifier } from "../solution/UnprimedBrownfieldQualifier.js";
 
+// Worker Identity
+import { IWorkerIdentityReader } from "./workers/IWorkerIdentityReader.js";
+
+// Goal Claims
+import { GoalClaimPolicy } from "../work/goals/claims/GoalClaimPolicy.js";
+
 // Port interfaces for session event stores - decomposed by use case
 import { ISessionStartedEventWriter } from "../work/sessions/start/ISessionStartedEventWriter.js";
 import { ISessionEndedEventWriter } from "../work/sessions/end/ISessionEndedEventWriter.js";
@@ -230,6 +236,12 @@ export interface IApplicationContainer {
   clock: IClock;
   settingsReader: ISettingsReader;
   settingsInitializer: ISettingsInitializer;
+
+  // Worker Identity
+  workerIdentityReader: IWorkerIdentityReader;
+
+  // Goal Claims
+  goalClaimPolicy: GoalClaimPolicy;
 
   // Maintenance Services
   databaseRebuildService: IDatabaseRebuildService;

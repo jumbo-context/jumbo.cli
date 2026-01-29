@@ -10,13 +10,26 @@ import { IGoalReader } from "../../../../../src/application/work/goals/resume/IG
 import { IEventBus } from "../../../../../src/application/shared/messaging/IEventBus";
 import { GoalEventType, GoalStatus } from "../../../../../src/domain/work/goals/Constants";
 import { GoalView } from "../../../../../src/application/work/goals/GoalView";
+import { GoalClaimPolicy } from "../../../../../src/application/work/goals/claims/GoalClaimPolicy";
+import { IGoalClaimStore } from "../../../../../src/application/work/goals/claims/IGoalClaimStore";
+import { IClock } from "../../../../../src/application/shared/system/IClock";
+import { IWorkerIdentityReader } from "../../../../../src/application/host/workers/IWorkerIdentityReader";
+import { ISettingsReader } from "../../../../../src/application/shared/settings/ISettingsReader";
+import { createWorkerId } from "../../../../../src/application/host/workers/WorkerId";
 
 describe("ResumeGoalCommandHandler", () => {
   let eventWriter: IGoalResumedEventWriter;
   let eventReader: IGoalResumedEventReader;
   let goalReader: IGoalReader;
   let eventBus: IEventBus;
+  let claimStore: IGoalClaimStore;
+  let clock: IClock;
+  let claimPolicy: GoalClaimPolicy;
+  let workerIdentityReader: IWorkerIdentityReader;
+  let settingsReader: ISettingsReader;
   let handler: ResumeGoalCommandHandler;
+
+  const testWorkerId = createWorkerId("test-worker-id");
 
   beforeEach(() => {
     // Mock event writer
@@ -40,7 +53,43 @@ describe("ResumeGoalCommandHandler", () => {
       publish: jest.fn().mockResolvedValue(undefined),
     };
 
-    handler = new ResumeGoalCommandHandler(eventWriter, eventReader, goalReader, eventBus);
+    // Mock claim store
+    claimStore = {
+      getClaim: jest.fn().mockReturnValue(null),
+      setClaim: jest.fn(),
+      releaseClaim: jest.fn(),
+    };
+
+    // Mock clock
+    clock = {
+      nowIso: jest.fn().mockReturnValue("2025-01-15T10:00:00.000Z"),
+    };
+
+    // Create claim policy with mocked dependencies
+    claimPolicy = new GoalClaimPolicy(claimStore, clock);
+
+    // Mock worker identity reader
+    workerIdentityReader = {
+      workerId: testWorkerId,
+    };
+
+    // Mock settings reader
+    settingsReader = {
+      read: jest.fn().mockResolvedValue({
+        qa: { defaultTurnLimit: 3 },
+        claims: { claimDurationMinutes: 30 },
+      }),
+    };
+
+    handler = new ResumeGoalCommandHandler(
+      eventWriter,
+      eventReader,
+      goalReader,
+      eventBus,
+      claimPolicy,
+      workerIdentityReader,
+      settingsReader
+    );
   });
 
   it("should resume goal and publish GoalResumedEvent", async () => {
@@ -328,5 +377,86 @@ describe("ResumeGoalCommandHandler", () => {
 
     // Act & Assert
     await expect(handler.execute(command)).rejects.toThrow("Event store failure");
+  });
+
+  it("should include claim data in GoalResumedEvent payload", async () => {
+    // Arrange
+    const command: ResumeGoalCommand = {
+      goalId: "goal_claim_test",
+    };
+
+    // Mock projection exists
+    const mockView: GoalView = {
+      goalId: "goal_claim_test",
+      objective: "Test claim data",
+      successCriteria: ["Claim verified"],
+      scopeIn: [],
+      scopeOut: [],
+      boundaries: [],
+      status: GoalStatus.PAUSED,
+      version: 3,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
+
+    // Mock event history
+    const mockHistory = [
+      {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_claim_test",
+        version: 1,
+        timestamp: "2025-01-01T00:00:00Z",
+        payload: {
+          objective: "Test claim data",
+          successCriteria: ["Claim verified"],
+          scopeIn: [],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+        },
+      },
+      {
+        type: GoalEventType.STARTED,
+        aggregateId: "goal_claim_test",
+        version: 2,
+        timestamp: "2025-01-01T01:00:00Z",
+        payload: {
+          status: GoalStatus.DOING,
+        },
+      },
+      {
+        type: GoalEventType.PAUSED,
+        aggregateId: "goal_claim_test",
+        version: 3,
+        timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.PAUSED,
+          reason: "ContextCompressed",
+        },
+      },
+    ];
+    (eventReader.readStream as jest.Mock).mockResolvedValue(mockHistory);
+
+    // Act
+    const result = await handler.execute(command);
+
+    // Assert
+    expect(result.goalId).toBe("goal_claim_test");
+
+    // Verify claim data is included in the event payload
+    const appendedEvent = (eventWriter.append as jest.Mock).mock.calls[0][0];
+    expect(appendedEvent.payload.claimedBy).toBe(testWorkerId);
+    expect(appendedEvent.payload.claimedAt).toBe("2025-01-15T10:00:00.000Z");
+    // Claim duration is 30 minutes = 30 * 60 * 1000 ms
+    expect(appendedEvent.payload.claimExpiresAt).toBe("2025-01-15T10:30:00.000Z");
+
+    // Verify claim was stored after event persistence
+    expect(claimStore.setClaim).toHaveBeenCalledWith({
+      goalId: "goal_claim_test",
+      claimedBy: testWorkerId,
+      claimedAt: "2025-01-15T10:00:00.000Z",
+      claimExpiresAt: "2025-01-15T10:30:00.000Z",
+    });
   });
 });

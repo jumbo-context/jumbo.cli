@@ -317,10 +317,15 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
    * Starts a defined goal (begins work).
    * Transitions status from "to-do" to "doing".
    *
+   * @param claimInfo - Optional claim information to embed in the event
    * @returns GoalStarted event
    * @throws Error if goal is blocked or completed
    */
-  start(): GoalStartedEvent {
+  start(claimInfo?: {
+    claimedBy: string;
+    claimedAt: string;
+    claimExpiresAt: string;
+  }): GoalStartedEvent {
     // State validation using rules
     // Note: CanStartRule allows 'doing' status (idempotent) and 'to-do' status
     ValidationRuleSet.ensure(this.state, [new CanStartRule()]);
@@ -329,7 +334,13 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
     return this.makeEvent(
       GoalEventType.STARTED,
       {
-        status: GoalStatus.DOING
+        status: GoalStatus.DOING,
+        // Include claim info if provided
+        ...(claimInfo && {
+          claimedBy: claimInfo.claimedBy,
+          claimedAt: claimInfo.claimedAt,
+          claimExpiresAt: claimInfo.claimExpiresAt,
+        }),
       },
       Goal.apply
     ) as GoalStartedEvent;
@@ -562,10 +573,18 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
    * Transitions status from "paused" to "doing".
    *
    * @param note - Optional note explaining the resumption
+   * @param claimInfo - Optional claim information to embed in the event
    * @returns GoalResumed event
    * @throws Error if goal is not paused, or if note is invalid
    */
-  resume(note?: string): GoalResumedEvent {
+  resume(
+    note?: string,
+    claimInfo?: {
+      claimedBy: string;
+      claimedAt: string;
+      claimExpiresAt: string;
+    }
+  ): GoalResumedEvent {
     // 1. State validation: can only resume from paused status
     ValidationRuleSet.ensure(this.state, [new CanResumeRule()]);
 
@@ -583,6 +602,12 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       {
         status: GoalStatus.DOING,
         note: sanitizedNote,
+        // Include claim info if provided
+        ...(claimInfo && {
+          claimedBy: claimInfo.claimedBy,
+          claimedAt: claimInfo.claimedAt,
+          claimExpiresAt: claimInfo.claimExpiresAt,
+        }),
       },
       Goal.apply
     ) as GoalResumedEvent;

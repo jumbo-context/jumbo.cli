@@ -20,6 +20,9 @@ export class SqliteGoalStartedProjector
     const stmt = this.db.prepare(`
       UPDATE goal_views
       SET status = ?,
+          claimedBy = ?,
+          claimedAt = ?,
+          claimExpiresAt = ?,
           version = ?,
           updatedAt = ?
       WHERE goalId = ?
@@ -27,6 +30,9 @@ export class SqliteGoalStartedProjector
 
     stmt.run(
       event.payload.status,
+      event.payload.claimedBy || null,
+      event.payload.claimedAt || null,
+      event.payload.claimExpiresAt || null,
       event.version,
       event.timestamp,
       event.aggregateId
@@ -53,6 +59,9 @@ export class SqliteGoalStartedProjector
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       note: row.note || undefined,
+      claimedBy: row.claimedBy || undefined,
+      claimedAt: row.claimedAt || undefined,
+      claimExpiresAt: row.claimExpiresAt || undefined,
       nextGoalId: row.nextGoalId || undefined,
     };
   }

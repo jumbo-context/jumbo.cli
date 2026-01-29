@@ -252,6 +252,14 @@ import { ReviewTurnTracker } from "../../application/work/goals/complete/ReviewT
 // Solution Context
 import { UnprimedBrownfieldQualifier } from "../../application/solution/UnprimedBrownfieldQualifier.js";
 
+// Worker Identity
+import { HostSessionKeyResolver } from "./session/HostSessionKeyResolver.js";
+import { FsWorkerIdentityRegistry } from "./workers/FsWorkerIdentityRegistry.js";
+
+// Goal Claims
+import { FsGoalClaimStore } from "../work/goals/claims/FsGoalClaimStore.js";
+import { GoalClaimPolicy } from "../../application/work/goals/claims/GoalClaimPolicy.js";
+
 export class HostBuilder {
   private readonly rootDir: string;
   private readonly db: Database.Database;
@@ -284,6 +292,17 @@ export class HostBuilder {
     await settingsInitializer.ensureSettingsFileExists();
 
     const settingsReader = new FsSettingsReader(this.rootDir);
+
+    // Create worker identity components
+    const hostSessionKeyResolver = new HostSessionKeyResolver();
+    const workerIdentityReader = new FsWorkerIdentityRegistry(
+      this.rootDir,
+      hostSessionKeyResolver
+    );
+
+    // Create goal claim components
+    const goalClaimStore = new FsGoalClaimStore(this.rootDir);
+    const goalClaimPolicy = new GoalClaimPolicy(goalClaimStore, clock);
 
     // Create database rebuild service
     // TEMPORARY: Uses sequential event bus to avoid race conditions during rebuild
@@ -467,7 +486,9 @@ export class HostBuilder {
       goalCompletedEventStore,
       goalCompletedEventStore,
       goalCompletedProjector,
-      eventBus
+      eventBus,
+      goalClaimPolicy,
+      workerIdentityReader
     );
     const getGoalContextQueryHandler = new GetGoalContextQueryHandler(
       goalContextReader,
@@ -490,7 +511,9 @@ export class HostBuilder {
       reviewTurnTracker,
       goalReviewedEventStore,
       goalReviewedEventStore,
-      eventBus
+      eventBus,
+      goalClaimPolicy,
+      workerIdentityReader
     );
 
     // Project Initialization Protocol
@@ -667,6 +690,12 @@ export class HostBuilder {
       clock,
       settingsReader,
       settingsInitializer,
+
+      // Worker Identity
+      workerIdentityReader,
+
+      // Goal Claims
+      goalClaimPolicy,
 
       // Maintenance Services
       databaseRebuildService,

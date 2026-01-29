@@ -63,7 +63,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     const startCommand: StartGoalCommand = {
       goalId,
@@ -100,7 +103,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     const resumeCommand: ResumeGoalCommand = {
       goalId,
@@ -119,7 +125,9 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalCompletedEventStore,
       container.goalCompletedEventStore,
       container.goalCompletedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader
     );
     const completeCommand: CompleteGoalCommand = {
       goalId,
@@ -167,7 +175,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -208,7 +219,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -223,7 +237,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
 
     // First pause/resume cycle
@@ -269,7 +286,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -285,7 +305,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await resumeHandler.execute({ goalId });
 

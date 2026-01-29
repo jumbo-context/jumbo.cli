@@ -60,7 +60,9 @@ export const GoalErrorMessages = {
   CANNOT_PAUSE_IN_STATUS: 'Cannot pause goal in {status} status. Goal must be in doing status.',
   CANNOT_RESUME_IN_STATUS: 'Cannot resume goal in {status} status. Goal must be paused.',
   // Embedded context: file path errors
-  FILE_PATH_TOO_LONG: 'File path must be less than {max} characters'
+  FILE_PATH_TOO_LONG: 'File path must be less than {max} characters',
+  // Claim-related errors
+  GOAL_CLAIMED_BY_ANOTHER_WORKER: 'Goal is claimed by another worker. Claim expires at {expiresAt}.',
 } as const;
 
 // Numeric limits

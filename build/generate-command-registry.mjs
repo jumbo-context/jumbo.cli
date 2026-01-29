@@ -27,6 +27,7 @@ const OUTPUT_FILE = path.join(ROOT_DIR, 'src', 'presentation', 'cli', 'shared', 
 // Clean Screaming Architecture directories to scan
 // Import paths are relative from shared/registry/ to feature folders (../../)
 const CLEAN_SCREAMING_DIRS = [
+  { dir: path.join(CLI_DIR, 'host'), importPrefix: '../../host' },
   { dir: path.join(CLI_DIR, 'work'), importPrefix: '../../work' },
   { dir: path.join(CLI_DIR, 'solution'), importPrefix: '../../solution' },
   { dir: path.join(CLI_DIR, 'project-knowledge'), importPrefix: '../../project-knowledge' },

@@ -45,7 +45,9 @@ export async function goalReset(options: { goalId: string }, container: IApplica
       container.goalResetEventStore,
       container.goalResetEventStore,
       container.goalResetProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader
     );
 
     // 2. Execute command

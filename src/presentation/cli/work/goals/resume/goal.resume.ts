@@ -79,7 +79,10 @@ export async function goalResume(options: { goalId: string; note?: string }, con
         container.goalResumedEventStore,
         container.goalResumedEventStore,
         container.goalResumedProjector,
-        container.eventBus
+        container.eventBus,
+        container.goalClaimPolicy,
+        container.workerIdentityReader,
+        container.settingsReader
       );
 
       const command: ResumeGoalCommand = {

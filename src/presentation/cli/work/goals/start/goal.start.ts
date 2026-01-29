@@ -46,7 +46,10 @@ export async function goalStart(options: { goalId: string }, container: IApplica
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
 
     // 2. Execute command
