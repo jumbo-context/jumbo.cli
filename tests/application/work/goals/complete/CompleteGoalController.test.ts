@@ -12,6 +12,9 @@ import { IGoalReviewedEventReader } from "../../../../../src/application/work/go
 import { IEventBus } from "../../../../../src/application/shared/messaging/IEventBus";
 import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../../src/domain/work/goals/Constants";
 import { GoalView } from "../../../../../src/application/work/goals/GoalView";
+import { GoalClaimPolicy } from "../../../../../src/application/work/goals/claims/GoalClaimPolicy";
+import { IWorkerIdentityReader } from "../../../../../src/application/host/workers/IWorkerIdentityReader";
+import { createWorkerId } from "../../../../../src/application/host/workers/WorkerId";
 
 describe("CompleteGoalController", () => {
   let completeGoalCommandHandler: CompleteGoalCommandHandler;
@@ -21,6 +24,10 @@ describe("CompleteGoalController", () => {
   let reviewEventWriter: IGoalReviewedEventWriter;
   let goalEventReader: IGoalReviewedEventReader;
   let eventBus: IEventBus;
+  let claimPolicy: GoalClaimPolicy;
+  let workerIdentityReader: IWorkerIdentityReader;
+
+  const testWorkerId = createWorkerId("test-worker-id");
 
   beforeEach(() => {
     completeGoalCommandHandler = {
@@ -51,6 +58,15 @@ describe("CompleteGoalController", () => {
       subscribe: jest.fn(),
       publish: jest.fn(),
     };
+
+    // Mock claim policy - default to allowing claims (no existing claim)
+    claimPolicy = {
+      canClaim: jest.fn().mockReturnValue({ allowed: true }),
+    } as unknown as GoalClaimPolicy;
+
+    workerIdentityReader = {
+      workerId: testWorkerId,
+    };
   });
 
   it("blocks commit when no QA review has been recorded", async () => {
@@ -68,7 +84,9 @@ describe("CompleteGoalController", () => {
       turnTracker,
       reviewEventWriter,
       goalEventReader,
-      eventBus
+      eventBus,
+      claimPolicy,
+      workerIdentityReader
     );
 
     const expectedMessage = formatErrorMessage(
@@ -115,7 +133,9 @@ describe("CompleteGoalController", () => {
       turnTracker,
       reviewEventWriter,
       goalEventReader,
-      eventBus
+      eventBus,
+      claimPolicy,
+      workerIdentityReader
     );
 
     const response = await controller.handle({ goalId: "goal_456", commit: true });
@@ -163,7 +183,9 @@ describe("CompleteGoalController", () => {
       turnTracker,
       reviewEventWriter,
       goalEventReader,
-      eventBus
+      eventBus,
+      claimPolicy,
+      workerIdentityReader
     );
 
     const response = await controller.handle({ goalId: "goal_789", commit: false });
@@ -172,5 +194,43 @@ describe("CompleteGoalController", () => {
     expect(reviewEventWriter.append).not.toHaveBeenCalled();
     expect(goalEventReader.readStream).not.toHaveBeenCalled();
     expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it("rejects completion when goal is claimed by another worker", async () => {
+    // Mock another worker's active claim
+    const otherWorkerId = createWorkerId("other-worker-id");
+    (claimPolicy.canClaim as jest.Mock).mockReturnValue({
+      allowed: false,
+      reason: "CLAIMED_BY_ANOTHER_WORKER",
+      existingClaim: {
+        goalId: "goal_123",
+        claimedBy: otherWorkerId,
+        claimedAt: "2025-01-15T09:00:00.000Z",
+        claimExpiresAt: "2025-01-15T11:00:00.000Z",
+      },
+    });
+
+    const controller = new CompleteGoalController(
+      completeGoalCommandHandler,
+      getGoalContextQueryHandler,
+      goalReader,
+      turnTracker,
+      reviewEventWriter,
+      goalEventReader,
+      eventBus,
+      claimPolicy,
+      workerIdentityReader
+    );
+
+    await expect(
+      controller.handle({ goalId: "goal_123", commit: false })
+    ).rejects.toThrow(
+      "Goal is claimed by another worker. Claim expires at 2025-01-15T11:00:00.000Z."
+    );
+
+    // Verify nothing else was called
+    expect(turnTracker.getCommitGate).not.toHaveBeenCalled();
+    expect(goalReader.findById).not.toHaveBeenCalled();
+    expect(completeGoalCommandHandler.execute).not.toHaveBeenCalled();
   });
 });

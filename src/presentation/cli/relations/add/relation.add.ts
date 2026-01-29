@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 import { AddRelationCommandHandler } from "../../../../application/relations/add/AddRelationCommandHandler.js";
 import { AddRelationCommand } from "../../../../application/relations/add/AddRelationCommand.js";
 import { EntityTypeValue, RelationStrengthValue } from "../../../../domain/relations/Constants.js";
@@ -74,7 +74,7 @@ export async function relationAdd(options: {
   relationType: string;
   description: string;
   strength?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

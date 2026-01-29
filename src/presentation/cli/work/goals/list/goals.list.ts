@@ -9,7 +9,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { GoalView } from "../../../../../application/work/goals/GoalView.js";
 
 /**
@@ -50,7 +50,7 @@ function formatStatus(status: string): string {
  */
 export async function goalsList(
   _options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   try {
     // Fetch all goals

@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { dependenciesList } from "../../../../../../src/presentation/cli/solution/dependencies/list/dependencies.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IDependencyListReader } from "../../../../../../src/application/solution/dependencies/list/IDependencyListReader.js";
 import { DependencyView } from "../../../../../../src/application/solution/dependencies/DependencyView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("dependencies.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockDependencyListReader: jest.Mocked<IDependencyListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -52,7 +52,7 @@ describe("dependencies.list command", () => {
 
     mockDependencyListReader.findAll.mockResolvedValue(mockDependencies);
 
-    await dependenciesList({}, mockContainer as ApplicationContainer);
+    await dependenciesList({}, mockContainer as IApplicationContainer);
 
     expect(mockDependencyListReader.findAll).toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
@@ -61,7 +61,7 @@ describe("dependencies.list command", () => {
   it("should filter by consumer when specified", async () => {
     mockDependencyListReader.findAll.mockResolvedValue([]);
 
-    await dependenciesList({ consumer: "comp_user" }, mockContainer as ApplicationContainer);
+    await dependenciesList({ consumer: "comp_user" }, mockContainer as IApplicationContainer);
 
     expect(mockDependencyListReader.findAll).toHaveBeenCalledWith({ consumer: "comp_user", provider: undefined });
   });
@@ -69,7 +69,7 @@ describe("dependencies.list command", () => {
   it("should show info message when no dependencies exist", async () => {
     mockDependencyListReader.findAll.mockResolvedValue([]);
 
-    await dependenciesList({}, mockContainer as ApplicationContainer);
+    await dependenciesList({}, mockContainer as IApplicationContainer);
 
     expect(mockDependencyListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

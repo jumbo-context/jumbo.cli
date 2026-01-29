@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { StartGoalCommandHandler } from "../../../../../application/work/goals/start/StartGoalCommandHandler.js";
 import { StartGoalCommand } from "../../../../../application/work/goals/start/StartGoalCommand.js";
@@ -37,7 +37,7 @@ export const metadata: CommandMetadata = {
  * Command handler
  * Called by Commander with parsed options
  */
-export async function goalStart(options: { goalId: string }, container: ApplicationContainer) {
+export async function goalStart(options: { goalId: string }, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {
@@ -46,7 +46,10 @@ export async function goalStart(options: { goalId: string }, container: Applicat
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
 
     // 2. Execute command

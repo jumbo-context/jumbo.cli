@@ -7,7 +7,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { CompleteGoalRequest } from "../../../../../application/work/goals/complete/CompleteGoalRequest.js";
 import { CompleteGoalResponse } from "../../../../../application/work/goals/complete/CompleteGoalResponse.js";
@@ -48,7 +48,7 @@ export const metadata: CommandMetadata = {
  */
 export async function goalComplete(
   options: { goalId: string; commit?: boolean },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { ViewArchitectureCommandHandler } from "../../../../../application/solution/architecture/view/ViewArchitectureCommandHandler.js";
 
@@ -30,7 +30,7 @@ export const metadata: CommandMetadata = {
  */
 export async function architectureView(
   options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

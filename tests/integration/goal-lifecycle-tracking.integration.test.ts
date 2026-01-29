@@ -14,13 +14,15 @@
 import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import fs from "fs-extra";
 import path from "path";
-import { bootstrap, ApplicationContainer } from "../../src/presentation/cli/composition/bootstrap.js";
+import { Host } from "../../src/infrastructure/host/Host.js";
+import { IApplicationContainer } from "../../src/application/host/IApplicationContainer.js";
 import { GetLatestSessionSummaryQueryHandler } from "../../src/application/work/sessions/get-context/GetLatestSessionSummaryQueryHandler.js";
 import { SessionSummaryFormatter } from "../../src/presentation/cli/work/sessions/start/SessionSummaryFormatter.js";
 
 describe("Integration: Goal Lifecycle Tracking", () => {
   const testRoot = path.join(process.cwd(), ".jumbo-goal-lifecycle-test");
-  let container: ApplicationContainer | null = null;
+  let host: Host | null = null;
+  let container: IApplicationContainer | null = null;
 
   beforeEach(async () => {
     // Clean up test directory
@@ -30,12 +32,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   afterEach(async () => {
-    if (container) {
-      const db = container.db;
-      if (db && db.open) {
-        db.pragma("wal_checkpoint(TRUNCATE)");
-        db.close();
-      }
+    if (host) {
+      host.dispose();
+      host = null;
       container = null;
     }
     // Wait for Windows to release file locks on WAL files
@@ -44,7 +43,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should track goal started events in session summary", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_lifecycle_test_1";
     const goalId = "goal_started_test_1";
@@ -110,7 +111,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should track goal paused events with reason and note", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_lifecycle_test_2";
     const goalId = "goal_paused_test_2";
@@ -192,7 +195,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should track goal resumed events", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_lifecycle_test_3";
     const goalId = "goal_resumed_test_3";
@@ -282,7 +287,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should preserve goal lifecycle data when archiving session", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const session1Id = "session_archive_test_1";
     const session2Id = "session_archive_test_2";
@@ -384,7 +391,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should include resume prompt in formatter output when goals are paused", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_formatter_test";
     const goalId = "goal_formatter_test";
@@ -457,7 +466,9 @@ describe("Integration: Goal Lifecycle Tracking", () => {
   });
 
   it("should track multiple goal lifecycle events in one session", async () => {
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_multiple_test";
     const goal1Id = "goal_multiple_1";

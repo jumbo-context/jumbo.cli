@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { audiencesList } from "../../../../../../src/presentation/cli/project-knowledge/audiences/list/audiences.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IAudienceContextReader } from "../../../../../../src/application/project-knowledge/audiences/query/IAudienceContextReader.js";
 import { AudienceView } from "../../../../../../src/application/project-knowledge/audiences/AudienceView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("audiences.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockAudienceContextReader: jest.Mocked<IAudienceContextReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -50,7 +50,7 @@ describe("audiences.list command", () => {
 
     mockAudienceContextReader.findAllActive.mockResolvedValue(mockAudiences);
 
-    await audiencesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudienceContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("audiences.list command", () => {
   it("should show info message when no audiences exist", async () => {
     mockAudienceContextReader.findAllActive.mockResolvedValue([]);
 
-    await audiencesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudienceContextReader.findAllActive).toHaveBeenCalledTimes(1);
     // The info message should be rendered
@@ -84,7 +84,7 @@ describe("audiences.list command", () => {
 
     mockAudienceContextReader.findAllActive.mockResolvedValue(mockAudiences);
 
-    await audiencesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudienceContextReader.findAllActive).toHaveBeenCalledTimes(1);
     // JSON output should be rendered via renderer.data()
@@ -127,7 +127,7 @@ describe("audiences.list command", () => {
 
     mockAudienceContextReader.findAllActive.mockResolvedValue(mockAudiences);
 
-    await audiencesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudienceContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { valuesList } from "../../../../../../src/presentation/cli/project-knowledge/value-propositions/list/values.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IValuePropositionContextReader } from "../../../../../../src/application/project-knowledge/value-propositions/query/IValuePropositionContextReader.js";
 import { ValuePropositionView } from "../../../../../../src/application/project-knowledge/value-propositions/ValuePropositionView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("values.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockValuePropositionContextReader: jest.Mocked<IValuePropositionContextReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -50,7 +50,7 @@ describe("values.list command", () => {
 
     mockValuePropositionContextReader.findAllActive.mockResolvedValue(mockValues);
 
-    await valuesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await valuesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockValuePropositionContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("values.list command", () => {
   it("should show info message when no values exist", async () => {
     mockValuePropositionContextReader.findAllActive.mockResolvedValue([]);
 
-    await valuesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await valuesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockValuePropositionContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe("values.list command", () => {
 
     mockValuePropositionContextReader.findAllActive.mockResolvedValue(mockValues);
 
-    await valuesList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await valuesList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockValuePropositionContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

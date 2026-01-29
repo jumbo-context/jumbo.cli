@@ -18,7 +18,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { UpdateGoalCommandHandler } from "../../../../../application/work/goals/update/UpdateGoalCommandHandler.js";
 import { UpdateGoalCommand } from "../../../../../application/work/goals/update/UpdateGoalCommand.js";
@@ -128,7 +128,7 @@ export async function goalUpdate(
     filesToBeChanged?: string[];
     nextGoal?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

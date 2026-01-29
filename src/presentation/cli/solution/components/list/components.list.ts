@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListComponentsQueryHandler } from "../../../../../application/solution/components/list/ListComponentsQueryHandler.js";
 import { ComponentStatusFilter } from "../../../../../application/solution/components/list/IComponentListReader.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -84,7 +84,7 @@ function isValidStatus(status: string): status is ComponentStatusFilter {
  */
 export async function componentsList(
   options: { status?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

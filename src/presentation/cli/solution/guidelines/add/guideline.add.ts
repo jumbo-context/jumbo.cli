@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddGuidelineCommandHandler } from "../../../../../application/solution/guidelines/add/AddGuidelineCommandHandler.js";
 import { AddGuidelineCommand } from "../../../../../application/solution/guidelines/add/AddGuidelineCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -69,7 +69,7 @@ export async function guidelineAdd(options: {
   rationale: string;
   enforcement: string;
   example?: string[];
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

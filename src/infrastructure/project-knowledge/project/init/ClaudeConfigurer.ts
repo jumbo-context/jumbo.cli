@@ -6,7 +6,7 @@
  * - .claude/settings.json with SessionStart hooks
  *
  * Use this as a reference when creating new agent Configurers.
- * Each Configurer must implement configure(projectRoot): Promise<void>.
+ * Each Configurer implements IConfigurer interface.
  *
  * Operations are idempotent and gracefully handle errors.
  */
@@ -15,8 +15,10 @@ import path from "path";
 import fs from "fs-extra";
 import { AgentInstructions } from "../../../../domain/project-knowledge/project/AgentInstructions.js";
 import { SafeClaudeSettingsMerger } from "./SafeClaudeSettingsMerger.js";
+import { IConfigurer } from "./IConfigurer.js";
+import { PlannedFileChange } from "../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 
-export class ClaudeConfigurer {
+export class ClaudeConfigurer implements IConfigurer {
   /**
    * Configure all Claude Code requirements for Jumbo
    *
@@ -65,8 +67,8 @@ export class ClaudeConfigurer {
    */
   private async ensureClaudeSettings(projectRoot: string): Promise<void> {
     try {
-      // Define all Jumbo hooks for Claude Code
-      const jumboHooks = {
+      // Define all Jumbo settings for Claude Code
+      const jumboSettings = {
         hooks: {
           SessionStart: [
             {
@@ -112,15 +114,41 @@ export class ClaudeConfigurer {
             },
           ],
         },
+        permissions: {
+          allow: ["Bash(jumbo --help)"],
+        },
       };
 
       // Merge into existing settings (or create new)
-      await SafeClaudeSettingsMerger.mergeSettings(projectRoot, jumboHooks);
+      await SafeClaudeSettingsMerger.mergeSettings(projectRoot, jumboSettings);
     } catch (error) {
       // Graceful degradation - log but don't throw
       console.warn(
         `Warning: Failed to configure Claude Code hooks: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  /**
+   * Return what changes this configurer will make without executing.
+   */
+  async getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]> {
+    const changes: PlannedFileChange[] = [];
+
+    const claudeMdPath = path.join(projectRoot, "CLAUDE.md");
+    changes.push({
+      path: "CLAUDE.md",
+      action: (await fs.pathExists(claudeMdPath)) ? "modify" : "create",
+      description: "Add Jumbo instructions",
+    });
+
+    const settingsPath = path.join(projectRoot, ".claude/settings.json");
+    changes.push({
+      path: ".claude/settings.json",
+      action: (await fs.pathExists(settingsPath)) ? "modify" : "create",
+      description: "Add hook configuration and permissions",
+    });
+
+    return changes;
   }
 }

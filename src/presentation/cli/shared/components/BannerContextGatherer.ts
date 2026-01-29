@@ -8,7 +8,7 @@
  * for display and queries stores directly via the container.
  */
 
-import { ApplicationContainer } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 import { GoalStatus } from "../../../../domain/work/goals/Constants.js";
 
 /**
@@ -60,7 +60,7 @@ export interface BannerContext {
  * @returns Aggregated banner context
  */
 export async function gatherBannerContext(
-  container: ApplicationContainer
+  container: IApplicationContainer
 ): Promise<BannerContext> {
   try {
     // Get project info

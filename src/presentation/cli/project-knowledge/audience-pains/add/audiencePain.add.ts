@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddAudiencePainCommandHandler } from "../../../../../application/project-knowledge/audience-pains/add/AddAudiencePainCommandHandler.js";
 import { AddAudiencePainCommand } from "../../../../../application/project-knowledge/audience-pains/add/AddAudiencePainCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -48,7 +48,7 @@ export const metadata: CommandMetadata = {
 export async function audiencePainAdd(options: {
   title: string;
   description: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

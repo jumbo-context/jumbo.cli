@@ -1,38 +1,33 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import {
-  bootstrap,
-  ApplicationContainer,
-} from "../../src/presentation/cli/composition/bootstrap.js";
+import { Host } from "../../src/infrastructure/host/Host.js";
+import { IApplicationContainer } from "../../src/application/host/IApplicationContainer.js";
 import { BaseEvent } from "../../src/domain/shared/BaseEvent.js";
 
 describe("Infrastructure Wiring Integration", () => {
   let tmpDir: string;
-  let container: ApplicationContainer;
+  let host: Host;
+  let container: IApplicationContainer;
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(process.cwd(), "test-integration-"));
-    container = await bootstrap(tmpDir);
+    host = new Host(tmpDir);
+    const builder = host.createBuilder();
+    container = await builder.build();
   });
 
   afterEach(async () => {
-    // LocalInfrastructureModule handles cleanup via signal handlers in production.
-    // For tests, we need to manually close the db connection since the process doesn't exit.
-    const db = container.db;
-    if (db && db.open) {
-      db.pragma("wal_checkpoint(TRUNCATE)");
-      db.close();
-    }
+    // Dispose of host resources for testing (production uses signal handlers)
+    host.dispose();
     // Wait for Windows to release file locks on WAL files
     await new Promise((resolve) => setTimeout(resolve, 100));
     await fs.remove(tmpDir);
   });
 
-  it("bootstrap creates all components", () => {
+  it("Host creates all components", () => {
     expect(container.eventBus).toBeDefined();
     expect(container.eventStore).toBeDefined();
     expect(container.clock).toBeDefined();
-    expect(container.db).toBeDefined();
   });
 
   it("appending to event store persists to file system", async () => {
@@ -110,12 +105,6 @@ describe("Infrastructure Wiring Integration", () => {
     expect(storedEvents[1].type).toBe("Event2");
     expect(storedEvents[0]).not.toHaveProperty("seq");
     expect(storedEvents[1]).not.toHaveProperty("seq");
-  });
-
-  it("database connection is established", () => {
-    // Verify we can execute a query
-    const result = container.db.prepare("SELECT 1 as test").get();
-    expect(result).toEqual({ test: 1 });
   });
 
   it("clock returns ISO8601 timestamps", () => {

@@ -9,6 +9,7 @@
 
 import { RegisteredCommand } from './CommandMetadata.js';
 
+import { workerView, metadata as workerViewMeta } from '../../host/workers/worker.view.js';
 import { goalAdd, metadata as goalAddMeta } from '../../work/goals/add/goal.add.js';
 import { goalBlock, metadata as goalBlockMeta } from '../../work/goals/block/goal.block.js';
 import { goalComplete, metadata as goalCompleteMeta } from '../../work/goals/complete/goal.complete.js';
@@ -70,6 +71,11 @@ import { relationRemove, metadata as relationRemoveMeta } from '../../relations/
 import { dbRebuild, metadata as dbRebuildMeta } from '../../maintenance/db/rebuild/db.rebuild.js';
 
 export const commands: RegisteredCommand[] = [
+  {
+    path: 'worker view',
+    metadata: workerViewMeta,
+    handler: workerView
+  },
   {
     path: 'goal add',
     metadata: goalAddMeta,

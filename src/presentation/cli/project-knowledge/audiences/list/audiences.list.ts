@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListAudiencesQueryHandler } from "../../../../../application/project-knowledge/audiences/list/ListAudiencesQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { AudienceView } from "../../../../../application/project-knowledge/audiences/AudienceView.js";
@@ -61,7 +61,7 @@ function formatAudienceText(audience: AudienceView): void {
  */
 export async function audiencesList(
   _options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

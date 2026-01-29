@@ -10,13 +10,24 @@ import { IGoalCompleteReader } from "../../../../../src/application/work/goals/c
 import { IEventBus } from "../../../../../src/application/shared/messaging/IEventBus";
 import { GoalEventType, GoalStatus } from "../../../../../src/domain/work/goals/Constants";
 import { GoalView } from "../../../../../src/application/work/goals/GoalView";
+import { GoalClaimPolicy } from "../../../../../src/application/work/goals/claims/GoalClaimPolicy";
+import { IGoalClaimStore } from "../../../../../src/application/work/goals/claims/IGoalClaimStore";
+import { IClock } from "../../../../../src/application/shared/system/IClock";
+import { IWorkerIdentityReader } from "../../../../../src/application/host/workers/IWorkerIdentityReader";
+import { createWorkerId } from "../../../../../src/application/host/workers/WorkerId";
 
 describe("CompleteGoalCommandHandler", () => {
   let eventWriter: IGoalCompletedEventWriter;
   let eventReader: IGoalCompletedEventReader;
   let goalReader: IGoalCompleteReader;
   let eventBus: IEventBus;
+  let claimStore: IGoalClaimStore;
+  let clock: IClock;
+  let claimPolicy: GoalClaimPolicy;
+  let workerIdentityReader: IWorkerIdentityReader;
   let handler: CompleteGoalCommandHandler;
+
+  const testWorkerId = createWorkerId("test-worker-id");
 
   beforeEach(() => {
     // Mock event writer
@@ -40,7 +51,34 @@ describe("CompleteGoalCommandHandler", () => {
       publish: jest.fn().mockResolvedValue(undefined),
     };
 
-    handler = new CompleteGoalCommandHandler(eventWriter, eventReader, goalReader, eventBus);
+    // Mock claim store
+    claimStore = {
+      getClaim: jest.fn().mockReturnValue(null),
+      setClaim: jest.fn(),
+      releaseClaim: jest.fn(),
+    };
+
+    // Mock clock
+    clock = {
+      nowIso: jest.fn().mockReturnValue("2025-01-15T10:00:00.000Z"),
+    };
+
+    // Create claim policy with mocked dependencies
+    claimPolicy = new GoalClaimPolicy(claimStore, clock);
+
+    // Mock worker identity reader
+    workerIdentityReader = {
+      workerId: testWorkerId,
+    };
+
+    handler = new CompleteGoalCommandHandler(
+      eventWriter,
+      eventReader,
+      goalReader,
+      eventBus,
+      claimPolicy,
+      workerIdentityReader
+    );
   });
 
   it("should complete goal and publish GoalCompletedEvent event", async () => {
@@ -308,6 +346,178 @@ describe("CompleteGoalCommandHandler", () => {
     await expect(handler.execute(command)).rejects.toThrow(
       "Goal is already completed"
     );
+  });
+
+  it("should throw error if goal is claimed by another worker", async () => {
+    // Arrange
+    const command: CompleteGoalCommand = {
+      goalId: "goal_123",
+    };
+
+    // Mock projection exists
+    const mockView: GoalView = {
+      goalId: "goal_123",
+      objective: "Implement authentication",
+      successCriteria: ["Users can log in"],
+      scopeIn: [],
+      scopeOut: [],
+      boundaries: [],
+      status: GoalStatus.DOING,
+      version: 2,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
+
+    // Mock another worker's active claim
+    const otherWorkerId = createWorkerId("other-worker-id");
+    (claimStore.getClaim as jest.Mock).mockReturnValue({
+      goalId: "goal_123",
+      claimedBy: otherWorkerId,
+      claimedAt: "2025-01-15T09:00:00.000Z",
+      claimExpiresAt: "2025-01-15T11:00:00.000Z", // Expires after current time (10:00)
+    });
+
+    // Act & Assert
+    await expect(handler.execute(command)).rejects.toThrow(
+      "Goal is claimed by another worker. Claim expires at 2025-01-15T11:00:00.000Z."
+    );
+
+    // Verify domain logic was never called
+    expect(eventWriter.append).not.toHaveBeenCalled();
+    expect(eventBus.publish).not.toHaveBeenCalled();
+  });
+
+  it("should allow completion if claim has expired", async () => {
+    // Arrange
+    const command: CompleteGoalCommand = {
+      goalId: "goal_123",
+    };
+
+    // Mock projection exists
+    const mockView: GoalView = {
+      goalId: "goal_123",
+      objective: "Implement authentication",
+      successCriteria: ["Users can log in"],
+      scopeIn: [],
+      scopeOut: [],
+      boundaries: [],
+      status: GoalStatus.DOING,
+      version: 2,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
+
+    // Mock expired claim from another worker
+    const otherWorkerId = createWorkerId("other-worker-id");
+    (claimStore.getClaim as jest.Mock).mockReturnValue({
+      goalId: "goal_123",
+      claimedBy: otherWorkerId,
+      claimedAt: "2025-01-15T08:00:00.000Z",
+      claimExpiresAt: "2025-01-15T09:00:00.000Z", // Expired before current time (10:00)
+    });
+
+    // Mock event history
+    const mockHistory = [
+      {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T00:00:00Z",
+        payload: {
+          objective: "Implement authentication",
+          successCriteria: ["Users can log in"],
+          scopeIn: [],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+        },
+      },
+      {
+        type: GoalEventType.STARTED,
+        aggregateId: "goal_123",
+        version: 2,
+        timestamp: "2025-01-01T01:00:00Z",
+        payload: {
+          status: GoalStatus.DOING,
+        },
+      },
+    ];
+    (eventReader.readStream as jest.Mock).mockResolvedValue(mockHistory);
+
+    // Act
+    const result = await handler.execute(command);
+
+    // Assert
+    expect(result.goalId).toBe("goal_123");
+    expect(eventWriter.append).toHaveBeenCalledTimes(1);
+  });
+
+  it("should allow completion if current worker owns the claim", async () => {
+    // Arrange
+    const command: CompleteGoalCommand = {
+      goalId: "goal_123",
+    };
+
+    // Mock projection exists
+    const mockView: GoalView = {
+      goalId: "goal_123",
+      objective: "Implement authentication",
+      successCriteria: ["Users can log in"],
+      scopeIn: [],
+      scopeOut: [],
+      boundaries: [],
+      status: GoalStatus.DOING,
+      version: 2,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+    (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
+
+    // Mock claim owned by current worker
+    (claimStore.getClaim as jest.Mock).mockReturnValue({
+      goalId: "goal_123",
+      claimedBy: testWorkerId,
+      claimedAt: "2025-01-15T09:00:00.000Z",
+      claimExpiresAt: "2025-01-15T11:00:00.000Z",
+    });
+
+    // Mock event history
+    const mockHistory = [
+      {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: "2025-01-01T00:00:00Z",
+        payload: {
+          objective: "Implement authentication",
+          successCriteria: ["Users can log in"],
+          scopeIn: [],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+        },
+      },
+      {
+        type: GoalEventType.STARTED,
+        aggregateId: "goal_123",
+        version: 2,
+        timestamp: "2025-01-01T01:00:00Z",
+        payload: {
+          status: GoalStatus.DOING,
+        },
+      },
+    ];
+    (eventReader.readStream as jest.Mock).mockResolvedValue(mockHistory);
+
+    // Act
+    const result = await handler.execute(command);
+
+    // Assert
+    expect(result.goalId).toBe("goal_123");
+    expect(eventWriter.append).toHaveBeenCalledTimes(1);
+    expect(claimStore.releaseClaim).toHaveBeenCalledWith("goal_123");
   });
 
   it("should propagate errors if event store fails", async () => {

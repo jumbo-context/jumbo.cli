@@ -40,6 +40,7 @@ export interface CommandExample {
  * Command category for organizing help output
  */
 export type CommandCategory =
+  | "host"
   | "project-knowledge"
   | "relations"
   | "solution"

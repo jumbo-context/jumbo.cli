@@ -17,10 +17,11 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
       INSERT OR REPLACE INTO goal_views (
         goalId, objective, successCriteria, scopeIn, scopeOut,
         boundaries, status, version, createdAt, updatedAt,
+        claimedBy, claimedAt, claimExpiresAt,
         relevantInvariants, relevantGuidelines, relevantDependencies,
         relevantComponents, architecture, filesToBeCreated, filesToBeChanged,
         nextGoalId
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -34,6 +35,9 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
       event.version,
       event.timestamp,
       event.timestamp,
+      null, // claimedBy - goals are not claimed when added
+      null, // claimedAt
+      null, // claimExpiresAt
       event.payload.relevantInvariants ? JSON.stringify(event.payload.relevantInvariants) : null,
       event.payload.relevantGuidelines ? JSON.stringify(event.payload.relevantGuidelines) : null,
       event.payload.relevantDependencies ? JSON.stringify(event.payload.relevantDependencies) : null,

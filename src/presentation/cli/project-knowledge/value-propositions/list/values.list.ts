@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListValuePropositionsQueryHandler } from "../../../../../application/project-knowledge/value-propositions/list/ListValuePropositionsQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { ValuePropositionView } from "../../../../../application/project-knowledge/value-propositions/ValuePropositionView.js";
@@ -58,7 +58,7 @@ function formatValueText(value: ValuePropositionView): void {
  */
 export async function valuesList(
   _options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

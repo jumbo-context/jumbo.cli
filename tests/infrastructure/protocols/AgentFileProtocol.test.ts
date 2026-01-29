@@ -120,6 +120,30 @@ describe("AgentFileProtocol", () => {
       expect(settings.hooks.SessionStart[0].hooks[0].command).toBe("jumbo session start");
     });
 
+    it("should create .claude/settings.json with jumbo --help permission", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const settingsPath = path.join(tmpDir, ".claude", "settings.json");
+      const content = await fs.readFile(settingsPath, "utf-8");
+      const settings = JSON.parse(content);
+      expect(settings.permissions?.allow).toBeDefined();
+      expect(settings.permissions.allow).toContain("Bash(jumbo --help)");
+    });
+
+    it("should create .gemini/settings.json with jumbo --help permission", async () => {
+      // Act
+      await protocol.ensureAgentConfigurations(tmpDir);
+
+      // Assert
+      const settingsPath = path.join(tmpDir, ".gemini", "settings.json");
+      const content = await fs.readFile(settingsPath, "utf-8");
+      const settings = JSON.parse(content);
+      expect(settings.tools?.allowed).toBeDefined();
+      expect(settings.tools.allowed).toContain("run_shell_command(jumbo --help)");
+    });
+
     it("should create .gemini/settings.json with SessionStart hook", async () => {
       // Act
       await protocol.ensureAgentConfigurations(tmpDir);

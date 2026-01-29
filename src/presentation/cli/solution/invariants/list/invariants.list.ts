@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListInvariantsQueryHandler } from "../../../../../application/solution/invariants/list/ListInvariantsQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { InvariantView } from "../../../../../application/solution/invariants/InvariantView.js";
@@ -30,7 +30,7 @@ function formatInvariantText(invariant: InvariantView): void {
 
 export async function invariantsList(
   options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

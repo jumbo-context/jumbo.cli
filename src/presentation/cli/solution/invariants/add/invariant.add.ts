@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddInvariantCommandHandler } from "../../../../../application/solution/invariants/add/AddInvariantCommandHandler.js";
 import { AddInvariantCommand } from "../../../../../application/solution/invariants/add/AddInvariantCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -58,7 +58,7 @@ export async function invariantAdd(options: {
   description: string;
   enforcement: string;
   rationale?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

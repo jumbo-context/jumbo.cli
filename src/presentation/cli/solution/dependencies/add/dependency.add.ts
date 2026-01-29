@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddDependencyCommandHandler } from "../../../../../application/solution/dependencies/add/AddDependencyCommandHandler.js";
 import { AddDependencyCommand } from "../../../../../application/solution/dependencies/add/AddDependencyCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -60,7 +60,7 @@ export async function dependencyAdd(
     endpoint?: string;
     contract?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

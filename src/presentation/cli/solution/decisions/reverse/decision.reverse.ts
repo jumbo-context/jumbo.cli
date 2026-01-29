@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ReverseDecisionCommandHandler } from "../../../../../application/solution/decisions/reverse/ReverseDecisionCommandHandler.js";
 import { ReverseDecisionCommand } from "../../../../../application/solution/decisions/reverse/ReverseDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -44,7 +44,7 @@ export async function decisionReverse(
     decisionId: string;
     reason: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

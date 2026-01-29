@@ -5,9 +5,7 @@
  * Content varies based on whether a project is initialized.
  */
 
-import path from "path";
-import fs from "fs-extra";
-import { ApplicationContainer, bootstrap } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 import { GetProjectSummaryQueryHandler } from "../../../../application/project-knowledge/project/query/GetProjectSummaryQueryHandler.js";
 import { GetWorkSummaryQueryHandler } from "../../../../application/work/query/GetWorkSummaryQueryHandler.js";
 import {
@@ -31,7 +29,7 @@ export function isBareCommand(argv: string[]): boolean {
  * @returns Banner display context
  */
 async function gatherDisplayContext(
-  container: ApplicationContainer | null
+  container: IApplicationContainer | null
 ): Promise<BannerDisplayContext> {
   if (!container) {
     return {
@@ -62,26 +60,22 @@ async function gatherDisplayContext(
 
 /**
  * Shows the animated banner with context-appropriate content.
- * Called when bare 'jumbo' command is detected.
+ * Called by AppRunner when bare 'jumbo' command is detected.
  *
  * @param version - CLI version string for display
+ * @param container - Application container (null if project not initialized)
  */
-export async function showBanner(version: string): Promise<void> {
-  const jumboRoot = path.join(process.cwd(), ".jumbo");
-  const projectExists = await fs.pathExists(jumboRoot);
-
-  let container: ApplicationContainer | null = null;
-  if (projectExists) {
-    container = await bootstrap(jumboRoot);
-  }
-
+export async function showBannerWithContainer(
+  version: string,
+  container: IApplicationContainer | null
+): Promise<void> {
   const displayContext = await gatherDisplayContext(container);
   const projectName = displayContext.project?.name ?? null;
   const content = generateBannerContent(displayContext);
 
   await showAnimatedBanner(content, projectName, version);
 
-  // No explicit cleanup needed - LocalInfrastructureModule handles
-  // resource disposal via process signal handlers when process.exit fires
+  // No explicit cleanup needed - Host handles resource disposal
+  // via process signal handlers when process.exit fires
   process.exit(0);
 }

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 import { ListRelationsQueryHandler } from "../../../../application/relations/list/ListRelationsQueryHandler.js";
 import { Renderer } from "../../shared/rendering/Renderer.js";
 import { RelationView } from "../../../../application/relations/RelationView.js";
@@ -50,7 +50,7 @@ function formatRelationText(relation: RelationView): void {
 
 export async function relationsList(
   options: { entityType?: string; entityId?: string; status?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

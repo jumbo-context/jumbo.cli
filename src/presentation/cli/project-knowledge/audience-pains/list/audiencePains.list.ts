@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListAudiencePainsQueryHandler } from "../../../../../application/project-knowledge/audience-pains/list/ListAudiencePainsQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { AudiencePainView } from "../../../../../application/project-knowledge/audience-pains/AudiencePainView.js";
@@ -61,7 +61,7 @@ function formatPainText(pain: AudiencePainView): void {
  */
 export async function audiencePainsList(
   _options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

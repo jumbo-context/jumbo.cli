@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListGuidelinesQueryHandler } from "../../../../../application/solution/guidelines/list/ListGuidelinesQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { GuidelineView } from "../../../../../application/solution/guidelines/GuidelineView.js";
@@ -36,7 +36,7 @@ function formatGuidelineText(guideline: GuidelineView): void {
 
 export async function guidelinesList(
   options: { category?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

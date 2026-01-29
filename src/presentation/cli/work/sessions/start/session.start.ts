@@ -7,7 +7,7 @@
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
 import { StartSessionCommandHandler } from "../../../../../application/work/sessions/start/StartSessionCommandHandler.js";
 import { StartSessionCommand } from "../../../../../application/work/sessions/start/StartSessionCommand.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { GetSessionStartContextQueryHandler } from "../../../../../application/work/sessions/get-context/GetSessionStartContextQueryHandler.js";
 import { SessionSummaryFormatter } from "./SessionSummaryFormatter.js";
@@ -44,7 +44,7 @@ export const metadata: CommandMetadata = {
  */
 export async function sessionStart(
   options: Record<string, never>,
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

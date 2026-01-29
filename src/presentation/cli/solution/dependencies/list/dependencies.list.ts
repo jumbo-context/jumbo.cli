@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListDependenciesQueryHandler } from "../../../../../application/solution/dependencies/list/ListDependenciesQueryHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { DependencyView } from "../../../../../application/solution/dependencies/DependencyView.js";
@@ -83,7 +83,7 @@ function formatDependencyText(dep: DependencyView): void {
  */
 export async function dependenciesList(
   options: { consumer?: string; provider?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

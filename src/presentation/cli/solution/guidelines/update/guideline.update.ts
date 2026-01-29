@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateGuidelineCommandHandler } from "../../../../../application/solution/guidelines/update/UpdateGuidelineCommandHandler.js";
 import { UpdateGuidelineCommand } from "../../../../../application/solution/guidelines/update/UpdateGuidelineCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -78,7 +78,7 @@ export async function guidelineUpdate(options: {
   rationale?: string;
   enforcement?: string;
   example?: string[];
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

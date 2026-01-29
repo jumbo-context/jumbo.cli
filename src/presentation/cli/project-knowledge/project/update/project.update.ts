@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateProjectCommandHandler } from "../../../../../application/project-knowledge/project/update/UpdateProjectCommandHandler.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 
@@ -45,7 +45,7 @@ export const metadata: CommandMetadata = {
 export async function projectUpdate(options: {
   purpose?: string | null;
   boundary?: string[];
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

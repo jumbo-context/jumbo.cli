@@ -12,6 +12,7 @@ import type { CommandCategory } from "../registry/CommandMetadata.js";
  * Category display configuration
  */
 const CATEGORY_LABELS: Record<CommandCategory, string> = {
+  "host": "HOST",
   "project-knowledge": "PROJECT",
   "work": "WORK",
   "solution": "SOLUTION",
@@ -22,6 +23,7 @@ const CATEGORY_LABELS: Record<CommandCategory, string> = {
  * Category display order (controls section ordering in help)
  */
 const CATEGORY_ORDER: CommandCategory[] = [
+  "host",
   "project-knowledge",
   "work",
   "solution",

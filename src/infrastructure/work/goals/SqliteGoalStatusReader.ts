@@ -51,6 +51,9 @@ export class SqliteGoalStatusReader
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       note: row.note || undefined,
+      claimedBy: row.claimedBy || undefined,
+      claimedAt: row.claimedAt || undefined,
+      claimExpiresAt: row.claimExpiresAt || undefined,
       nextGoalId: row.nextGoalId || undefined,
     };
   }

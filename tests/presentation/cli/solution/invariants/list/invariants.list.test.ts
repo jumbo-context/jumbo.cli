@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { invariantsList } from "../../../../../../src/presentation/cli/solution/invariants/list/invariants.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IInvariantListReader } from "../../../../../../src/application/solution/invariants/list/IInvariantListReader.js";
 import { InvariantView } from "../../../../../../src/application/solution/invariants/InvariantView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("invariants.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockInvariantListReader: jest.Mocked<IInvariantListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -50,7 +50,7 @@ describe("invariants.list command", () => {
 
     mockInvariantListReader.findAll.mockResolvedValue(mockInvariants);
 
-    await invariantsList({}, mockContainer as ApplicationContainer);
+    await invariantsList({}, mockContainer as IApplicationContainer);
 
     expect(mockInvariantListReader.findAll).toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("invariants.list command", () => {
   it("should show info message when no invariants exist", async () => {
     mockInvariantListReader.findAll.mockResolvedValue([]);
 
-    await invariantsList({}, mockContainer as ApplicationContainer);
+    await invariantsList({}, mockContainer as IApplicationContainer);
 
     expect(mockInvariantListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe("invariants.list command", () => {
 
     mockInvariantListReader.findAll.mockResolvedValue(mockInvariants);
 
-    await invariantsList({}, mockContainer as ApplicationContainer);
+    await invariantsList({}, mockContainer as IApplicationContainer);
 
     expect(mockInvariantListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

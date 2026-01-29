@@ -13,8 +13,10 @@
 import path from "path";
 import fs from "fs-extra";
 import { AgentInstructions } from "../../../../domain/project-knowledge/project/AgentInstructions.js";
+import { IConfigurer } from "./IConfigurer.js";
+import { PlannedFileChange } from "../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 
-export class CopilotConfigurer {
+export class CopilotConfigurer implements IConfigurer {
   /**
    * Configure all GitHub Copilot requirements for Jumbo
    *
@@ -67,5 +69,24 @@ export class CopilotConfigurer {
         `Warning: Failed to update .github/copilot-instructions.md: ${error instanceof Error ? error.message : String(error)}`
       );
     }
+  }
+
+  /**
+   * Return what changes this configurer will make without executing.
+   */
+  async getPlannedFileChanges(projectRoot: string): Promise<PlannedFileChange[]> {
+    const copilotInstructionsPath = path.join(
+      projectRoot,
+      ".github",
+      "copilot-instructions.md"
+    );
+
+    return [
+      {
+        path: ".github/copilot-instructions.md",
+        action: (await fs.pathExists(copilotInstructionsPath)) ? "modify" : "create",
+        description: "Add Jumbo instructions",
+      },
+    ];
   }
 }

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { EndSessionCommandHandler } from "../../../../../application/work/sessions/end/EndSessionCommandHandler.js";
 import { EndSessionCommand } from "../../../../../application/work/sessions/end/EndSessionCommand.js";
@@ -52,7 +52,7 @@ export async function sessionEnd(
     focus: string;
     summary?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

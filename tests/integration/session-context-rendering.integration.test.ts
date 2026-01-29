@@ -15,12 +15,14 @@ import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import fs from "fs-extra";
 import path from "path";
 import Database from "better-sqlite3";
-import { bootstrap, ApplicationContainer } from "../../src/presentation/cli/composition/bootstrap.js";
+import { Host } from "../../src/infrastructure/host/Host.js";
+import { IApplicationContainer } from "../../src/application/host/IApplicationContainer.js";
 import { GetLatestSessionSummaryQueryHandler } from "../../src/application/work/sessions/get-context/GetLatestSessionSummaryQueryHandler.js";
 
 describe("Integration: Session Context Rendering", () => {
   const testRoot = path.join(process.cwd(), ".jumbo-integration-test");
-  let container: ApplicationContainer | null = null;
+  let host: Host | null = null;
+  let container: IApplicationContainer | null = null;
 
   beforeEach(async () => {
     // Clean up test directory
@@ -32,12 +34,9 @@ describe("Integration: Session Context Rendering", () => {
   afterEach(async () => {
     // LocalInfrastructureModule handles cleanup via signal handlers in production.
     // For tests, we need to manually close the db connection since the process doesn't exit.
-    if (container) {
-      const db = container.db;
-      if (db && db.open) {
-        db.pragma("wal_checkpoint(TRUNCATE)");
-        db.close();
-      }
+    if (host) {
+      host.dispose();
+      host = null;
       container = null;
     }
     // Wait for Windows to release file locks on WAL files
@@ -49,7 +48,9 @@ describe("Integration: Session Context Rendering", () => {
     // ============================================================
     // STEP 1: Start first session (publish SessionStarted event)
     // ============================================================
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const sessionId = "session_test_123";
     const goalId = "goal_test_456";
@@ -175,7 +176,9 @@ describe("Integration: Session Context Rendering", () => {
     // ============================================================
     // Fresh start - no previous sessions
     // ============================================================
-    container = await bootstrap(testRoot);
+    host = new Host(testRoot);
+    const builder = host.createBuilder();
+    container = await builder.build();
 
     const getLatestSessionSummary = new GetLatestSessionSummaryQueryHandler(
       container.sessionSummaryProjectionStore

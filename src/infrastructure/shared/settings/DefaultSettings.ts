@@ -1,4 +1,7 @@
-import { Settings } from "../../../application/shared/settings/Settings.js";
+import {
+  Settings,
+  DEFAULT_CLAIM_DURATION_MINUTES,
+} from "../../../application/shared/settings/Settings.js";
 
 /**
  * Default settings used when no settings file exists
@@ -7,5 +10,8 @@ import { Settings } from "../../../application/shared/settings/Settings.js";
 export const DEFAULT_SETTINGS: Settings = {
   qa: {
     defaultTurnLimit: 3,
+  },
+  claims: {
+    claimDurationMinutes: DEFAULT_CLAIM_DURATION_MINUTES,
   },
 };

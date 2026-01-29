@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateComponentCommandHandler } from "../../../../../application/solution/components/update/UpdateComponentCommandHandler.js";
 import { UpdateComponentCommand } from "../../../../../application/solution/components/update/UpdateComponentCommand.js";
 import { ComponentTypeValue } from "../../../../../domain/solution/components/Constants.js";
@@ -66,7 +66,7 @@ export async function componentUpdate(
     path?: string;
     type?: ComponentTypeValue;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

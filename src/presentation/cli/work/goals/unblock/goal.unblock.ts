@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { UnblockGoalCommandHandler } from "../../../../../application/work/goals/unblock/UnblockGoalCommandHandler.js";
 import { UnblockGoalCommand } from "../../../../../application/work/goals/unblock/UnblockGoalCommand.js";
@@ -46,7 +46,7 @@ export async function goalUnblock(
     goalId: string;
     note?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

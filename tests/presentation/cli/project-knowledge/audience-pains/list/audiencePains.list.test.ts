@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { audiencePainsList } from "../../../../../../src/presentation/cli/project-knowledge/audience-pains/list/audiencePains.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IAudiencePainContextReader } from "../../../../../../src/application/project-knowledge/audience-pains/query/IAudiencePainContextReader.js";
 import { AudiencePainView } from "../../../../../../src/application/project-knowledge/audience-pains/AudiencePainView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("audiencePains.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockAudiencePainContextReader: jest.Mocked<IAudiencePainContextReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -50,7 +50,7 @@ describe("audiencePains.list command", () => {
 
     mockAudiencePainContextReader.findAllActive.mockResolvedValue(mockPains);
 
-    await audiencePainsList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencePainsList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudiencePainContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("audiencePains.list command", () => {
   it("should show info message when no pains exist", async () => {
     mockAudiencePainContextReader.findAllActive.mockResolvedValue([]);
 
-    await audiencePainsList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencePainsList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudiencePainContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe("audiencePains.list command", () => {
 
     mockAudiencePainContextReader.findAllActive.mockResolvedValue(mockPains);
 
-    await audiencePainsList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencePainsList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudiencePainContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -115,7 +115,7 @@ describe("audiencePains.list command", () => {
 
     mockAudiencePainContextReader.findAllActive.mockResolvedValue(mockPains);
 
-    await audiencePainsList({} as Record<string, never>, mockContainer as ApplicationContainer);
+    await audiencePainsList({} as Record<string, never>, mockContainer as IApplicationContainer);
 
     expect(mockAudiencePainContextReader.findAllActive).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

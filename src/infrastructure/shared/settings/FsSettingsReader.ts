@@ -63,6 +63,13 @@ export class FsSettingsReader implements ISettingsReader {
     // Default turn limit for QA iterations on goal completion
     // When this limit is reached, the goal is automatically completed
     "defaultTurnLimit": 3,
+  },
+
+  // Claim settings for goal ownership and concurrency control
+  "claims": {
+    // Duration in minutes that a goal claim remains valid
+    // After this duration, the claim expires and another worker can claim the goal
+    "claimDurationMinutes": 30,
   }
 }
 `;
@@ -78,6 +85,11 @@ export class FsSettingsReader implements ISettingsReader {
       qa: {
         defaultTurnLimit:
           settings.qa?.defaultTurnLimit ?? DEFAULT_SETTINGS.qa.defaultTurnLimit,
+      },
+      claims: {
+        claimDurationMinutes:
+          settings.claims?.claimDurationMinutes ??
+          DEFAULT_SETTINGS.claims.claimDurationMinutes,
       },
     };
   }

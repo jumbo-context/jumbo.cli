@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListDecisionsQueryHandler } from "../../../../../application/solution/decisions/list/ListDecisionsQueryHandler.js";
 import { DecisionStatusFilter } from "../../../../../application/solution/decisions/list/IDecisionListReader.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -89,7 +89,7 @@ function isValidStatus(status: string): status is DecisionStatusFilter {
  */
 export async function decisionsList(
   options: { status?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

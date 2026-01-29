@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { BlockGoalCommandHandler } from "../../../../../application/work/goals/block/BlockGoalCommandHandler.js";
 import { BlockGoalCommand } from "../../../../../application/work/goals/block/BlockGoalCommand.js";
@@ -40,7 +40,7 @@ export async function goalBlock(
     goalId: string;
     note: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

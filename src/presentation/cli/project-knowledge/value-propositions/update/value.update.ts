@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateValuePropositionCommandHandler } from "../../../../../application/project-knowledge/value-propositions/update/UpdateValuePropositionCommandHandler.js";
 import { UpdateValuePropositionCommand } from "../../../../../application/project-knowledge/value-propositions/update/UpdateValuePropositionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -73,7 +73,7 @@ export async function valueUpdate(options: {
   benefit?: string;
   measurableOutcome?: string;
   clearMeasurableOutcome?: boolean;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   // Validate at least one field provided

@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { RemoveInvariantCommandHandler } from "../../../../../application/solution/invariants/remove/RemoveInvariantCommandHandler.js";
 import { RemoveInvariantCommand } from "../../../../../application/solution/invariants/remove/RemoveInvariantCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -37,7 +37,7 @@ export const metadata: CommandMetadata = {
  */
 export async function invariantRemove(options: {
   id: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

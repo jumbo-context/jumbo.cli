@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddAudienceCommandHandler } from "../../../../../application/project-knowledge/audiences/add/AddAudienceCommandHandler.js";
 import { AddAudienceCommand } from "../../../../../application/project-knowledge/audiences/add/AddAudienceCommand.js";
 import { AudiencePriorityType } from "../../../../../domain/project-knowledge/audiences/Constants.js";
@@ -54,7 +54,7 @@ export async function audienceAdd(options: {
   name: string;
   description: string;
   priority: AudiencePriorityType;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

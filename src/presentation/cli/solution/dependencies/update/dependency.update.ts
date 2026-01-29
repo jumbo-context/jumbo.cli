@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateDependencyCommandHandler } from "../../../../../application/solution/dependencies/update/UpdateDependencyCommandHandler.js";
 import { UpdateDependencyCommand } from "../../../../../application/solution/dependencies/update/UpdateDependencyCommand.js";
 import { DependencyStatusType } from "../../../../../domain/solution/dependencies/Constants.js";
@@ -65,7 +65,7 @@ export async function dependencyUpdate(
     contract?: string;
     status?: DependencyStatusType;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

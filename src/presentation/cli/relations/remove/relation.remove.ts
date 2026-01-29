@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 import { RemoveRelationCommandHandler } from "../../../../application/relations/remove/RemoveRelationCommandHandler.js";
 import { RemoveRelationCommand } from "../../../../application/relations/remove/RemoveRelationCommand.js";
 import { Renderer } from "../../shared/rendering/Renderer.js";
@@ -48,7 +48,7 @@ export const metadata: CommandMetadata = {
 export async function relationRemove(options: {
   relationId: string;
   reason?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

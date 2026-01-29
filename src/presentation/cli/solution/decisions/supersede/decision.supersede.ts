@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { SupersedeDecisionCommandHandler } from "../../../../../application/solution/decisions/supersede/SupersedeDecisionCommandHandler.js";
 import { SupersedeDecisionCommand } from "../../../../../application/solution/decisions/supersede/SupersedeDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -44,7 +44,7 @@ export async function decisionSupersede(
     decisionId: string;
     supersededBy: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

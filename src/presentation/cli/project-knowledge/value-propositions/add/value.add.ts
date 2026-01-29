@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddValuePropositionCommandHandler } from "../../../../../application/project-knowledge/value-propositions/add/AddValuePropositionCommandHandler.js";
 import { AddValuePropositionCommand } from "../../../../../application/project-knowledge/value-propositions/add/AddValuePropositionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -60,7 +60,7 @@ export async function valueAdd(options: {
   description: string;
   benefit: string;
   measurableOutcome?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

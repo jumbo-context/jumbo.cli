@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { RemoveComponentCommandHandler } from "../../../../../application/solution/components/remove/RemoveComponentCommandHandler.js";
 import { RemoveComponentCommand } from "../../../../../application/solution/components/remove/RemoveComponentCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -40,7 +40,7 @@ export async function componentRemove(
   options: {
     componentId: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

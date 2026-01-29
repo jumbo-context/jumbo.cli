@@ -10,17 +10,17 @@ import chalk from "chalk";
 import { RegisteredCommand } from "./CommandMetadata.js";
 import { normalizePath, extractParts } from "./PathNormalizer.js";
 import { Renderer } from "../rendering/Renderer.js";
-import { ApplicationContainer } from "../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../application/host/IApplicationContainer.js";
 
 /**
  * Applies registered commands to Commander.js
  */
 export class CommanderApplicator {
   private parentCommands: Map<string, Command> = new Map();
-  private container?: ApplicationContainer;
+  private container?: IApplicationContainer;
   private program?: Command;
 
-  apply(program: Command, commands: RegisteredCommand[], container?: ApplicationContainer): void {
+  apply(program: Command, commands: RegisteredCommand[], container?: IApplicationContainer): void {
     this.container = container;
     this.program = program;
     const grouped = this.groupByParent(commands);

@@ -10,7 +10,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ListSessionsQueryHandler } from "../../../../../application/work/sessions/list/ListSessionsQueryHandler.js";
 import { SessionStatusFilter } from "../../../../../application/work/sessions/list/ISessionListReader.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -86,7 +86,7 @@ function isValidStatus(status: string): status is SessionStatusFilter {
  */
 export async function sessionsList(
   options: { status?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

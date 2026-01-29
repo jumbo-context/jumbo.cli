@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { RemoveValuePropositionCommandHandler } from "../../../../../application/project-knowledge/value-propositions/remove/RemoveValuePropositionCommandHandler.js";
 import { RemoveValuePropositionCommand } from "../../../../../application/project-knowledge/value-propositions/remove/RemoveValuePropositionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -37,7 +37,7 @@ export const metadata: CommandMetadata = {
  */
 export async function valueRemove(options: {
   valuePropositionId: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

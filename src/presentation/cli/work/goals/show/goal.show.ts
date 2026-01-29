@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 
 /**
@@ -54,7 +54,7 @@ function formatStatus(status: string): string {
  */
 export async function goalShow(
   options: { goalId: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 
@@ -116,6 +116,13 @@ export async function goalShow(
         console.log(`\nNext Goal:  ${goal.nextGoalId}`);
       }
 
+      if (goal.claimedBy) {
+        console.log("\nClaim:");
+        console.log(`  Claimed By:  ${goal.claimedBy}`);
+        console.log(`  Claimed At:  ${goal.claimedAt}`);
+        console.log(`  Expires At:  ${goal.claimExpiresAt}`);
+      }
+
       console.log("");
     } else {
       // Structured output for programmatic consumers
@@ -131,7 +138,10 @@ export async function goalShow(
         createdAt: goal.createdAt,
         updatedAt: goal.updatedAt,
         note: goal.note,
-        nextGoalId: goal.nextGoalId
+        nextGoalId: goal.nextGoalId,
+        claimedBy: goal.claimedBy,
+        claimedAt: goal.claimedAt,
+        claimExpiresAt: goal.claimExpiresAt
       });
     }
   } catch (error) {

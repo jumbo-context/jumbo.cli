@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { RemoveGoalCommandHandler } from "../../../../../application/work/goals/remove/RemoveGoalCommandHandler.js";
 import { RemoveGoalCommand } from "../../../../../application/work/goals/remove/RemoveGoalCommand.js";
@@ -35,7 +35,7 @@ export const metadata: CommandMetadata = {
  * Command handler
  * Called by Commander with parsed options
  */
-export async function goalRemove(options: { goalId: string }, container: ApplicationContainer) {
+export async function goalRemove(options: { goalId: string }, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

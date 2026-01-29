@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { componentsList } from "../../../../../../src/presentation/cli/solution/components/list/components.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IComponentListReader } from "../../../../../../src/application/solution/components/list/IComponentListReader.js";
 import { ComponentView } from "../../../../../../src/application/solution/components/ComponentView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("components.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockComponentListReader: jest.Mocked<IComponentListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -53,7 +53,7 @@ describe("components.list command", () => {
 
     mockComponentListReader.findAll.mockResolvedValue(mockComponents);
 
-    await componentsList({}, mockContainer as ApplicationContainer);
+    await componentsList({}, mockContainer as IApplicationContainer);
 
     expect(mockComponentListReader.findAll).toHaveBeenCalledWith("all");
     expect(consoleSpy).toHaveBeenCalled();
@@ -62,7 +62,7 @@ describe("components.list command", () => {
   it("should filter by status when specified", async () => {
     mockComponentListReader.findAll.mockResolvedValue([]);
 
-    await componentsList({ status: "active" }, mockContainer as ApplicationContainer);
+    await componentsList({ status: "active" }, mockContainer as IApplicationContainer);
 
     expect(mockComponentListReader.findAll).toHaveBeenCalledWith("active");
   });
@@ -70,7 +70,7 @@ describe("components.list command", () => {
   it("should show info message when no components exist", async () => {
     mockComponentListReader.findAll.mockResolvedValue([]);
 
-    await componentsList({}, mockContainer as ApplicationContainer);
+    await componentsList({}, mockContainer as IApplicationContainer);
 
     expect(mockComponentListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -97,7 +97,7 @@ describe("components.list command", () => {
 
     mockComponentListReader.findAll.mockResolvedValue(mockComponents);
 
-    await componentsList({}, mockContainer as ApplicationContainer);
+    await componentsList({}, mockContainer as IApplicationContainer);
 
     expect(mockComponentListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();

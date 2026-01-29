@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateInvariantCommandHandler } from "../../../../../application/solution/invariants/update/UpdateInvariantCommandHandler.js";
 import { UpdateInvariantCommand } from "../../../../../application/solution/invariants/update/UpdateInvariantCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -63,7 +63,7 @@ export async function invariantUpdate(options: {
   description?: string;
   rationale?: string;
   enforcement?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

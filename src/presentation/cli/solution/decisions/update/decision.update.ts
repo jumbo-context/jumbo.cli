@@ -1,5 +1,5 @@
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateDecisionCommandHandler } from "../../../../../application/solution/decisions/update/UpdateDecisionCommandHandler.js";
 import { UpdateDecisionCommand } from "../../../../../application/solution/decisions/update/UpdateDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -64,7 +64,7 @@ export async function decisionUpdate(
     alternative?: string[];
     consequences?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

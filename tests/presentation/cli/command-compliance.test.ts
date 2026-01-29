@@ -43,8 +43,8 @@ describe('Command Compliance', () => {
       const relativePath = path.relative(process.cwd(), file);
 
       // Commands must have container parameter (or container? for project.init)
-      if (!content.includes('container: ApplicationContainer') &&
-          !content.includes('container?: ApplicationContainer')) {
+      if (!content.includes('container: IApplicationContainer') &&
+          !content.includes('container?: IApplicationContainer')) {
         violations.push(relativePath);
       }
     }

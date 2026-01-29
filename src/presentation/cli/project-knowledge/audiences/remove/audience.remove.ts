@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { RemoveAudienceCommandHandler } from "../../../../../application/project-knowledge/audiences/remove/RemoveAudienceCommandHandler.js";
 import { RemoveAudienceCommand } from "../../../../../application/project-knowledge/audiences/remove/RemoveAudienceCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -49,7 +49,7 @@ export const metadata: CommandMetadata = {
 export async function audienceRemove(options: {
   audienceId: string;
   reason?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

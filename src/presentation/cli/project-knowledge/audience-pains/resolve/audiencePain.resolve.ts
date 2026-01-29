@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { ResolveAudiencePainCommandHandler } from "../../../../../application/project-knowledge/audience-pains/resolve/ResolveAudiencePainCommandHandler.js";
 import { ResolveAudiencePainCommand } from "../../../../../application/project-knowledge/audience-pains/resolve/ResolveAudiencePainCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -48,7 +48,7 @@ export const metadata: CommandMetadata = {
 export async function audiencePainResolve(options: {
   painId: string;
   notes?: string;
-}, container: ApplicationContainer) {
+}, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

@@ -12,7 +12,7 @@
 import fs from "fs-extra";
 import path from "path";
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 
 /**
@@ -47,7 +47,7 @@ interface RebuildOptions {
  * Command handler
  * Called by Commander with parsed options
  */
-export async function dbRebuild(options: RebuildOptions, container: ApplicationContainer) {
+export async function dbRebuild(options: RebuildOptions, container: IApplicationContainer) {
   const renderer = Renderer.getInstance();
 
   try {

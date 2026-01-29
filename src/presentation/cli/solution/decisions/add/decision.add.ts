@@ -6,7 +6,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { AddDecisionCommandHandler } from "../../../../../application/solution/decisions/add/AddDecisionCommandHandler.js";
 import { AddDecisionCommand } from "../../../../../application/solution/decisions/add/AddDecisionCommand.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
@@ -68,7 +68,7 @@ export async function decisionAdd(
     alternative?: string[];
     consequences?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

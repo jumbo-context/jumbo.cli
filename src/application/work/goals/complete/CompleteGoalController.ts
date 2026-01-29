@@ -9,6 +9,8 @@ import { IGoalReviewedEventReader } from "./IGoalReviewedEventReader.js";
 import { IEventBus } from "../../../shared/messaging/IEventBus.js";
 import { Goal } from "../../../../domain/work/goals/Goal.js";
 import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
+import { GoalClaimPolicy } from "../claims/GoalClaimPolicy.js";
+import { IWorkerIdentityReader } from "../../../host/workers/IWorkerIdentityReader.js";
 
 /**
  * CompleteGoalController
@@ -27,10 +29,23 @@ export class CompleteGoalController {
     private readonly turnTracker: ReviewTurnTracker,
     private readonly reviewEventWriter: IGoalReviewedEventWriter,
     private readonly goalEventReader: IGoalReviewedEventReader, // Use for full goal history
-    private readonly eventBus: IEventBus
+    private readonly eventBus: IEventBus,
+    private readonly claimPolicy: GoalClaimPolicy,
+    private readonly workerIdentityReader: IWorkerIdentityReader
   ) {}
 
   async handle(request: CompleteGoalRequest): Promise<CompleteGoalResponse> {
+    // Validate claim ownership - only the claimant can complete a goal
+    const workerId = this.workerIdentityReader.workerId;
+    const claimValidation = this.claimPolicy.canClaim(request.goalId, workerId);
+    if (!claimValidation.allowed) {
+      throw new Error(
+        formatErrorMessage(GoalErrorMessages.GOAL_CLAIMED_BY_ANOTHER_WORKER, {
+          expiresAt: claimValidation.existingClaim.claimExpiresAt,
+        })
+      );
+    }
+
     // Check if we should auto-commit due to turn limit
     const gate = await this.turnTracker.getCommitGate(request.goalId);
     const effectiveCommit = request.commit ? gate.current >= 1 : gate.canCommit;

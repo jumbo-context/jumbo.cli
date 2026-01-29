@@ -29,6 +29,9 @@ export interface GeminiSettings {
     SessionEnd?: GeminiHookMatcher[];
     [key: string]: GeminiHookMatcher[] | undefined;
   };
+  tools?: {
+    allowed?: string[];
+  };
 }
 
 /**
@@ -134,6 +137,18 @@ export class SafeGeminiSettingsMerger {
             newHooks
           );
         }
+      }
+    }
+
+    // Merge tools
+    if (newSettings.tools) {
+      result.tools = result.tools ?? {};
+
+      // Merge allowed array (unique values)
+      if (newSettings.tools.allowed) {
+        const existingAllowed = existing.tools?.allowed ?? [];
+        const newAllowed = newSettings.tools.allowed;
+        result.tools.allowed = Array.from(new Set([...existingAllowed, ...newAllowed]));
       }
     }
 

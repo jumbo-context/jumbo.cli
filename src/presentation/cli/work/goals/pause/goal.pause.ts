@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { PauseGoalCommandHandler } from "../../../../../application/work/goals/pause/PauseGoalCommandHandler.js";
 import { PauseGoalCommand } from "../../../../../application/work/goals/pause/PauseGoalCommand.js";
@@ -52,7 +52,7 @@ export const metadata: CommandMetadata = {
  */
 export async function goalPause(
   options: { goalId: string; reason: string; note?: string },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

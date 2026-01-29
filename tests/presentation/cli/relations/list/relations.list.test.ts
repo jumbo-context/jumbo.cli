@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { relationsList } from "../../../../../src/presentation/cli/relations/list/relations.list.js";
-import { ApplicationContainer } from "../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../src/application/host/IApplicationContainer.js";
 import { IRelationListReader } from "../../../../../src/application/relations/list/IRelationListReader.js";
 import { RelationView } from "../../../../../src/application/relations/RelationView.js";
 import { Renderer } from "../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("relations.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockRelationListReader: jest.Mocked<IRelationListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -54,7 +54,7 @@ describe("relations.list command", () => {
 
     mockRelationListReader.findAll.mockResolvedValue(mockRelations);
 
-    await relationsList({}, mockContainer as ApplicationContainer);
+    await relationsList({}, mockContainer as IApplicationContainer);
 
     expect(mockRelationListReader.findAll).toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalled();
@@ -63,7 +63,7 @@ describe("relations.list command", () => {
   it("should filter by entity type when specified", async () => {
     mockRelationListReader.findAll.mockResolvedValue([]);
 
-    await relationsList({ entityType: "goal" }, mockContainer as ApplicationContainer);
+    await relationsList({ entityType: "goal" }, mockContainer as IApplicationContainer);
 
     expect(mockRelationListReader.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ entityType: "goal" })
@@ -75,7 +75,7 @@ describe("relations.list command", () => {
 
     await relationsList(
       { entityType: "component", entityId: "comp_123" },
-      mockContainer as ApplicationContainer
+      mockContainer as IApplicationContainer
     );
 
     expect(mockRelationListReader.findAll).toHaveBeenCalledWith(
@@ -86,7 +86,7 @@ describe("relations.list command", () => {
   it("should show info message when no relations exist", async () => {
     mockRelationListReader.findAll.mockResolvedValue([]);
 
-    await relationsList({}, mockContainer as ApplicationContainer);
+    await relationsList({}, mockContainer as IApplicationContainer);
 
     expect(mockRelationListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -114,7 +114,7 @@ describe("relations.list command", () => {
 
     mockRelationListReader.findAll.mockResolvedValue(mockRelations);
 
-    await relationsList({}, mockContainer as ApplicationContainer);
+    await relationsList({}, mockContainer as IApplicationContainer);
 
     expect(mockRelationListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe("relations.list command", () => {
   it("should filter by status when specified", async () => {
     mockRelationListReader.findAll.mockResolvedValue([]);
 
-    await relationsList({ status: "all" }, mockContainer as ApplicationContainer);
+    await relationsList({ status: "all" }, mockContainer as IApplicationContainer);
 
     expect(mockRelationListReader.findAll).toHaveBeenCalledWith(
       expect.objectContaining({ status: "all" })

@@ -9,7 +9,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { AddGoalCommandHandler } from "../../../../../application/work/goals/add/AddGoalCommandHandler.js";
 import { AddGoalCommand } from "../../../../../application/work/goals/add/AddGoalCommand.js";
@@ -132,7 +132,7 @@ interface InteractiveGoalInputs {
 /**
  * Runs interactive goal creation flow with prompts
  */
-async function runInteractiveFlow(container: ApplicationContainer): Promise<InteractiveGoalInputs> {
+async function runInteractiveFlow(container: IApplicationContainer): Promise<InteractiveGoalInputs> {
   const promptService = new InteractivePromptService();
 
   // Fetch all entities in parallel
@@ -329,7 +329,7 @@ export async function goalAdd(
     nextGoal?: string;
     previousGoal?: string;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

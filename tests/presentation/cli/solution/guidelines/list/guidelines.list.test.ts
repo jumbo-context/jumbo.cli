@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { guidelinesList } from "../../../../../../src/presentation/cli/solution/guidelines/list/guidelines.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IGuidelineListReader } from "../../../../../../src/application/solution/guidelines/list/IGuidelineListReader.js";
 import { GuidelineView } from "../../../../../../src/application/solution/guidelines/GuidelineView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("guidelines.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockGuidelineListReader: jest.Mocked<IGuidelineListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -55,7 +55,7 @@ describe("guidelines.list command", () => {
 
     mockGuidelineListReader.findAll.mockResolvedValue(mockGuidelines);
 
-    await guidelinesList({}, mockContainer as ApplicationContainer);
+    await guidelinesList({}, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledWith(undefined);
     expect(consoleSpy).toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe("guidelines.list command", () => {
   it("should filter by category when specified", async () => {
     mockGuidelineListReader.findAll.mockResolvedValue([]);
 
-    await guidelinesList({ category: "testing" }, mockContainer as ApplicationContainer);
+    await guidelinesList({ category: "testing" }, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledWith("testing");
   });
@@ -72,7 +72,7 @@ describe("guidelines.list command", () => {
   it("should show info message when no guidelines exist", async () => {
     mockGuidelineListReader.findAll.mockResolvedValue([]);
 
-    await guidelinesList({}, mockContainer as ApplicationContainer);
+    await guidelinesList({}, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe("guidelines.list command", () => {
 
     mockGuidelineListReader.findAll.mockResolvedValue(mockGuidelines);
 
-    await guidelinesList({}, mockContainer as ApplicationContainer);
+    await guidelinesList({}, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe("guidelines.list command", () => {
   it("should filter by codingStyle category", async () => {
     mockGuidelineListReader.findAll.mockResolvedValue([]);
 
-    await guidelinesList({ category: "codingStyle" }, mockContainer as ApplicationContainer);
+    await guidelinesList({ category: "codingStyle" }, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledWith("codingStyle");
   });
@@ -118,7 +118,7 @@ describe("guidelines.list command", () => {
   it("should filter by security category", async () => {
     mockGuidelineListReader.findAll.mockResolvedValue([]);
 
-    await guidelinesList({ category: "security" }, mockContainer as ApplicationContainer);
+    await guidelinesList({ category: "security" }, mockContainer as IApplicationContainer);
 
     expect(mockGuidelineListReader.findAll).toHaveBeenCalledWith("security");
   });

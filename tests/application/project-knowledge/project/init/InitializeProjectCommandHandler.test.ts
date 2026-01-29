@@ -40,10 +40,12 @@ describe("InitializeProjectCommandHandler", () => {
     agentFileProtocol = {
       ensureAgentsMd: jest.fn().mockResolvedValue(undefined),
       ensureAgentConfigurations: jest.fn().mockResolvedValue(undefined),
+      getPlannedFileChanges: jest.fn().mockResolvedValue([]),
     };
 
     settingsInitializer = {
       ensureSettingsFileExists: jest.fn().mockResolvedValue(undefined),
+      getPlannedFileChange: jest.fn().mockResolvedValue(null),
     };
 
     handler = new InitializeProjectCommandHandler(

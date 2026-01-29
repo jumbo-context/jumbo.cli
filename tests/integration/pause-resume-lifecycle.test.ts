@@ -5,10 +5,8 @@
 
 import * as fs from "fs-extra";
 import * as path from "path";
-import {
-  bootstrap,
-  ApplicationContainer,
-} from "../../src/presentation/cli/composition/bootstrap.js";
+import { Host } from "../../src/infrastructure/host/Host.js";
+import { IApplicationContainer } from "../../src/application/host/IApplicationContainer.js";
 import { AddGoalCommandHandler } from "../../src/application/work/goals/add/AddGoalCommandHandler.js";
 import { AddGoalCommand } from "../../src/application/work/goals/add/AddGoalCommand.js";
 import { StartGoalCommandHandler } from "../../src/application/work/goals/start/StartGoalCommandHandler.js";
@@ -23,21 +21,19 @@ import { GoalStatus, GoalEventType } from "../../src/domain/work/goals/Constants
 
 describe("Pause-Resume Lifecycle Integration", () => {
   let tmpDir: string;
-  let container: ApplicationContainer;
+  let host: Host;
+  let container: IApplicationContainer;
 
   beforeEach(async () => {
     tmpDir = await fs.mkdtemp(path.join(process.cwd(), "test-pause-resume-"));
-    container = await bootstrap(tmpDir);
+    host = new Host(tmpDir);
+    const builder = host.createBuilder();
+    container = await builder.build();
   });
 
   afterEach(async () => {
-    // LocalInfrastructureModule handles cleanup via signal handlers in production.
-    // For tests, we need to manually close the db connection since the process doesn't exit.
-    const db = container.db;
-    if (db && db.open) {
-      db.pragma("wal_checkpoint(TRUNCATE)");
-      db.close();
-    }
+    // Dispose of host resources for testing (production uses signal handlers)
+    host.dispose();
     // Wait for Windows to release file locks on WAL files
     await new Promise((resolve) => setTimeout(resolve, 100));
     await fs.remove(tmpDir);
@@ -67,7 +63,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     const startCommand: StartGoalCommand = {
       goalId,
@@ -104,7 +103,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     const resumeCommand: ResumeGoalCommand = {
       goalId,
@@ -123,7 +125,9 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalCompletedEventStore,
       container.goalCompletedEventStore,
       container.goalCompletedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader
     );
     const completeCommand: CompleteGoalCommand = {
       goalId,
@@ -171,7 +175,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -190,7 +197,7 @@ describe("Pause-Resume Lifecycle Integration", () => {
 
     // Verify event stream includes reason and note
     const events = await container.eventStore.readStream(goalId);
-    const pausedEvent = events.find((e) => e.type === GoalEventType.PAUSED);
+    const pausedEvent = events.find((e: { type: string }) => e.type === GoalEventType.PAUSED);
     expect(pausedEvent).toBeDefined();
     expect((pausedEvent as any).payload.reason).toBe("Other");
     expect((pausedEvent as any).payload.note).toBe("Need to switch priorities");
@@ -212,7 +219,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -227,7 +237,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
 
     // First pause/resume cycle
@@ -251,8 +264,8 @@ describe("Pause-Resume Lifecycle Integration", () => {
     // Verify event stream has all events
     const events = await container.eventStore.readStream(goalId);
     expect(events).toHaveLength(6); // add, start, pause, resume, pause, resume
-    const pausedEvents = events.filter((e) => e.type === GoalEventType.PAUSED);
-    const resumedEvents = events.filter((e) => e.type === GoalEventType.RESUMED);
+    const pausedEvents = events.filter((e: { type: string }) => e.type === GoalEventType.PAUSED);
+    const resumedEvents = events.filter((e: { type: string }) => e.type === GoalEventType.RESUMED);
     expect(pausedEvents).toHaveLength(2);
     expect(resumedEvents).toHaveLength(2);
   });
@@ -273,7 +286,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalStartedEventStore,
       container.goalStartedEventStore,
       container.goalStartedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await startHandler.execute({ goalId });
 
@@ -289,7 +305,10 @@ describe("Pause-Resume Lifecycle Integration", () => {
       container.goalResumedEventStore,
       container.goalResumedEventStore,
       container.goalResumedProjector,
-      container.eventBus
+      container.eventBus,
+      container.goalClaimPolicy,
+      container.workerIdentityReader,
+      container.settingsReader
     );
     await resumeHandler.execute({ goalId });
 

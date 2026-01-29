@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { DefineArchitectureCommandHandler } from "../../../../../application/solution/architecture/define/DefineArchitectureCommandHandler.js";
 import { DefineArchitectureCommand } from "../../../../../application/solution/architecture/define/DefineArchitectureCommand.js";
 import { DataStore } from "../../../../../domain/solution/architecture/define/ArchitectureDefinedEvent.js";
@@ -67,7 +67,7 @@ export async function architectureDefine(
     dataStore?: string[];  // Format: "name:type:purpose"
     stack?: string[];
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

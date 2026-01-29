@@ -5,7 +5,7 @@
  */
 
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { UpdateArchitectureCommandHandler } from "../../../../../application/solution/architecture/update/UpdateArchitectureCommandHandler.js";
 import { UpdateArchitectureCommand } from "../../../../../application/solution/architecture/update/UpdateArchitectureCommand.js";
 import { DataStore } from "../../../../../domain/solution/architecture/define/ArchitectureDefinedEvent.js";
@@ -69,7 +69,7 @@ export async function architectureUpdate(
     dataStore?: string[];  // Format: "name:type:purpose"
     stack?: string[];
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   const renderer = Renderer.getInstance();
 

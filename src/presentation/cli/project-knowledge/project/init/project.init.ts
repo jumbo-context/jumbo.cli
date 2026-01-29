@@ -7,13 +7,61 @@
  */
 
 import inquirer from "inquirer";
+import chalk from "chalk";
 import { CommandMetadata } from "../../../shared/registry/CommandMetadata.js";
-import { ApplicationContainer } from "../../../composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../application/host/IApplicationContainer.js";
 import { InitializeProjectCommand } from "../../../../../application/project-knowledge/project/init/InitializeProjectCommand.js";
-import { InitializeProjectCommandHandler } from "../../../../../application/project-knowledge/project/init/InitializeProjectCommandHandler.js";
+import { PlannedFileChange } from "../../../../../application/project-knowledge/project/init/PlannedFileChange.js";
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { getBannerLines } from "../../../shared/components/AnimatedBanner.js";
 import { ProjectLimits } from "../../../../../domain/project-knowledge/project/Constants.js";
+
+/**
+ * Displays the planned changes in a user-friendly format
+ */
+function displayPlannedChanges(renderer: Renderer, changes: PlannedFileChange[]): void {
+  renderer.info("\nThe following changes will be made to your project:\n");
+
+  const creates = changes.filter((c) => c.action === "create");
+  const modifies = changes.filter((c) => c.action === "modify");
+
+  // Calculate the max path length for column alignment
+  const maxPathLength = Math.max(...changes.map((c) => c.path.length));
+
+  const renderChangeList = (items: PlannedFileChange[], symbol: string, pathColor: typeof chalk.green) => {
+    items.forEach((c) => {
+      const padding = " ".repeat(maxPathLength - c.path.length + 2);
+      console.log(`    ${symbol} ${pathColor(c.path)}${padding}${chalk.dim(c.description)}`);
+    });
+  };
+
+  if (creates.length > 0) {
+    console.log(chalk.green("  Files/directories to create:"));
+    renderChangeList(creates, "+", chalk.cyan);
+    console.log();
+  }
+
+  if (modifies.length > 0) {
+    console.log(chalk.yellow("  Files to modify (existing content will be preserved):"));
+    renderChangeList(modifies, "~", chalk.cyan);
+    console.log();
+  }
+}
+
+/**
+ * Prompts user to confirm the planned changes
+ */
+async function confirmChanges(): Promise<boolean> {
+  const answers = await inquirer.prompt([
+    {
+      type: "confirm",
+      name: "proceed",
+      message: "Proceed with initialization?",
+      default: true,
+    },
+  ]);
+  return answers.proceed;
+}
 
 /**
  * Command metadata for auto-registration
@@ -38,6 +86,10 @@ export const metadata: CommandMetadata = {
     {
       flags: "--non-interactive",
       description: "Skip interactive prompts, use command line options only"
+    },
+    {
+      flags: "--yolo",
+      description: "Skip confirmation prompt and proceed with initialization"
     }
   ],
   examples: [
@@ -48,6 +100,10 @@ export const metadata: CommandMetadata = {
     {
       command: 'jumbo project init --non-interactive --name "MyProject" --purpose "AI memory management"',
       description: "Initialize without prompts using command line options"
+    },
+    {
+      command: "jumbo project init --yolo",
+      description: "Initialize interactively but skip the confirmation prompt"
     }
   ],
   related: ["project update"],
@@ -128,8 +184,9 @@ export async function projectInit(
     purpose?: string;
     boundary?: string[];
     nonInteractive?: boolean;
+    yolo?: boolean;
   },
-  container: ApplicationContainer
+  container: IApplicationContainer
 ) {
   // Configure renderer for onboarding (always flashy/human-friendly)
   const renderer = Renderer.configure({ forceHuman: true });
@@ -157,23 +214,40 @@ export async function projectInit(
     projectDetails = await promptForProjectDetails();
   }
 
-  // Create command handler from container dependencies
-  const commandHandler = new InitializeProjectCommandHandler(
-    container.projectInitializedEventStore,
-    container.eventBus,
-    container.projectInitializedProjector,
-    container.agentFileProtocol,
-    container.settingsInitializer
-  );
+  // Get planned changes from application layer (single source of truth)
+  const projectRoot = process.cwd();
+  const plannedChanges = await container.initializationProtocol.getPlannedFileChanges(projectRoot);
+  displayPlannedChanges(renderer, plannedChanges);
 
-  // Execute command
+  // Ask for confirmation (unless --yolo flag is set)
+  if (!options.yolo) {
+    const confirmed = await confirmChanges();
+    if (!confirmed) {
+      renderer.info("\nInitialization cancelled.");
+      process.exit(0);
+    }
+  }
+
+  // Show progress header
+  renderer.info("\nInitializing project...\n");
+
+  // Execute initialization via protocol
   const command: InitializeProjectCommand = {
     name: projectDetails.name,
     purpose: projectDetails.purpose,
     boundaries: projectDetails.boundaries,
   };
 
-  const result = await commandHandler.execute(command, process.cwd());
+  const result = await container.initializationProtocol.execute(command, projectRoot);
+
+  // Show completion status for each change (from the result, not hardcoded)
+  console.log();
+  result.changes.forEach((change) => {
+    const symbol = change.action === "create" ? chalk.green("✓") : chalk.yellow("✓");
+    const verb = change.action === "create" ? "Created" : "Updated";
+    console.log(`  ${symbol} ${verb} ${change.path}`);
+  });
+  console.log();
 
   // Success output (verbose for onboarding)
   const data: Record<string, string> = {
@@ -185,9 +259,6 @@ export async function projectInit(
   }
 
   renderer.success("Welcome to Jumbo! Project initialized successfully.", data);
-  renderer.info("✓ Claude Code SessionStart hook configured (.claude/settings.json)");
-  renderer.info("✓ Copilot instructions created (.github/copilot-instructions.md)");
-  renderer.info("ℹ Gemini users: See AGENTS.md for manual setup instructions");
   renderer.info("");
   renderer.info("Next steps: Start a session with 'jumbo session start --focus \"<your focus>\"'");
 }

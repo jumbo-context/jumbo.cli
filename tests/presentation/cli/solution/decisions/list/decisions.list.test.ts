@@ -4,13 +4,13 @@
 
 import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { decisionsList } from "../../../../../../src/presentation/cli/solution/decisions/list/decisions.list.js";
-import { ApplicationContainer } from "../../../../../../src/presentation/cli/composition/bootstrap.js";
+import { IApplicationContainer } from "../../../../../../src/application/host/IApplicationContainer.js";
 import { IDecisionListReader } from "../../../../../../src/application/solution/decisions/list/IDecisionListReader.js";
 import { DecisionView } from "../../../../../../src/application/solution/decisions/DecisionView.js";
 import { Renderer } from "../../../../../../src/presentation/cli/shared/rendering/Renderer.js";
 
 describe("decisions.list command", () => {
-  let mockContainer: Partial<ApplicationContainer>;
+  let mockContainer: Partial<IApplicationContainer>;
   let mockDecisionListReader: jest.Mocked<IDecisionListReader>;
   let consoleSpy: jest.SpiedFunction<typeof console.log>;
 
@@ -55,7 +55,7 @@ describe("decisions.list command", () => {
 
     mockDecisionListReader.findAll.mockResolvedValue(mockDecisions);
 
-    await decisionsList({}, mockContainer as ApplicationContainer);
+    await decisionsList({}, mockContainer as IApplicationContainer);
 
     expect(mockDecisionListReader.findAll).toHaveBeenCalledWith("all");
     expect(consoleSpy).toHaveBeenCalled();
@@ -64,7 +64,7 @@ describe("decisions.list command", () => {
   it("should filter by status when specified", async () => {
     mockDecisionListReader.findAll.mockResolvedValue([]);
 
-    await decisionsList({ status: "active" }, mockContainer as ApplicationContainer);
+    await decisionsList({ status: "active" }, mockContainer as IApplicationContainer);
 
     expect(mockDecisionListReader.findAll).toHaveBeenCalledWith("active");
   });
@@ -72,7 +72,7 @@ describe("decisions.list command", () => {
   it("should show info message when no decisions exist", async () => {
     mockDecisionListReader.findAll.mockResolvedValue([]);
 
-    await decisionsList({}, mockContainer as ApplicationContainer);
+    await decisionsList({}, mockContainer as IApplicationContainer);
 
     expect(mockDecisionListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe("decisions.list command", () => {
 
     mockDecisionListReader.findAll.mockResolvedValue(mockDecisions);
 
-    await decisionsList({}, mockContainer as ApplicationContainer);
+    await decisionsList({}, mockContainer as IApplicationContainer);
 
     expect(mockDecisionListReader.findAll).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalled();
