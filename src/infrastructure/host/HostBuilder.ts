@@ -46,6 +46,7 @@ import { FsGoalCompletedEventStore } from "../work/goals/complete/FsGoalComplete
 import { FsGoalReviewedEventStore } from "../work/goals/complete/FsGoalReviewedEventStore.js";
 import { FsGoalResetEventStore } from "../work/goals/reset/FsGoalResetEventStore.js";
 import { FsGoalRemovedEventStore } from "../work/goals/remove/FsGoalRemovedEventStore.js";
+import { FsGoalProgressUpdatedEventStore } from "../work/goals/update-progress/FsGoalProgressUpdatedEventStore.js";
 // Decision Event Stores - decomposed by use case
 import { FsDecisionAddedEventStore } from "../solution/decisions/add/FsDecisionAddedEventStore.js";
 import { FsDecisionUpdatedEventStore } from "../solution/decisions/update/FsDecisionUpdatedEventStore.js";
@@ -108,6 +109,7 @@ import { SqliteGoalResumedProjector } from "../work/goals/resume/SqliteGoalResum
 import { SqliteGoalCompletedProjector } from "../work/goals/complete/SqliteGoalCompletedProjector.js";
 import { SqliteGoalResetProjector } from "../work/goals/reset/SqliteGoalResetProjector.js";
 import { SqliteGoalRemovedProjector } from "../work/goals/remove/SqliteGoalRemovedProjector.js";
+import { SqliteGoalProgressUpdatedProjector } from "../work/goals/update-progress/SqliteGoalProgressUpdatedProjector.js";
 import { SqliteGoalContextReader } from "../work/goals/get-context/SqliteGoalContextReader.js";
 import { SqliteGoalStatusReader } from "../work/goals/SqliteGoalStatusReader.js";
 // Decision Projection Stores - decomposed by use case
@@ -199,6 +201,7 @@ import { GoalResumedEventHandler } from "../../application/work/goals/resume/Goa
 import { GoalCompletedEventHandler } from "../../application/work/goals/complete/GoalCompletedEventHandler.js";
 import { GoalResetEventHandler } from "../../application/work/goals/reset/GoalResetEventHandler.js";
 import { GoalRemovedEventHandler } from "../../application/work/goals/remove/GoalRemovedEventHandler.js";
+import { GoalProgressUpdatedEventHandler } from "../../application/work/goals/update-progress/GoalProgressUpdatedEventHandler.js";
 // Decision Event Handlers - decomposed by use case
 import { DecisionAddedEventHandler } from "../../application/solution/decisions/add/DecisionAddedEventHandler.js";
 import { DecisionUpdatedEventHandler } from "../../application/solution/decisions/update/DecisionUpdatedEventHandler.js";
@@ -332,6 +335,7 @@ export class HostBuilder {
     const goalReviewedEventStore = new FsGoalReviewedEventStore(this.rootDir);
     const goalResetEventStore = new FsGoalResetEventStore(this.rootDir);
     const goalRemovedEventStore = new FsGoalRemovedEventStore(this.rootDir);
+    const goalProgressUpdatedEventStore = new FsGoalProgressUpdatedEventStore(this.rootDir);
 
     // Solution Category
     // Architecture Event Stores - decomposed by use case
@@ -405,6 +409,7 @@ export class HostBuilder {
     const goalCompletedProjector = new SqliteGoalCompletedProjector(this.db);
     const goalResetProjector = new SqliteGoalResetProjector(this.db);
     const goalRemovedProjector = new SqliteGoalRemovedProjector(this.db);
+    const goalProgressUpdatedProjector = new SqliteGoalProgressUpdatedProjector(this.db);
     const goalContextReader = new SqliteGoalContextReader(this.db);
     const goalStatusReader = new SqliteGoalStatusReader(this.db);
 
@@ -553,6 +558,7 @@ export class HostBuilder {
     const goalCompletedEventHandler = new GoalCompletedEventHandler(goalCompletedProjector);
     const goalResetEventHandler = new GoalResetEventHandler(goalResetProjector);
     const goalRemovedEventHandler = new GoalRemovedEventHandler(goalRemovedProjector);
+    const goalProgressUpdatedEventHandler = new GoalProgressUpdatedEventHandler(goalProgressUpdatedProjector);
 
     // Solution Category
     // Architecture Event Handlers - decomposed by use case
@@ -624,6 +630,7 @@ export class HostBuilder {
     eventBus.subscribe("GoalCompletedEvent", goalCompletedEventHandler);
     eventBus.subscribe("GoalResetEvent", goalResetEventHandler);
     eventBus.subscribe("GoalRemovedEvent", goalRemovedEventHandler);
+    eventBus.subscribe("GoalProgressUpdatedEvent", goalProgressUpdatedEventHandler);
 
     // Solution Category - Architecture events - decomposed by use case
     eventBus.subscribe("ArchitectureDefinedEvent", architectureDefinedEventHandler);
@@ -718,6 +725,7 @@ export class HostBuilder {
       goalReviewedEventStore,
       goalResetEventStore,
       goalRemovedEventStore,
+      goalProgressUpdatedEventStore,
       // Session Projection Stores - decomposed by use case
       sessionStartedProjector,
       sessionEndedProjector,
@@ -736,6 +744,7 @@ export class HostBuilder {
       goalCompletedProjector,
       goalResetProjector,
       goalRemovedProjector,
+      goalProgressUpdatedProjector,
       goalContextReader,
       goalStatusReader,
       // Goal Controllers

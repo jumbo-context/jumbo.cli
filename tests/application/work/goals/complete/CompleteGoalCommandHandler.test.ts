@@ -99,6 +99,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -170,6 +171,7 @@ describe("CompleteGoalCommandHandler", () => {
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       note: "Waiting for dependencies",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -256,6 +258,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 1,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -302,6 +305,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -366,6 +370,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -406,6 +411,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -472,6 +478,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -538,6 +545,7 @@ describe("CompleteGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 

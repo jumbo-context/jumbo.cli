@@ -22,6 +22,10 @@ import { goalShow, metadata as goalShowMeta } from '../../work/goals/show/goal.s
 import { goalStart, metadata as goalStartMeta } from '../../work/goals/start/goal.start.js';
 import { goalUnblock, metadata as goalUnblockMeta } from '../../work/goals/unblock/goal.unblock.js';
 import { goalUpdate, metadata as goalUpdateMeta } from '../../work/goals/update/goal.update.js';
+import { goalUpdateProgress, metadata as goalUpdateProgressMeta } from '../../work/goals/update-progress/goal.updateProgress.js';
+import { workPause, metadata as workPauseMeta } from '../../work/pause/work.pause.js';
+import { workResume, metadata as workResumeMeta } from '../../work/resume/work.resume.js';
+import { sessionCompact, metadata as sessionCompactMeta } from '../../work/sessions/compact/session.compact.js';
 import { sessionEnd, metadata as sessionEndMeta } from '../../work/sessions/end/session.end.js';
 import { sessionsList, metadata as sessionsListMeta } from '../../work/sessions/list/sessions.list.js';
 import { sessionStart, metadata as sessionStartMeta } from '../../work/sessions/start/session.start.js';
@@ -135,6 +139,26 @@ export const commands: RegisteredCommand[] = [
     path: 'goal update',
     metadata: goalUpdateMeta,
     handler: goalUpdate
+  },
+  {
+    path: 'goal updateProgress',
+    metadata: goalUpdateProgressMeta,
+    handler: goalUpdateProgress
+  },
+  {
+    path: 'work pause',
+    metadata: workPauseMeta,
+    handler: workPause
+  },
+  {
+    path: 'work resume',
+    metadata: workResumeMeta,
+    handler: workResume
+  },
+  {
+    path: 'session compact',
+    metadata: sessionCompactMeta,
+    handler: sessionCompact
   },
   {
     path: 'session end',

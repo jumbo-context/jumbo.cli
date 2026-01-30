@@ -122,6 +122,7 @@ describe("CompleteGoalController", () => {
       version: 4,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
     (completeGoalCommandHandler.execute as jest.Mock).mockResolvedValue({ goalId: "goal_456" });
@@ -164,6 +165,7 @@ describe("CompleteGoalController", () => {
       version: 1,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
     (getGoalContextQueryHandler.execute as jest.Mock).mockResolvedValue({

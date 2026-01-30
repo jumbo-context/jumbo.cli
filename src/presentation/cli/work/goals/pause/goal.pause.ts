@@ -24,7 +24,7 @@ export const metadata: CommandMetadata = {
     },
     {
       flags: "--reason <reason>",
-      description: "Reason for pausing (ContextCompressed, Other)"
+      description: "Reason for pausing (ContextCompressed, WorkPaused, Other)"
     }
   ],
   options: [

@@ -15,7 +15,8 @@ export const GoalEventType = {
   COMPLETED: 'GoalCompletedEvent',
   RESET: 'GoalResetEvent',
   REMOVED: 'GoalRemovedEvent',
-  REVIEWED: 'GoalReviewedEvent'
+  REVIEWED: 'GoalReviewedEvent',
+  PROGRESS_UPDATED: 'GoalProgressUpdatedEvent'
 } as const;
 
 export type GoalEventTypeValue = typeof GoalEventType[keyof typeof GoalEventType];

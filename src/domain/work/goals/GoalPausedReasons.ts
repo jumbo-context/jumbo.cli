@@ -5,6 +5,7 @@
 
 export const GoalPausedReasons = {
   ContextCompressed: 'ContextCompressed',
+  WorkPaused: 'WorkPaused',
   Other: 'Other'
 } as const;
 

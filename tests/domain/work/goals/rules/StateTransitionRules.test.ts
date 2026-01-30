@@ -27,6 +27,7 @@ function createGoalState(overrides: Partial<GoalState> = {}): GoalState {
     boundaries: [],
     status: GoalStatus.TODO,
     version: 0,
+    progress: [],
     ...overrides,
   };
 }

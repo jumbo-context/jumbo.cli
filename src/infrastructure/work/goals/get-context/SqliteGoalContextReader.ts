@@ -32,6 +32,7 @@ export class SqliteGoalContextReader implements IGoalContextReader {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       note: row.note || undefined,
+      progress: JSON.parse(row.progress || "[]"),
       claimedBy: row.claimedBy || undefined,
       claimedAt: row.claimedAt || undefined,
       claimExpiresAt: row.claimExpiresAt || undefined,

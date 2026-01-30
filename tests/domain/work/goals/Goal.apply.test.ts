@@ -17,6 +17,7 @@ function createEmptyGoalState(id: string): GoalState {
     boundaries: [],
     status: GoalStatus.TODO,
     version: 0,
+    progress: [],
   };
 }
 
@@ -33,6 +34,7 @@ describe("Goal", () => {
         boundaries: [],
         status: 'to-do' as const,
         version: 0,
+        progress: [],
       };
 
       const event: GoalAddedEvent = {
@@ -145,6 +147,7 @@ describe("Goal", () => {
         boundaries: [],
         status: GoalStatus.TODO,
         version: 1,
+        progress: [],
       };
 
       const event: GoalStartedEvent = {
@@ -179,6 +182,7 @@ describe("Goal", () => {
         boundaries: [],
         status: GoalStatus.DOING,
         version: 2,
+        progress: [],
       };
 
       const event: GoalCompletedEvent = {
@@ -295,6 +299,7 @@ describe("Goal", () => {
         status: GoalStatus.DOING,
         version: 2,
         note: undefined,
+        progress: [],
       };
 
       const event: GoalPausedEvent = {
@@ -332,6 +337,7 @@ describe("Goal", () => {
         status: GoalStatus.DOING,
         version: 2,
         note: undefined,
+        progress: [],
       };
 
       const event: GoalPausedEvent = {
@@ -368,6 +374,7 @@ describe("Goal", () => {
         status: GoalStatus.PAUSED,
         version: 3,
         note: undefined,
+        progress: [],
       };
 
       const event: GoalResumedEvent = {
@@ -404,6 +411,7 @@ describe("Goal", () => {
         status: GoalStatus.PAUSED,
         version: 3,
         note: undefined,
+        progress: [],
       };
 
       const event: GoalResumedEvent = {

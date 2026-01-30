@@ -110,6 +110,7 @@ describe("ResumeGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -191,6 +192,7 @@ describe("ResumeGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -274,6 +276,7 @@ describe("ResumeGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -329,6 +332,7 @@ describe("ResumeGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -397,6 +401,7 @@ describe("ResumeGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 

@@ -208,6 +208,7 @@ describe("SessionSummaryProjectionHandler", () => {
         version: 1,
         createdAt: "2025-01-01T09:00:00Z",
         updatedAt: "2025-01-01T11:00:00Z",
+        progress: [],
       };
 
       mockStore.findLatest.mockResolvedValue(mockLatest);
@@ -376,6 +377,7 @@ describe("SessionSummaryProjectionHandler", () => {
         version: 1,
         createdAt: "2025-01-01T09:00:00Z",
         updatedAt: "2025-01-01T11:30:00Z",
+        progress: [],
       };
 
       mockStore.findLatest.mockResolvedValue(mockLatest);
@@ -503,6 +505,7 @@ describe("SessionSummaryProjectionHandler", () => {
         version: 1,
         createdAt: "2025-01-01T09:00:00Z",
         updatedAt: "2025-01-01T10:30:00Z",
+        progress: [],
       };
 
       mockStore.findLatest.mockResolvedValue(mockLatest);
@@ -670,6 +673,7 @@ describe("SessionSummaryProjectionHandler", () => {
         version: 1,
         createdAt: "2025-01-01T09:00:00Z",
         updatedAt: "2025-01-01T11:15:00Z",
+        progress: [],
       };
 
       mockStore.findLatest.mockResolvedValue(mockLatest);
@@ -758,6 +762,7 @@ describe("SessionSummaryProjectionHandler", () => {
         version: 1,
         createdAt: "2025-01-01T09:00:00Z",
         updatedAt: "2025-01-01T12:00:00Z",
+        progress: [],
       };
 
       mockStore.findLatest.mockResolvedValue(mockLatest);

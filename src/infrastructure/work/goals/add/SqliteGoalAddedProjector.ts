@@ -20,8 +20,8 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
         claimedBy, claimedAt, claimExpiresAt,
         relevantInvariants, relevantGuidelines, relevantDependencies,
         relevantComponents, architecture, filesToBeCreated, filesToBeChanged,
-        nextGoalId
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        nextGoalId, progress
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -45,7 +45,8 @@ export class SqliteGoalAddedProjector implements IGoalAddedProjector {
       event.payload.architecture ? JSON.stringify(event.payload.architecture) : null,
       event.payload.filesToBeCreated ? JSON.stringify(event.payload.filesToBeCreated) : null,
       event.payload.filesToBeChanged ? JSON.stringify(event.payload.filesToBeChanged) : null,
-      event.payload.nextGoalId ?? null
+      event.payload.nextGoalId ?? null,
+      JSON.stringify([]) // progress - initialized as empty array
     );
   }
 }

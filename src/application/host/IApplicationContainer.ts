@@ -174,6 +174,10 @@ import { IGoalResetEventWriter } from "../work/goals/reset/IGoalResetEventWriter
 import { IGoalResetEventReader } from "../work/goals/reset/IGoalResetEventReader.js";
 import { IGoalRemovedEventWriter } from "../work/goals/remove/IGoalRemovedEventWriter.js";
 import { IGoalRemovedEventReader } from "../work/goals/remove/IGoalRemovedEventReader.js";
+import { IGoalProgressUpdatedEventWriter } from "../work/goals/update-progress/IGoalProgressUpdatedEventWriter.js";
+import { IGoalProgressUpdatedEventReader } from "../work/goals/update-progress/IGoalProgressUpdatedEventReader.js";
+import { IGoalProgressUpdatedProjector } from "../work/goals/update-progress/IGoalProgressUpdatedProjector.js";
+import { IGoalProgressUpdateReader } from "../work/goals/update-progress/IGoalProgressUpdateReader.js";
 import { IDecisionAddedEventWriter } from "../solution/decisions/add/IDecisionAddedEventWriter.js";
 import { IDecisionUpdatedEventWriter } from "../solution/decisions/update/IDecisionUpdatedEventWriter.js";
 import { IDecisionReversedEventWriter } from "../solution/decisions/reverse/IDecisionReversedEventWriter.js";
@@ -264,6 +268,7 @@ export interface IApplicationContainer {
   goalReviewedEventStore: IGoalReviewedEventWriter & IGoalReviewedEventReader;
   goalResetEventStore: IGoalResetEventWriter & IGoalResetEventReader;
   goalRemovedEventStore: IGoalRemovedEventWriter & IGoalRemovedEventReader;
+  goalProgressUpdatedEventStore: IGoalProgressUpdatedEventWriter & IGoalProgressUpdatedEventReader;
 
   // Work Category - Session Projection Stores - decomposed by use case
   sessionStartedProjector: ISessionStartedProjector;
@@ -283,6 +288,7 @@ export interface IApplicationContainer {
   goalCompletedProjector: IGoalCompletedProjector & IGoalCompleteReader;
   goalResetProjector: IGoalResetProjector & IGoalResetReader;
   goalRemovedProjector: IGoalRemovedProjector & IGoalRemoveReader;
+  goalProgressUpdatedProjector: IGoalProgressUpdatedProjector & IGoalProgressUpdateReader;
   goalContextReader: IGoalContextReader;
   goalStatusReader: IGoalStatusReader & IGoalReadForSessionSummary;
   // Goal Controllers

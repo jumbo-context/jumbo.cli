@@ -62,6 +62,7 @@ describe("PauseGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -135,6 +136,7 @@ describe("PauseGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -210,6 +212,7 @@ describe("PauseGoalCommandHandler", () => {
       version: 1,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -257,6 +260,7 @@ describe("PauseGoalCommandHandler", () => {
       version: 3,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
@@ -323,6 +327,7 @@ describe("PauseGoalCommandHandler", () => {
       version: 2,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 

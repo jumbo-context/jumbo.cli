@@ -112,6 +112,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -140,6 +141,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -177,6 +179,7 @@ describe("GetGoalContextQueryHandler", () => {
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
         note: "Waiting for external API documentation",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -208,6 +211,7 @@ describe("GetGoalContextQueryHandler", () => {
           { title: "Single Responsibility", description: "One class, one reason to change" },
           { title: "No Junk Drawers", description: "No utils/ or helpers/ folders" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -237,6 +241,7 @@ describe("GetGoalContextQueryHandler", () => {
         relevantInvariants: [
           { title: "Rule 1", description: "Description 1" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -263,6 +268,7 @@ describe("GetGoalContextQueryHandler", () => {
           { title: "Coding Style", description: "Use descriptive variable names" },
           { title: "Testing", description: "All business rules must be unit tested" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -289,6 +295,7 @@ describe("GetGoalContextQueryHandler", () => {
         relevantGuidelines: [
           { title: "Guide 1", description: "Description 1" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -315,6 +322,7 @@ describe("GetGoalContextQueryHandler", () => {
           { name: "GoalAggregate", responsibility: "Manages goal lifecycle" },
           { name: "EventStore", responsibility: "Persists domain events" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -342,6 +350,7 @@ describe("GetGoalContextQueryHandler", () => {
         relevantComponents: [
           { name: "Component1", responsibility: "Does something" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -368,6 +377,7 @@ describe("GetGoalContextQueryHandler", () => {
           { consumer: "GoalAggregate", provider: "EventStore" },
           { consumer: "QueryHandler", provider: "ProjectionStore" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -394,6 +404,7 @@ describe("GetGoalContextQueryHandler", () => {
         relevantDependencies: [
           { consumer: "A", provider: "B" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -435,6 +446,7 @@ describe("GetGoalContextQueryHandler", () => {
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
         // No relevantInvariants field
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -473,6 +485,7 @@ describe("GetGoalContextQueryHandler", () => {
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
         // No relevantGuidelines field
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -516,6 +529,7 @@ describe("GetGoalContextQueryHandler", () => {
         relevantInvariants: [
           { title: "Embedded Rule", description: "From goal creation" },
         ],
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -552,6 +566,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -607,6 +622,7 @@ describe("GetGoalContextQueryHandler", () => {
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
         relevantInvariants: [], // Empty array should trigger fallback
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -655,6 +671,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -705,6 +722,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);
@@ -755,6 +773,7 @@ describe("GetGoalContextQueryHandler", () => {
         version: 1,
         createdAt: "2025-01-01T00:00:00Z",
         updatedAt: "2025-01-01T00:00:00Z",
+        progress: [],
       };
 
       mockReader.addGoal(goal);

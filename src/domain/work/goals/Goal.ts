@@ -1,7 +1,7 @@
 import { BaseAggregate, AggregateState } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
-import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalReviewedEvent } from "./EventIndex.js";
+import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalReviewedEvent, GoalProgressUpdatedEvent } from "./EventIndex.js";
 import { GoalEventType, GoalStatus, GoalStatusType } from "./Constants.js";
 import { GoalPausedReasonsType } from "./GoalPausedReasons.js";
 import { OBJECTIVE_RULES } from "./rules/ObjectiveRules.js";
@@ -48,6 +48,7 @@ export interface GoalState extends AggregateState {
   status: GoalStatusType;
   version: number;
   note?: string;  // Optional: populated when blocked or completed
+  progress: string[];  // Tracks completed sub-tasks (append-only)
   // Embedded context fields - populated during goal creation with --interactive
   relevantInvariants?: EmbeddedInvariant[];
   relevantGuidelines?: EmbeddedGuideline[];
@@ -216,6 +217,14 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         break;
       }
 
+      case GoalEventType.PROGRESS_UPDATED: {
+        const e = event as GoalProgressUpdatedEvent;
+        // Append task description to progress array (append-only)
+        state.progress.push(e.payload.taskDescription);
+        state.version = e.version;
+        break;
+      }
+
       case GoalEventType.REMOVED: {
         const e = event as GoalRemovedEvent;
         // Goal is removed - mark in state for filtering in queries
@@ -235,6 +244,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       boundaries: [],
       status: GoalStatus.TODO,
       version: 0,
+      progress: [],
     };
     return new Goal(state);
   }
@@ -253,6 +263,7 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       boundaries: [],
       status: GoalStatus.TODO,
       version: 0,
+      progress: [],
     };
 
     for (const event of history) {
@@ -637,5 +648,33 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       },
       Goal.apply
     ) as GoalReviewedEvent;
+  }
+
+  /**
+   * Records progress on the goal by appending a task description.
+   * Progress is append-only - completed sub-tasks cannot be removed.
+   *
+   * @param taskDescription - Description of the completed sub-task
+   * @returns GoalProgressUpdated event
+   * @throws Error if taskDescription is empty or too long
+   */
+  updateProgress(taskDescription: string): GoalProgressUpdatedEvent {
+    // Input validation: taskDescription must be provided and valid
+    const trimmed = taskDescription?.trim();
+    if (!trimmed) {
+      throw new Error("Task description is required");
+    }
+    if (trimmed.length > 500) {
+      throw new Error("Task description must be less than 500 characters");
+    }
+
+    // Create and return event
+    return this.makeEvent(
+      GoalEventType.PROGRESS_UPDATED,
+      {
+        taskDescription: trimmed,
+      },
+      Goal.apply
+    ) as GoalProgressUpdatedEvent;
   }
 }
