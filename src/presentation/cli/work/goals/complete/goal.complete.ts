@@ -11,7 +11,7 @@ import { IApplicationContainer } from "../../../../../application/host/IApplicat
 import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { CompleteGoalRequest } from "../../../../../application/work/goals/complete/CompleteGoalRequest.js";
 import { CompleteGoalResponse } from "../../../../../application/work/goals/complete/CompleteGoalResponse.js";
-import { GoalContextFormatter } from "../start/GoalContextFormatter.js";
+import { GoalContextRenderer } from "../start/GoalContextRenderer.js";
 import { GoalStatus } from "../../../../../domain/work/goals/Constants.js";
 
 /**

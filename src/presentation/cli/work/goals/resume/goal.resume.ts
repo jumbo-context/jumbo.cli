@@ -12,7 +12,7 @@ import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { ResumeGoalCommandHandler } from "../../../../../application/work/goals/resume/ResumeGoalCommandHandler.js";
 import { ResumeGoalCommand } from "../../../../../application/work/goals/resume/ResumeGoalCommand.js";
 import { GetGoalContextQueryHandler } from "../../../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
-import { GoalContextFormatter } from "../start/GoalContextFormatter.js";
+import { GoalContextRenderer } from "../start/GoalContextRenderer.js";
 
 /**
  * Command metadata for auto-registration
@@ -95,10 +95,10 @@ export async function goalResume(options: { goalId: string; note?: string }, con
       const updatedContext = await getGoalContext.execute(options.goalId);
 
       // 4. Format and render goal context
-      const goalContextFormatter = new GoalContextFormatter();
-      const contextYaml = goalContextFormatter.format(updatedContext);
+      const goalContextFormatter = new GoalContextRenderer(renderer);
+      
+      goalContextFormatter.render(updatedContext);
 
-      renderer.info("\n" + contextYaml);
       renderer.info("---\n");
 
       // LLM Guidance
@@ -109,11 +109,6 @@ export async function goalResume(options: { goalId: string; note?: string }, con
       ];
       renderer.info(llmInstruction.join("\n") + "\n");
 
-      renderer.success("Goal resumed", {
-        goalId: updatedContext.goal!.goalId,
-        objective: updatedContext.goal!.objective,
-        status: updatedContext.goal!.status,
-      });
       return;
     }
 
@@ -127,10 +122,9 @@ export async function goalResume(options: { goalId: string; note?: string }, con
     }
 
     // 5. Format and render goal context
-    const goalContextFormatter = new GoalContextFormatter();
-    const contextYaml = goalContextFormatter.format(goalContext);
+    const goalContextFormatter = new GoalContextRenderer(renderer);
+    goalContextFormatter.render(goalContext);
 
-    renderer.info("\n" + contextYaml);
     renderer.info("---\n");
 
     // LLM Guidance
@@ -151,5 +145,4 @@ export async function goalResume(options: { goalId: string; note?: string }, con
     renderer.error("Failed to resume goal", error instanceof Error ? error : String(error));
     process.exit(1);
   }
-  // NO CLEANUP - infrastructure manages itself!
 }

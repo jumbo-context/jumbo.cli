@@ -10,7 +10,7 @@ import { Renderer } from "../../../shared/rendering/Renderer.js";
 import { StartGoalCommandHandler } from "../../../../../application/work/goals/start/StartGoalCommandHandler.js";
 import { StartGoalCommand } from "../../../../../application/work/goals/start/StartGoalCommand.js";
 import { GetGoalContextQueryHandler } from "../../../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
-import { GoalContextFormatter } from "./GoalContextFormatter.js";
+import { GoalContextRenderer } from "./GoalContextRenderer.js";
 
 /**
  * Command metadata for auto-registration
@@ -21,16 +21,16 @@ export const metadata: CommandMetadata = {
   requiredOptions: [
     {
       flags: "--goal-id <goalId>",
-      description: "ID of the goal to start"
+      description: "[required]ID of the goal to start"
     }
   ],
   examples: [
     {
       command: "jumbo goal start --goal-id goal_abc123",
-      description: "Start working on a specific goal"
+      description: "Start working on the goal with ID 'goal_abc123'"
     }
   ],
-  related: ["goal add", "goal complete", "goal block"]
+  related: ["goal update-progress", "goal complete"]
 };
 
 /**
@@ -70,33 +70,24 @@ export async function goalStart(options: { goalId: string }, container: IApplica
       container.architectureReader,
       container.relationRemovedProjector
     );
-    const goalContextFormatter = new GoalContextFormatter();
+    const goalContextRenderer = new GoalContextRenderer(renderer);
 
     const goalContext = await getGoalContext.execute(result.goalId);
-    const contextYaml = goalContextFormatter.format(goalContext);
-
-    // Display context to user
-    renderer.info("\n" + contextYaml);
+    
+    goalContextRenderer.render(goalContext);
 
     renderer.info("---\n");
 
     // LLM Guidance
-    const llmInstruction = [
+    const additionalLlmInstructions = [
       "@LLM: Goal context loaded. Work within scope and boundaries.",
       "YOUR ROLE: Proactively run jumbo commands to capture project memories as they surface.",
       "Run 'jumbo --help' to see what can be tracked, if you haven't already.",
     ];
-    renderer.info(llmInstruction.join("\n") + "\n");
+    renderer.info(additionalLlmInstructions.join("\n") + "\n");
 
-    // Success output
-    renderer.success("Goal started", {
-      goalId: result.goalId,
-      objective: view?.objective || "",
-      status: view?.status || "doing",
-    });
   } catch (error) {
     renderer.error("Failed to start goal", error instanceof Error ? error : String(error));
     process.exit(1);
   }
-  // NO CLEANUP - infrastructure manages itself!
 }

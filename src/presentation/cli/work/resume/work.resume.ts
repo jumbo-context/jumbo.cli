@@ -11,7 +11,7 @@ import { IApplicationContainer } from "../../../../application/host/IApplication
 import { Renderer } from "../../shared/rendering/Renderer.js";
 import { ResumeWorkCommandHandler } from "../../../../application/work/resume/ResumeWorkCommandHandler.js";
 import { GetGoalContextQueryHandler } from "../../../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
-import { GoalContextFormatter } from "../goals/start/GoalContextFormatter.js";
+import { GoalContextRenderer } from "../goals/start/GoalContextRenderer.js";
 
 /**
  * Command metadata for auto-registration
@@ -67,10 +67,10 @@ export async function workResume(
       container.architectureReader,
       container.relationRemovedProjector
     );
-    const goalContextFormatter = new GoalContextFormatter();
+    const goalContextRenderer = new GoalContextRenderer(renderer);
 
     const goalContext = await getGoalContext.execute(result.goalId);
-    const contextYaml = goalContextFormatter.format(goalContext);
+    const contextYaml = goalContextRenderer.render(goalContext);
 
     // 4. Display context to user
     renderer.info("\n" + contextYaml);
