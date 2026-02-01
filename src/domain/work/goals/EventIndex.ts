@@ -10,6 +10,7 @@ export * from "./start/GoalStartedEvent.js";
 export * from "./unblock/GoalUnblockedEvent.js";
 export * from "./update/GoalUpdatedEvent.js";
 export * from "./update-progress/GoalProgressUpdatedEvent.js";
+export * from "./review/GoalSubmittedForReviewEvent.js";
 
 import { GoalAddedEvent} from "./add/GoalAddedEvent.js";
 import { GoalBlockedEvent} from "./block/GoalBlockedEvent.js";
@@ -23,6 +24,7 @@ import { GoalStartedEvent} from "./start/GoalStartedEvent.js";
 import { GoalUnblockedEvent} from "./unblock/GoalUnblockedEvent.js";
 import { GoalUpdatedEvent} from "./update/GoalUpdatedEvent.js";
 import { GoalProgressUpdatedEvent} from "./update-progress/GoalProgressUpdatedEvent.js";
+import { GoalSubmittedForReviewEvent} from "./review/GoalSubmittedForReviewEvent.js";
 
 // Union type will expand as we add more events
 export type GoalEvent =
@@ -37,4 +39,5 @@ export type GoalEvent =
     GoalResumedEvent |
     GoalStartedEvent |
     GoalUnblockedEvent |
-    GoalUpdatedEvent;
+    GoalUpdatedEvent |
+    GoalSubmittedForReviewEvent;
