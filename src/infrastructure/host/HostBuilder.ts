@@ -109,6 +109,8 @@ import { SqliteGoalCompletedProjector } from "../work/goals/complete/SqliteGoalC
 import { SqliteGoalResetProjector } from "../work/goals/reset/SqliteGoalResetProjector.js";
 import { SqliteGoalRemovedProjector } from "../work/goals/remove/SqliteGoalRemovedProjector.js";
 import { SqliteGoalProgressUpdatedProjector } from "../work/goals/update-progress/SqliteGoalProgressUpdatedProjector.js";
+import { SqliteGoalSubmittedForReviewProjector } from "../work/goals/review/SqliteGoalSubmittedForReviewProjector.js";
+import { SqliteGoalQualifiedProjector } from "../work/goals/qualify/SqliteGoalQualifiedProjector.js";
 import { SqliteGoalContextReader } from "../work/goals/get-context/SqliteGoalContextReader.js";
 import { SqliteGoalStatusReader } from "../work/goals/SqliteGoalStatusReader.js";
 // Decision Projection Stores - decomposed by use case
@@ -201,6 +203,8 @@ import { GoalCompletedEventHandler } from "../../application/work/goals/complete
 import { GoalResetEventHandler } from "../../application/work/goals/reset/GoalResetEventHandler.js";
 import { GoalRemovedEventHandler } from "../../application/work/goals/remove/GoalRemovedEventHandler.js";
 import { GoalProgressUpdatedEventHandler } from "../../application/work/goals/update-progress/GoalProgressUpdatedEventHandler.js";
+import { GoalSubmittedForReviewEventHandler } from "../../application/work/goals/review/GoalSubmittedForReviewEventHandler.js";
+import { GoalQualifiedEventHandler } from "../../application/work/goals/qualify/GoalQualifiedEventHandler.js";
 // Decision Event Handlers - decomposed by use case
 import { DecisionAddedEventHandler } from "../../application/solution/decisions/add/DecisionAddedEventHandler.js";
 import { DecisionUpdatedEventHandler } from "../../application/solution/decisions/update/DecisionUpdatedEventHandler.js";
@@ -415,6 +419,8 @@ export class HostBuilder {
     const goalResetProjector = new SqliteGoalResetProjector(this.db);
     const goalRemovedProjector = new SqliteGoalRemovedProjector(this.db);
     const goalProgressUpdatedProjector = new SqliteGoalProgressUpdatedProjector(this.db);
+    const goalSubmittedForReviewProjector = new SqliteGoalSubmittedForReviewProjector(this.db);
+    const goalQualifiedProjector = new SqliteGoalQualifiedProjector(this.db);
     const goalContextReader = new SqliteGoalContextReader(this.db);
     const goalStatusReader = new SqliteGoalStatusReader(this.db);
 
@@ -586,6 +592,8 @@ export class HostBuilder {
     const goalResetEventHandler = new GoalResetEventHandler(goalResetProjector);
     const goalRemovedEventHandler = new GoalRemovedEventHandler(goalRemovedProjector);
     const goalProgressUpdatedEventHandler = new GoalProgressUpdatedEventHandler(goalProgressUpdatedProjector);
+    const goalSubmittedForReviewEventHandler = new GoalSubmittedForReviewEventHandler(goalSubmittedForReviewProjector);
+    const goalQualifiedEventHandler = new GoalQualifiedEventHandler(goalQualifiedProjector);
 
     // Solution Category
     // Architecture Event Handlers - decomposed by use case
@@ -658,6 +666,8 @@ export class HostBuilder {
     eventBus.subscribe("GoalResetEvent", goalResetEventHandler);
     eventBus.subscribe("GoalRemovedEvent", goalRemovedEventHandler);
     eventBus.subscribe("GoalProgressUpdatedEvent", goalProgressUpdatedEventHandler);
+    eventBus.subscribe("GoalSubmittedForReviewEvent", goalSubmittedForReviewEventHandler);
+    eventBus.subscribe("GoalQualifiedEvent", goalQualifiedEventHandler);
 
     // Solution Category - Architecture events - decomposed by use case
     eventBus.subscribe("ArchitectureDefinedEvent", architectureDefinedEventHandler);
