@@ -17,7 +17,7 @@ import { GoalView } from "../../../../../application/work/goals/GoalView.js";
  * Hidden: true - This command is intentionally not shown in --help
  */
 export const metadata: CommandMetadata = {
-  description: "List non-completed goals (to-do, doing, blocked)",
+  description: "List non-completed goals (to-do, doing, blocked, paused)",
   category: "work",
   hidden: true,
   examples: [
@@ -39,6 +39,8 @@ function formatStatus(status: string): string {
       return "[BLOCKED]";
     case "to-do":
       return "[TO-DO]  ";
+    case "paused":
+      return "[PAUSED] ";
     default:
       return `[${status.toUpperCase()}]`;
   }
@@ -56,8 +58,8 @@ export async function goalsList(
     // Fetch all goals
     const allGoals = await container.goalStatusReader.findAll();
 
-    // Filter to non-completed goals (to-do, doing, blocked)
-    const nonCompletedStatuses = ["to-do", "doing", "blocked"];
+    // Filter to non-completed goals (to-do, doing, blocked, paused)
+    const nonCompletedStatuses = ["to-do", "doing", "blocked", "paused"];
     const activeGoals = allGoals.filter((goal: GoalView) =>
       nonCompletedStatuses.includes(goal.status)
     );
@@ -67,11 +69,12 @@ export async function goalsList(
       return;
     }
 
-    // Sort: doing first, then blocked, then to-do, then by createdAt
+    // Sort: first paused, then doing, then blocked, then to-do, then paused, then by createdAt
     const statusOrder: Record<string, number> = {
-      "doing": 0,
-      "blocked": 1,
-      "to-do": 2
+      "paused": 0,
+      "doing": 1,
+      "blocked": 2,
+      "to-do": 3
     };
 
     activeGoals.sort((a: GoalView, b: GoalView) => {
