@@ -111,7 +111,7 @@ describe("FsGoalSubmittedForReviewEventStore", () => {
       };
 
       const event2: BaseEvent = {
-        type: "GoalReviewedEvent",
+        type: "GoalQualifiedEvent",
         aggregateId: "goal_test-1",
         version: 2,
         timestamp: "2026-02-02T11:00:00.000Z",
@@ -124,7 +124,7 @@ describe("FsGoalSubmittedForReviewEventStore", () => {
 
       expect(events).toHaveLength(2);
       expect(events[0].type).toBe("GoalSubmittedForReviewEvent");
-      expect(events[1].type).toBe("GoalReviewedEvent");
+      expect(events[1].type).toBe("GoalQualifiedEvent");
     });
 
     it("strips infrastructure metadata from returned events", async () => {

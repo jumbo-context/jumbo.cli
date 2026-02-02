@@ -1,14 +1,13 @@
 /**
  * Tests for ReviewGoalController
  *
- * Tests the orchestration of goal review submission with QA gate logic.
+ * Tests the orchestration of goal review submission.
  */
 
 import { ReviewGoalController } from "../../../../../src/application/work/goals/review/ReviewGoalController";
 import { SubmitGoalForReviewCommandHandler } from "../../../../../src/application/work/goals/review/SubmitGoalForReviewCommandHandler";
 import { GetGoalContextQueryHandler } from "../../../../../src/application/work/goals/get-context/GetGoalContextQueryHandler";
 import { IGoalSubmitForReviewReader } from "../../../../../src/application/work/goals/review/IGoalSubmitForReviewReader";
-import { ReviewTurnTracker } from "../../../../../src/application/work/goals/complete/ReviewTurnTracker";
 import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../../src/domain/work/goals/Constants";
 import { GoalView } from "../../../../../src/application/work/goals/GoalView";
 import { GoalClaimPolicy } from "../../../../../src/application/work/goals/claims/GoalClaimPolicy";
@@ -19,7 +18,6 @@ describe("ReviewGoalController", () => {
   let submitGoalForReviewCommandHandler: SubmitGoalForReviewCommandHandler;
   let getGoalContextQueryHandler: GetGoalContextQueryHandler;
   let goalReader: IGoalSubmitForReviewReader;
-  let turnTracker: ReviewTurnTracker;
   let claimPolicy: GoalClaimPolicy;
   let workerIdentityReader: IWorkerIdentityReader;
 
@@ -63,11 +61,6 @@ describe("ReviewGoalController", () => {
       findById: jest.fn(),
     };
 
-    turnTracker = {
-      getCommitGate: jest.fn(),
-      getCurrentTurnCount: jest.fn(),
-    } as unknown as ReviewTurnTracker;
-
     // Mock claim policy - default to allowing claims (no existing claim)
     claimPolicy = {
       canClaim: jest.fn().mockReturnValue({ allowed: true }),
@@ -93,7 +86,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );
@@ -125,7 +117,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );
@@ -149,7 +140,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );
@@ -183,7 +173,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );
@@ -227,7 +216,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );
@@ -260,7 +248,6 @@ describe("ReviewGoalController", () => {
         submitGoalForReviewCommandHandler,
         getGoalContextQueryHandler,
         goalReader,
-        turnTracker,
         claimPolicy,
         workerIdentityReader
       );

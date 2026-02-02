@@ -53,8 +53,6 @@ import { IGoalReadForSessionSummary } from "../work/sessions/get-context/IGoalRe
 // Goal Controllers
 import { CompleteGoalController } from "../work/goals/complete/CompleteGoalController.js";
 import { ReviewGoalController } from "../work/goals/review/ReviewGoalController.js";
-import { IGoalReviewedEventWriter } from "../work/goals/complete/IGoalReviewedEventWriter.js";
-import { IGoalReviewedEventReader } from "../work/goals/complete/IGoalReviewedEventReader.js";
 import { IGoalSubmittedForReviewEventWriter } from "../work/goals/review/IGoalSubmittedForReviewEventWriter.js";
 import { IGoalSubmittedForReviewEventReader } from "../work/goals/review/IGoalSubmittedForReviewEventReader.js";
 import { QualifyGoalController } from "../work/goals/qualify/QualifyGoalController.js";
@@ -270,7 +268,6 @@ export interface IApplicationContainer {
   goalPausedEventStore: IGoalPausedEventWriter & IGoalPausedEventReader;
   goalResumedEventStore: IGoalResumedEventWriter & IGoalResumedEventReader;
   goalCompletedEventStore: IGoalCompletedEventWriter & IGoalCompletedEventReader;
-  goalReviewedEventStore: IGoalReviewedEventWriter & IGoalReviewedEventReader;
   goalResetEventStore: IGoalResetEventWriter & IGoalResetEventReader;
   goalRemovedEventStore: IGoalRemovedEventWriter & IGoalRemovedEventReader;
   goalProgressUpdatedEventStore: IGoalProgressUpdatedEventWriter & IGoalProgressUpdatedEventReader;

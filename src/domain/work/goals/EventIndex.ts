@@ -1,7 +1,6 @@
 export * from "./add/GoalAddedEvent.js";
 export * from "./block/GoalBlockedEvent.js";
 export * from "./complete/GoalCompletedEvent.js";
-export * from "./complete/GoalReviewedEvent.js";
 export * from "./pause/GoalPausedEvent.js";
 export * from "./remove/GoalRemovedEvent.js";
 export * from "./reset/GoalResetEvent.js";
@@ -17,7 +16,6 @@ import { GoalAddedEvent} from "./add/GoalAddedEvent.js";
 import { GoalBlockedEvent} from "./block/GoalBlockedEvent.js";
 import { GoalCompletedEvent} from "./complete/GoalCompletedEvent.js";
 import { GoalPausedEvent} from "./pause/GoalPausedEvent.js";
-import { GoalReviewedEvent} from "./complete/GoalReviewedEvent.js";
 import { GoalRemovedEvent} from "./remove/GoalRemovedEvent.js";
 import { GoalResetEvent} from "./reset/GoalResetEvent.js";
 import { GoalResumedEvent} from "./resume/GoalResumedEvent.js";
@@ -35,7 +33,6 @@ export type GoalEvent =
     GoalCompletedEvent |
     GoalPausedEvent |
     GoalProgressUpdatedEvent |
-    GoalReviewedEvent |
     GoalRemovedEvent |
     GoalResetEvent |
     GoalResumedEvent |

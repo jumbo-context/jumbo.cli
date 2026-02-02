@@ -43,7 +43,6 @@ import { FsGoalUnblockedEventStore } from "../work/goals/unblock/FsGoalUnblocked
 import { FsGoalPausedEventStore } from "../work/goals/pause/FsGoalPausedEventStore.js";
 import { FsGoalResumedEventStore } from "../work/goals/resume/FsGoalResumedEventStore.js";
 import { FsGoalCompletedEventStore } from "../work/goals/complete/FsGoalCompletedEventStore.js";
-import { FsGoalReviewedEventStore } from "../work/goals/complete/FsGoalReviewedEventStore.js";
 import { FsGoalResetEventStore } from "../work/goals/reset/FsGoalResetEventStore.js";
 import { FsGoalRemovedEventStore } from "../work/goals/remove/FsGoalRemovedEventStore.js";
 import { FsGoalProgressUpdatedEventStore } from "../work/goals/update-progress/FsGoalProgressUpdatedEventStore.js";
@@ -252,7 +251,6 @@ import { CompleteGoalCommandHandler } from "../../application/work/goals/complet
 import { GetGoalContextQueryHandler } from "../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
 import { ReviewGoalController } from "../../application/work/goals/review/ReviewGoalController.js";
 import { SubmitGoalForReviewCommandHandler } from "../../application/work/goals/review/SubmitGoalForReviewCommandHandler.js";
-import { ReviewTurnTracker } from "../../application/work/goals/complete/ReviewTurnTracker.js";
 import { FsGoalSubmittedForReviewEventStore } from "../work/goals/review/FsGoalSubmittedForReviewEventStore.js";
 import { QualifyGoalController } from "../../application/work/goals/qualify/QualifyGoalController.js";
 import { QualifyGoalCommandHandler } from "../../application/work/goals/qualify/QualifyGoalCommandHandler.js";
@@ -338,7 +336,6 @@ export class HostBuilder {
     const goalPausedEventStore = new FsGoalPausedEventStore(this.rootDir);
     const goalResumedEventStore = new FsGoalResumedEventStore(this.rootDir);
     const goalCompletedEventStore = new FsGoalCompletedEventStore(this.rootDir);
-    const goalReviewedEventStore = new FsGoalReviewedEventStore(this.rootDir);
     const goalResetEventStore = new FsGoalResetEventStore(this.rootDir);
     const goalRemovedEventStore = new FsGoalRemovedEventStore(this.rootDir);
     const goalProgressUpdatedEventStore = new FsGoalProgressUpdatedEventStore(this.rootDir);
@@ -528,15 +525,10 @@ export class HostBuilder {
       goalClaimPolicy,
       workerIdentityReader
     );
-    const reviewTurnTracker = new ReviewTurnTracker(
-      goalReviewedEventStore,
-      settingsReader
-    );
     const reviewGoalController = new ReviewGoalController(
       submitGoalForReviewCommandHandler,
       getGoalContextQueryHandler,
       goalContextReader,
-      reviewTurnTracker,
       goalClaimPolicy,
       workerIdentityReader
     );
@@ -757,7 +749,6 @@ export class HostBuilder {
       goalPausedEventStore,
       goalResumedEventStore,
       goalCompletedEventStore,
-      goalReviewedEventStore,
       goalResetEventStore,
       goalRemovedEventStore,
       goalProgressUpdatedEventStore,

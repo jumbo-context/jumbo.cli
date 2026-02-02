@@ -1,7 +1,7 @@
 import { BaseAggregate, AggregateState } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
-import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalReviewedEvent, GoalProgressUpdatedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent } from "./EventIndex.js";
+import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalProgressUpdatedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent } from "./EventIndex.js";
 import { GoalEventType, GoalStatus, GoalStatusType } from "./Constants.js";
 import { GoalPausedReasonsType } from "./GoalPausedReasons.js";
 import { OBJECTIVE_RULES } from "./rules/ObjectiveRules.js";
@@ -207,14 +207,6 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         const e = event as GoalResetEvent;
         state.status = e.payload.status;  // 'to-do'
         state.note = undefined;            // Clear any notes from previous states
-        state.version = e.version;
-        break;
-      }
-
-      case GoalEventType.REVIEWED: {
-        const e = event as GoalReviewedEvent;
-        // Review event doesn't change goal state
-        // It's used for tracking turn count only
         state.version = e.version;
         break;
       }
@@ -684,32 +676,6 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       },
       Goal.apply
     ) as GoalQualifiedEvent;
-  }
-
-  /**
-   * Records a review of the goal during completion.
-   * Does not change goal status - used for tracking turn count.
-   * No state validation needed - reviews can be recorded at any time.
-   *
-   * @param turnNumber - The turn number for this review
-   * @returns GoalReviewed event
-   */
-  recordReview(turnNumber: number): GoalReviewedEvent {
-    // No state validation needed - reviews can be recorded at any time
-    // Input validation: turn number must be positive
-    if (turnNumber < 1) {
-      throw new Error("Turn number must be at least 1");
-    }
-
-    // Create and return event
-    return this.makeEvent(
-      GoalEventType.REVIEWED,
-      {
-        reviewedAt: new Date().toISOString(),
-        turnNumber,
-      },
-      Goal.apply
-    ) as GoalReviewedEvent;
   }
 
   /**

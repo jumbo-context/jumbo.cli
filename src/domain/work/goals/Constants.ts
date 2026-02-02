@@ -15,7 +15,6 @@ export const GoalEventType = {
   COMPLETED: 'GoalCompletedEvent',
   RESET: 'GoalResetEvent',
   REMOVED: 'GoalRemovedEvent',
-  REVIEWED: 'GoalReviewedEvent',
   PROGRESS_UPDATED: 'GoalProgressUpdatedEvent',
   SUBMITTED_FOR_REVIEW: 'GoalSubmittedForReviewEvent',
   QUALIFIED: 'GoalQualifiedEvent'

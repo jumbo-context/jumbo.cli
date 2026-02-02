@@ -3,7 +3,6 @@ import { ReviewGoalResponse } from "./ReviewGoalResponse.js";
 import { SubmitGoalForReviewCommandHandler } from "./SubmitGoalForReviewCommandHandler.js";
 import { GetGoalContextQueryHandler } from "../get-context/GetGoalContextQueryHandler.js";
 import { IGoalSubmitForReviewReader } from "./IGoalSubmitForReviewReader.js";
-import { ReviewTurnTracker } from "../complete/ReviewTurnTracker.js";
 import { GoalErrorMessages, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
 import { GoalClaimPolicy } from "../claims/GoalClaimPolicy.js";
 import { IWorkerIdentityReader } from "../../../host/workers/IWorkerIdentityReader.js";
@@ -12,11 +11,10 @@ import { IWorkerIdentityReader } from "../../../host/workers/IWorkerIdentityRead
  * ReviewGoalController
  *
  * Controller for goal review submission requests.
- * Orchestrates the submit-for-review flow with QA gate enforcement.
+ * Orchestrates the submit-for-review flow.
  *
  * Responsibilities:
  * - Validates claim ownership (only the claimant can submit for review)
- * - Enforces QA gate: records review turn via ReviewTurnTracker
  * - Delegates state change to SubmitGoalForReviewCommandHandler
  * - Returns criteria context for QA verification
  */
@@ -25,7 +23,6 @@ export class ReviewGoalController {
     private readonly submitGoalForReviewCommandHandler: SubmitGoalForReviewCommandHandler,
     private readonly getGoalContextQueryHandler: GetGoalContextQueryHandler,
     private readonly goalReader: IGoalSubmitForReviewReader,
-    private readonly turnTracker: ReviewTurnTracker,
     private readonly claimPolicy: GoalClaimPolicy,
     private readonly workerIdentityReader: IWorkerIdentityReader
   ) {}
