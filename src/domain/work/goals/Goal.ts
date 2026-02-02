@@ -1,7 +1,7 @@
 import { BaseAggregate, AggregateState } from "../../shared/BaseAggregate.js";
 import { UUID } from "../../shared/BaseEvent.js";
 import { ValidationRuleSet } from "../../shared/validation/ValidationRule.js";
-import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalReviewedEvent, GoalProgressUpdatedEvent } from "./EventIndex.js";
+import { GoalEvent, GoalAddedEvent, GoalStartedEvent, GoalUpdatedEvent, GoalBlockedEvent, GoalUnblockedEvent, GoalCompletedEvent, GoalResetEvent, GoalRemovedEvent, GoalPausedEvent, GoalResumedEvent, GoalReviewedEvent, GoalProgressUpdatedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent } from "./EventIndex.js";
 import { GoalEventType, GoalStatus, GoalStatusType } from "./Constants.js";
 import { GoalPausedReasonsType } from "./GoalPausedReasons.js";
 import { OBJECTIVE_RULES } from "./rules/ObjectiveRules.js";
@@ -20,6 +20,8 @@ import {
   CanPauseRule,
   CanResumeRule,
 } from "./rules/StateTransitionRules.js";
+import { CanSubmitForReviewRule } from "./rules/CanSubmitForReviewRule.js";
+import { CanQualifyRule } from "./rules/CanQualifyRule.js";
 import {
   EmbeddedInvariant,
   EmbeddedGuideline,
@@ -221,6 +223,20 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
         const e = event as GoalProgressUpdatedEvent;
         // Append task description to progress array (append-only)
         state.progress.push(e.payload.taskDescription);
+        state.version = e.version;
+        break;
+      }
+
+      case GoalEventType.SUBMITTED_FOR_REVIEW: {
+        const e = event as GoalSubmittedForReviewEvent;
+        state.status = e.payload.status;  // 'in-review'
+        state.version = e.version;
+        break;
+      }
+
+      case GoalEventType.QUALIFIED: {
+        const e = event as GoalQualifiedEvent;
+        state.status = e.payload.status;  // 'qualified'
         state.version = e.version;
         break;
       }
@@ -622,6 +638,52 @@ export class Goal extends BaseAggregate<GoalState, GoalEvent> {
       },
       Goal.apply
     ) as GoalResumedEvent;
+  }
+
+  /**
+   * Submits a goal for QA review.
+   * Transitions status from "doing" or "blocked" to "in-review".
+   * Marks the point where implementation is considered complete and awaiting validation.
+   *
+   * @returns GoalSubmittedForReview event
+   * @throws Error if goal is not in 'doing' or 'blocked' status
+   */
+  submitForReview(): GoalSubmittedForReviewEvent {
+    // 1. State validation: can only submit for review from doing or blocked status
+    ValidationRuleSet.ensure(this.state, [new CanSubmitForReviewRule()]);
+
+    // 2. Create and return event using BaseAggregate.makeEvent
+    return this.makeEvent(
+      GoalEventType.SUBMITTED_FOR_REVIEW,
+      {
+        status: GoalStatus.INREVIEW,
+        submittedAt: new Date().toISOString(),
+      },
+      Goal.apply
+    ) as GoalSubmittedForReviewEvent;
+  }
+
+  /**
+   * Qualifies a goal after successful QA review.
+   * Transitions status from "in-review" to "qualified".
+   * Marks the point where a goal has been validated and can proceed to completion.
+   *
+   * @returns GoalQualified event
+   * @throws Error if goal is not in 'in-review' status
+   */
+  qualify(): GoalQualifiedEvent {
+    // 1. State validation: can only qualify from in-review status
+    ValidationRuleSet.ensure(this.state, [new CanQualifyRule()]);
+
+    // 2. Create and return event using BaseAggregate.makeEvent
+    return this.makeEvent(
+      GoalEventType.QUALIFIED,
+      {
+        status: GoalStatus.QUALIFIED,
+        qualifiedAt: new Date().toISOString(),
+      },
+      Goal.apply
+    ) as GoalQualifiedEvent;
   }
 
   /**

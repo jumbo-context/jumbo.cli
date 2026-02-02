@@ -4,7 +4,7 @@
  */
 
 import { Goal, GoalState } from "../../../../src/domain/work/goals/Goal";
-import { GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent, GoalPausedEvent, GoalResumedEvent } from "../../../../src/domain/work/goals/EventIndex";
+import { GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent, GoalPausedEvent, GoalResumedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent } from "../../../../src/domain/work/goals/EventIndex";
 import { GoalEventType, GoalStatus } from "../../../../src/domain/work/goals/Constants";
 
 function createEmptyGoalState(id: string): GoalState {
@@ -431,6 +431,197 @@ describe("Goal", () => {
       expect(state.status).toBe(GoalStatus.DOING);
       expect(state.note).toBeUndefined();
       expect(state.version).toBe(4);
+    });
+  });
+
+  describe("apply() - GoalSubmittedForReviewEvent", () => {
+    it("should apply GoalSubmittedForReviewEvent event correctly", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: ["AuthController"],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.DOING,
+        version: 2,
+        note: undefined,
+        progress: [],
+      };
+
+      const event: GoalSubmittedForReviewEvent = {
+        type: GoalEventType.SUBMITTED_FOR_REVIEW,
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: new Date().toISOString(),
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.INREVIEW);
+      expect(state.version).toBe(3);
+      // Other fields should remain unchanged
+      expect(state.objective).toBe("Implement authentication");
+      expect(state.successCriteria).toEqual(["Users can log in"]);
+    });
+
+    it("should apply GoalSubmittedForReviewEvent from blocked status", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: [],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.BLOCKED,
+        version: 3,
+        note: "Waiting for API",
+        progress: [],
+      };
+
+      const event: GoalSubmittedForReviewEvent = {
+        type: GoalEventType.SUBMITTED_FOR_REVIEW,
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: new Date().toISOString(),
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.INREVIEW);
+      expect(state.version).toBe(4);
+      // Note should remain unchanged (not cleared by this event)
+      expect(state.note).toBe("Waiting for API");
+    });
+  });
+
+  describe("apply() - GoalQualifiedEvent", () => {
+    it("should apply GoalQualifiedEvent event correctly", () => {
+      // Arrange
+      const state = {
+        id: "goal_123",
+        objective: "Implement authentication",
+        successCriteria: ["Users can log in"],
+        scopeIn: ["AuthController"],
+        scopeOut: [],
+        boundaries: [],
+        status: GoalStatus.INREVIEW,
+        version: 3,
+        note: undefined,
+        progress: [],
+      };
+
+      const event: GoalQualifiedEvent = {
+        type: GoalEventType.QUALIFIED,
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: new Date().toISOString(),
+        },
+      };
+
+      // Act
+      Goal.apply(state, event);
+
+      // Assert
+      expect(state.status).toBe(GoalStatus.QUALIFIED);
+      expect(state.version).toBe(4);
+      // Other fields should remain unchanged
+      expect(state.objective).toBe("Implement authentication");
+      expect(state.successCriteria).toEqual(["Users can log in"]);
+    });
+  });
+
+  describe("rehydrate() - full review workflow", () => {
+    it("should rehydrate through complete review workflow (TODO -> DOING -> IN_REVIEW -> QUALIFIED -> COMPLETED)", () => {
+      // Arrange
+      const addedEvent: GoalAddedEvent = {
+        type: GoalEventType.ADDED,
+        aggregateId: "goal_123",
+        version: 1,
+        timestamp: new Date().toISOString(),
+        payload: {
+          objective: "Implement authentication",
+          successCriteria: ["Users can log in"],
+          scopeIn: ["AuthController"],
+          scopeOut: [],
+          boundaries: [],
+          status: GoalStatus.TODO,
+        },
+      };
+
+      const startedEvent: GoalStartedEvent = {
+        type: GoalEventType.STARTED,
+        aggregateId: "goal_123",
+        version: 2,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.DOING,
+        },
+      };
+
+      const submittedEvent: GoalSubmittedForReviewEvent = {
+        type: GoalEventType.SUBMITTED_FOR_REVIEW,
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: new Date().toISOString(),
+        },
+      };
+
+      const qualifiedEvent: GoalQualifiedEvent = {
+        type: GoalEventType.QUALIFIED,
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: new Date().toISOString(),
+        },
+      };
+
+      const completedEvent: GoalCompletedEvent = {
+        type: GoalEventType.COMPLETED,
+        aggregateId: "goal_123",
+        version: 5,
+        timestamp: new Date().toISOString(),
+        payload: {
+          status: GoalStatus.COMPLETED,
+        },
+      };
+
+      // Act
+      const goal = Goal.rehydrate("goal_123", [
+        addedEvent,
+        startedEvent,
+        submittedEvent,
+        qualifiedEvent,
+        completedEvent,
+      ]);
+      const state = goal.snapshot;
+
+      // Assert
+      expect(state.objective).toBe("Implement authentication");
+      expect(state.status).toBe(GoalStatus.COMPLETED);
+      expect(state.version).toBe(5);
     });
   });
 });

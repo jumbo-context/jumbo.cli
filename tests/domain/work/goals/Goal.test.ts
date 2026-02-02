@@ -75,11 +75,11 @@ describe("Goal Aggregate", () => {
     it("should throw error if objective is too long", () => {
       // Arrange
       const goal = Goal.create("goal_123");
-      const longObjective = "a".repeat(201); // Max is 200
+      const longObjective = "a".repeat(501); // Max is 500
 
       // Act & Assert
       expect(() => goal.add(longObjective, ["Criterion 1"])).toThrow(
-        "Objective must be less than 200 characters"
+        "Objective must be less than 500 characters"
       );
     });
 
@@ -96,22 +96,22 @@ describe("Goal Aggregate", () => {
     it("should throw error if too many success criteria", () => {
       // Arrange
       const goal = Goal.create("goal_123");
-      const tooManyCriteria = Array.from({ length: 21 }, (_, i) => `Criterion ${i}`);
+      const tooManyCriteria = Array.from({ length: 51 }, (_, i) => `Criterion ${i}`);
 
       // Act & Assert
       expect(() => goal.add("My objective", tooManyCriteria)).toThrow(
-        "Cannot have more than 20 success criteria"
+        "Cannot have more than 50 success criteria"
       );
     });
 
     it("should throw error if success criterion is too long", () => {
       // Arrange
       const goal = Goal.create("goal_123");
-      const longCriterion = "a".repeat(301); // Max is 300
+      const longCriterion = "a".repeat(601); // Max is 600
 
       // Act & Assert
       expect(() => goal.add("My objective", [longCriterion])).toThrow(
-        "Success criterion must be less than 300 characters"
+        "Success criterion must be less than 600 characters"
       );
     });
 
@@ -399,11 +399,11 @@ describe("Goal Aggregate", () => {
       // Arrange
       const goal = Goal.create("goal_123");
       goal.add("Original objective", ["Criterion 1"]);
-      const longObjective = "a".repeat(201); // Max is 200
+      const longObjective = "a".repeat(501); // Max is 500
 
       // Act & Assert
       expect(() => goal.update(longObjective)).toThrow(
-        "Objective must be less than 200 characters"
+        "Objective must be less than 500 characters"
       );
     });
 
@@ -422,11 +422,11 @@ describe("Goal Aggregate", () => {
       // Arrange
       const goal = Goal.create("goal_123");
       goal.add("Original objective", ["Criterion 1"]);
-      const tooManyCriteria = Array.from({ length: 21 }, (_, i) => `Criterion ${i}`);
+      const tooManyCriteria = Array.from({ length: 51 }, (_, i) => `Criterion ${i}`);
 
       // Act & Assert
       expect(() => goal.update(undefined, tooManyCriteria)).toThrow(
-        "Cannot have more than 20 success criteria"
+        "Cannot have more than 50 success criteria"
       );
     });
 
@@ -434,11 +434,11 @@ describe("Goal Aggregate", () => {
       // Arrange
       const goal = Goal.create("goal_123");
       goal.add("Original objective", ["Criterion 1"]);
-      const longCriterion = "a".repeat(301); // Max is 300
+      const longCriterion = "a".repeat(601); // Max is 600
 
       // Act & Assert
       expect(() => goal.update(undefined, [longCriterion])).toThrow(
-        "Success criterion must be less than 300 characters"
+        "Success criterion must be less than 600 characters"
       );
     });
 
@@ -635,11 +635,54 @@ describe("Goal Aggregate", () => {
   });
 
   describe("complete()", () => {
-    it("should create GoalCompletedEvent event from doing status", () => {
-      // Arrange
-      const goal = Goal.create("goal_123");
-      goal.add("Implement authentication", ["Users can log in"]);
-      goal.start();
+    it("should create GoalCompletedEvent event from qualified status", () => {
+      // Arrange - rehydrate a goal in qualified status
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
 
       // Act
       const event = goal.complete();
@@ -647,27 +690,34 @@ describe("Goal Aggregate", () => {
       // Assert
       expect(event.type).toBe(GoalEventType.COMPLETED);
       expect(event.aggregateId).toBe("goal_123");
-      expect(event.version).toBe(3);
+      expect(event.version).toBe(5);
       expect(event.payload.status).toBe(GoalStatus.COMPLETED);
       expect(event.timestamp).toBeDefined();
     });
 
-    it("should create GoalCompletedEvent event from blocked status", () => {
+    it("should throw error if goal is in doing status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act & Assert
+      expect(() => goal.complete()).toThrow(
+        "Cannot complete goal. Goal must be qualified first."
+      );
+    });
+
+    it("should throw error if goal is in blocked status", () => {
       // Arrange
       const goal = Goal.create("goal_123");
       goal.add("Implement authentication", ["Users can log in"]);
       goal.start();
       goal.block("Waiting for API credentials");
 
-      // Act
-      const event = goal.complete();
-
-      // Assert
-      expect(event.type).toBe(GoalEventType.COMPLETED);
-      expect(event.aggregateId).toBe("goal_123");
-      expect(event.version).toBe(4);
-      expect(event.payload.status).toBe(GoalStatus.COMPLETED);
-      expect(event.timestamp).toBeDefined();
+      // Act & Assert
+      expect(() => goal.complete()).toThrow(
+        "Cannot complete goal. Goal must be qualified first."
+      );
     });
 
     it("should throw error if goal is not started (to-do status)", () => {
@@ -677,16 +727,67 @@ describe("Goal Aggregate", () => {
 
       // Act & Assert
       expect(() => goal.complete()).toThrow(
-        "Cannot complete a goal that has not been started"
+        "Cannot complete goal. Goal must be qualified first."
       );
     });
 
     it("should throw error if goal is already completed", () => {
-      // Arrange
-      const goal = Goal.create("goal_123");
-      goal.add("Implement authentication", ["Users can log in"]);
-      goal.start();
-      goal.complete();
+      // Arrange - rehydrate a goal that is already completed
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.COMPLETED,
+          aggregateId: "goal_123",
+          version: 5,
+          timestamp: "2025-01-01T04:00:00Z",
+          payload: {
+            status: GoalStatus.COMPLETED,
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
 
       // Act & Assert
       expect(() => goal.complete()).toThrow(
@@ -695,10 +796,53 @@ describe("Goal Aggregate", () => {
     });
 
     it("should transition goal to completed status", () => {
-      // Arrange
-      const goal = Goal.create("goal_123");
-      goal.add("Implement authentication", ["Users can log in"]);
-      goal.start();
+      // Arrange - rehydrate a goal in qualified status
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
 
       // Act
       goal.complete();
@@ -706,23 +850,7 @@ describe("Goal Aggregate", () => {
       // Assert
       const snapshot = goal.snapshot;
       expect(snapshot.status).toBe(GoalStatus.COMPLETED);
-      expect(snapshot.version).toBe(3);
-    });
-
-    it("should transition from blocked to completed", () => {
-      // Arrange
-      const goal = Goal.create("goal_123");
-      goal.add("Implement authentication", ["Users can log in"]);
-      goal.start();
-      goal.block("Waiting for dependencies");
-
-      // Act
-      goal.complete();
-
-      // Assert
-      const snapshot = goal.snapshot;
-      expect(snapshot.status).toBe(GoalStatus.COMPLETED);
-      expect(snapshot.version).toBe(4);
+      expect(snapshot.version).toBe(5);
     });
   });
 
@@ -957,6 +1085,377 @@ describe("Goal Aggregate", () => {
 
       // Assert
       expect(event.payload.note).toBeUndefined();
+    });
+  });
+
+  describe("submitForReview()", () => {
+    it("should create GoalSubmittedForReviewEvent event from doing status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act
+      const event = goal.submitForReview();
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.SUBMITTED_FOR_REVIEW);
+      expect(event.aggregateId).toBe("goal_123");
+      expect(event.version).toBe(3);
+      expect(event.payload.status).toBe(GoalStatus.INREVIEW);
+      expect(event.payload.submittedAt).toBeDefined();
+      expect(event.timestamp).toBeDefined();
+    });
+
+    it("should create GoalSubmittedForReviewEvent event from blocked status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.block("Waiting for API credentials");
+
+      // Act
+      const event = goal.submitForReview();
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.SUBMITTED_FOR_REVIEW);
+      expect(event.payload.status).toBe(GoalStatus.INREVIEW);
+      expect(event.version).toBe(4);
+    });
+
+    it("should transition goal to in-review status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act
+      goal.submitForReview();
+
+      // Assert
+      const snapshot = goal.snapshot;
+      expect(snapshot.status).toBe(GoalStatus.INREVIEW);
+      expect(snapshot.version).toBe(3);
+    });
+
+    it("should throw error if goal is in to-do status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+
+      // Act & Assert
+      expect(() => goal.submitForReview()).toThrow(
+        "Cannot submit goal for review in to-do status. Goal must be in doing or blocked status."
+      );
+    });
+
+    it("should throw error if goal is in paused status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act & Assert
+      expect(() => goal.submitForReview()).toThrow(
+        "Cannot submit goal for review in paused status. Goal must be in doing or blocked status."
+      );
+    });
+
+    it("should throw error if goal is already in-review", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.submitForReview();
+
+      // Act & Assert
+      expect(() => goal.submitForReview()).toThrow(
+        "Cannot submit goal for review in in-review status. Goal must be in doing or blocked status."
+      );
+    });
+
+    it("should throw error if goal is in qualified status", () => {
+      // Arrange - rehydrate a goal in qualified status
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
+
+      // Act & Assert
+      expect(() => goal.submitForReview()).toThrow(
+        "Cannot submit goal for review in qualified status. Goal must be in doing or blocked status."
+      );
+    });
+
+    it("should throw error if goal is completed", () => {
+      // Arrange - rehydrate a goal in completed status
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.COMPLETED,
+          aggregateId: "goal_123",
+          version: 5,
+          timestamp: "2025-01-01T04:00:00Z",
+          payload: {
+            status: GoalStatus.COMPLETED,
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
+
+      // Act & Assert
+      expect(() => goal.submitForReview()).toThrow(
+        "Cannot submit goal for review in completed status. Goal must be in doing or blocked status."
+      );
+    });
+  });
+
+  describe("qualify()", () => {
+    it("should create GoalQualifiedEvent event from in-review status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.submitForReview();
+
+      // Act
+      const event = goal.qualify();
+
+      // Assert
+      expect(event.type).toBe(GoalEventType.QUALIFIED);
+      expect(event.aggregateId).toBe("goal_123");
+      expect(event.version).toBe(4);
+      expect(event.payload.status).toBe(GoalStatus.QUALIFIED);
+      expect(event.payload.qualifiedAt).toBeDefined();
+      expect(event.timestamp).toBeDefined();
+    });
+
+    it("should transition goal to qualified status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.submitForReview();
+
+      // Act
+      goal.qualify();
+
+      // Assert
+      const snapshot = goal.snapshot;
+      expect(snapshot.status).toBe(GoalStatus.QUALIFIED);
+      expect(snapshot.version).toBe(4);
+    });
+
+    it("should throw error if goal is in to-do status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in to-do status. Goal must be in-review."
+      );
+    });
+
+    it("should throw error if goal is in doing status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in doing status. Goal must be in-review."
+      );
+    });
+
+    it("should throw error if goal is in blocked status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.block("Waiting for API credentials");
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in blocked status. Goal must be in-review."
+      );
+    });
+
+    it("should throw error if goal is in paused status", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.pause("ContextCompressed");
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in paused status. Goal must be in-review."
+      );
+    });
+
+    it("should throw error if goal is already qualified", () => {
+      // Arrange
+      const goal = Goal.create("goal_123");
+      goal.add("Implement authentication", ["Users can log in"]);
+      goal.start();
+      goal.submitForReview();
+      goal.qualify();
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in qualified status. Goal must be in-review."
+      );
+    });
+
+    it("should throw error if goal is completed", () => {
+      // Arrange - rehydrate a goal in completed status
+      const history = [
+        {
+          type: GoalEventType.ADDED,
+          aggregateId: "goal_123",
+          version: 1,
+          timestamp: "2025-01-01T00:00:00Z",
+          payload: {
+            objective: "Implement authentication",
+            successCriteria: ["Users can log in"],
+            scopeIn: [],
+            scopeOut: [],
+            boundaries: [],
+            status: GoalStatus.TODO,
+          },
+        },
+        {
+          type: GoalEventType.STARTED,
+          aggregateId: "goal_123",
+          version: 2,
+          timestamp: "2025-01-01T01:00:00Z",
+          payload: {
+            status: GoalStatus.DOING,
+          },
+        },
+        {
+          type: GoalEventType.SUBMITTED_FOR_REVIEW,
+          aggregateId: "goal_123",
+          version: 3,
+          timestamp: "2025-01-01T02:00:00Z",
+          payload: {
+            status: GoalStatus.INREVIEW,
+            submittedAt: "2025-01-01T02:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.QUALIFIED,
+          aggregateId: "goal_123",
+          version: 4,
+          timestamp: "2025-01-01T03:00:00Z",
+          payload: {
+            status: GoalStatus.QUALIFIED,
+            qualifiedAt: "2025-01-01T03:00:00Z",
+          },
+        },
+        {
+          type: GoalEventType.COMPLETED,
+          aggregateId: "goal_123",
+          version: 5,
+          timestamp: "2025-01-01T04:00:00Z",
+          payload: {
+            status: GoalStatus.COMPLETED,
+          },
+        },
+      ];
+      const goal = Goal.rehydrate("goal_123", history as any);
+
+      // Act & Assert
+      expect(() => goal.qualify()).toThrow(
+        "Cannot qualify goal in completed status. Goal must be in-review."
+      );
     });
   });
 });
