@@ -56,7 +56,7 @@ export const GoalErrorMessages = {
   NOTE_TOO_LONG: 'Note must be less than {max} characters',
   CANNOT_BLOCK_IN_STATUS: 'Cannot block goal in {status} status. Goal must be in to-do or doing status.',
   CANNOT_UNBLOCK_IN_STATUS: 'Cannot unblock goal in {status} status. Goal must be blocked.',
-  NOT_STARTED: 'Cannot complete a goal that has not been started',
+  NOT_QUALIFIED: 'Cannot complete goal. Goal must be qualified first.',
   ALREADY_COMPLETED: 'Goal is already completed',
   QA_REVIEW_REQUIRED: 'At least one QA review is required before committing goal {goalId}.',
   CANNOT_RESET_BLOCKED: 'Cannot reset a blocked goal. Unblock it first to preserve blocker context.',
@@ -68,7 +68,7 @@ export const GoalErrorMessages = {
   // Claim-related errors
   GOAL_CLAIMED_BY_ANOTHER_WORKER: 'Goal is claimed by another worker. Claim expires at {expiresAt}.',
   // Review and qualification state transition errors
-  CANNOT_SUBMIT_FOR_REVIEW_IN_STATUS: 'Cannot submit goal for review in {status} status. Goal must be in doing status.',
+  CANNOT_SUBMIT_FOR_REVIEW_IN_STATUS: 'Cannot submit goal for review in {status} status. Goal must be in doing or blocked status.',
   CANNOT_QUALIFY_IN_STATUS: 'Cannot qualify goal in {status} status. Goal must be in-review.',
 } as const;
 

@@ -120,20 +120,28 @@ describe("StateTransitionRules", () => {
   });
 
   describe("CanCompleteRule", () => {
-    it("should pass when status is doing", () => {
+    it("should pass when status is qualified", () => {
       const rule = new CanCompleteRule();
-      const state = createGoalState({ status: GoalStatus.DOING });
+      const state = createGoalState({ status: GoalStatus.QUALIFIED });
       const result = rule.validate(state);
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);
     });
 
-    it("should pass when status is blocked", () => {
+    it("should fail when status is doing", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.DOING });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot complete goal. Goal must be qualified first.");
+    });
+
+    it("should fail when status is blocked", () => {
       const rule = new CanCompleteRule();
       const state = createGoalState({ status: GoalStatus.BLOCKED });
       const result = rule.validate(state);
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toEqual([]);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot complete goal. Goal must be qualified first.");
     });
 
     it("should fail when status is to-do", () => {
@@ -141,7 +149,23 @@ describe("StateTransitionRules", () => {
       const state = createGoalState({ status: GoalStatus.TODO });
       const result = rule.validate(state);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain("Cannot complete a goal that has not been started");
+      expect(result.errors).toContain("Cannot complete goal. Goal must be qualified first.");
+    });
+
+    it("should fail when status is in-review", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.INREVIEW });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot complete goal. Goal must be qualified first.");
+    });
+
+    it("should fail when status is paused", () => {
+      const rule = new CanCompleteRule();
+      const state = createGoalState({ status: GoalStatus.PAUSED });
+      const result = rule.validate(state);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toContain("Cannot complete goal. Goal must be qualified first.");
     });
 
     it("should fail when status is already completed", () => {
