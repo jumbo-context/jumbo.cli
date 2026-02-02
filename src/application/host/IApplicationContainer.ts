@@ -52,7 +52,6 @@ import { IGoalStatusReader } from "../work/goals/IGoalStatusReader.js";
 import { IGoalReadForSessionSummary } from "../work/sessions/get-context/IGoalReadForSessionSummary.js";
 // Goal Controllers
 import { CompleteGoalController } from "../work/goals/complete/CompleteGoalController.js";
-import { ReviewTurnTracker } from "../work/goals/complete/ReviewTurnTracker.js";
 import { IGoalReviewedEventWriter } from "../work/goals/complete/IGoalReviewedEventWriter.js";
 import { IGoalReviewedEventReader } from "../work/goals/complete/IGoalReviewedEventReader.js";
 
@@ -292,7 +291,6 @@ export interface IApplicationContainer {
   goalContextReader: IGoalContextReader;
   goalStatusReader: IGoalStatusReader & IGoalReadForSessionSummary;
   // Goal Controllers
-  reviewTurnTracker: ReviewTurnTracker;
   completeGoalController: CompleteGoalController;
 
   // Solution Category - Event Stores

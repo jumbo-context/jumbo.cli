@@ -250,7 +250,6 @@ import { RelationRemovedEventHandler } from "../../application/relations/remove/
 import { CompleteGoalController } from "../../application/work/goals/complete/CompleteGoalController.js";
 import { CompleteGoalCommandHandler } from "../../application/work/goals/complete/CompleteGoalCommandHandler.js";
 import { GetGoalContextQueryHandler } from "../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
-import { ReviewTurnTracker } from "../../application/work/goals/complete/ReviewTurnTracker.js";
 
 // Solution Context
 import { UnprimedBrownfieldQualifier } from "../../application/solution/UnprimedBrownfieldQualifier.js";
@@ -505,18 +504,9 @@ export class HostBuilder {
       architectureReader,
       relationRemovedProjector
     );
-    const reviewTurnTracker = new ReviewTurnTracker(
-      goalReviewedEventStore,
-      settingsReader
-    );
     const completeGoalController = new CompleteGoalController(
       completeGoalCommandHandler,
-      getGoalContextQueryHandler,
       goalCompletedProjector,
-      reviewTurnTracker,
-      goalReviewedEventStore,
-      goalReviewedEventStore,
-      eventBus,
       goalClaimPolicy,
       workerIdentityReader
     );
@@ -748,7 +738,6 @@ export class HostBuilder {
       goalContextReader,
       goalStatusReader,
       // Goal Controllers
-      reviewTurnTracker,
       completeGoalController,
 
       // Solution Category

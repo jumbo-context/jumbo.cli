@@ -1,15 +1,13 @@
 /**
- * Tests for CompleteGoalController QA turn gating
+ * Tests for CompleteGoalController
+ *
+ * Tests the simplified completion controller that handles only QUALIFIED goals.
+ * Review logic has been moved to ReviewGoalController.
  */
 
 import { CompleteGoalController } from "../../../../../src/application/work/goals/complete/CompleteGoalController";
 import { CompleteGoalCommandHandler } from "../../../../../src/application/work/goals/complete/CompleteGoalCommandHandler";
-import { GetGoalContextQueryHandler } from "../../../../../src/application/work/goals/get-context/GetGoalContextQueryHandler";
 import { IGoalCompleteReader } from "../../../../../src/application/work/goals/complete/IGoalCompleteReader";
-import { ReviewTurnTracker } from "../../../../../src/application/work/goals/complete/ReviewTurnTracker";
-import { IGoalReviewedEventWriter } from "../../../../../src/application/work/goals/complete/IGoalReviewedEventWriter";
-import { IGoalReviewedEventReader } from "../../../../../src/application/work/goals/complete/IGoalReviewedEventReader";
-import { IEventBus } from "../../../../../src/application/shared/messaging/IEventBus";
 import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../../src/domain/work/goals/Constants";
 import { GoalView } from "../../../../../src/application/work/goals/GoalView";
 import { GoalClaimPolicy } from "../../../../../src/application/work/goals/claims/GoalClaimPolicy";
@@ -18,12 +16,7 @@ import { createWorkerId } from "../../../../../src/application/host/workers/Work
 
 describe("CompleteGoalController", () => {
   let completeGoalCommandHandler: CompleteGoalCommandHandler;
-  let getGoalContextQueryHandler: GetGoalContextQueryHandler;
   let goalReader: IGoalCompleteReader;
-  let turnTracker: ReviewTurnTracker;
-  let reviewEventWriter: IGoalReviewedEventWriter;
-  let goalEventReader: IGoalReviewedEventReader;
-  let eventBus: IEventBus;
   let claimPolicy: GoalClaimPolicy;
   let workerIdentityReader: IWorkerIdentityReader;
 
@@ -34,29 +27,8 @@ describe("CompleteGoalController", () => {
       execute: jest.fn(),
     } as unknown as CompleteGoalCommandHandler;
 
-    getGoalContextQueryHandler = {
-      execute: jest.fn(),
-    } as unknown as GetGoalContextQueryHandler;
-
     goalReader = {
       findById: jest.fn(),
-    };
-
-    turnTracker = {
-      getCommitGate: jest.fn(),
-    } as unknown as ReviewTurnTracker;
-
-    reviewEventWriter = {
-      append: jest.fn(),
-    };
-
-    goalEventReader = {
-      readStream: jest.fn(),
-    };
-
-    eventBus = {
-      subscribe: jest.fn(),
-      publish: jest.fn(),
     };
 
     // Mock claim policy - default to allowing claims (no existing claim)
@@ -69,48 +41,7 @@ describe("CompleteGoalController", () => {
     };
   });
 
-  it("blocks commit when no QA review has been recorded", async () => {
-    (turnTracker.getCommitGate as jest.Mock).mockResolvedValue({
-      current: 0,
-      limit: 3,
-      remaining: 3,
-      canCommit: false,
-    });
-
-    const controller = new CompleteGoalController(
-      completeGoalCommandHandler,
-      getGoalContextQueryHandler,
-      goalReader,
-      turnTracker,
-      reviewEventWriter,
-      goalEventReader,
-      eventBus,
-      claimPolicy,
-      workerIdentityReader
-    );
-
-    const expectedMessage = formatErrorMessage(
-      GoalErrorMessages.QA_REVIEW_REQUIRED,
-      {
-        goalId: "goal_123",
-      }
-    );
-
-    await expect(
-      controller.handle({ goalId: "goal_123", commit: true })
-    ).rejects.toThrow(expectedMessage);
-
-    expect(completeGoalCommandHandler.execute).not.toHaveBeenCalled();
-  });
-
-  it("allows commit after at least one QA review", async () => {
-    (turnTracker.getCommitGate as jest.Mock).mockResolvedValue({
-      current: 1,
-      limit: 3,
-      remaining: 2,
-      canCommit: false,
-    });
-
+  it("completes a qualified goal successfully", async () => {
     const mockView: GoalView = {
       goalId: "goal_456",
       objective: "Complete the controller",
@@ -129,35 +60,38 @@ describe("CompleteGoalController", () => {
 
     const controller = new CompleteGoalController(
       completeGoalCommandHandler,
-      getGoalContextQueryHandler,
       goalReader,
-      turnTracker,
-      reviewEventWriter,
-      goalEventReader,
-      eventBus,
       claimPolicy,
       workerIdentityReader
     );
 
-    const response = await controller.handle({ goalId: "goal_456", commit: true });
+    const response = await controller.handle({ goalId: "goal_456" });
 
     expect(completeGoalCommandHandler.execute).toHaveBeenCalledWith({ goalId: "goal_456" });
     expect(response.status).toBe(GoalStatus.COMPLETED);
     expect(response.goalId).toBe("goal_456");
+    expect(response.objective).toBe("Complete the controller");
   });
 
-  it("does not record QA review when goal is not doing", async () => {
-    (turnTracker.getCommitGate as jest.Mock).mockResolvedValue({
-      current: 0,
-      limit: 3,
-      remaining: 3,
-      canCommit: false,
-    });
-
+  it("includes next goal in response when present", async () => {
     const mockView: GoalView = {
-      goalId: "goal_789",
-      objective: "Not started goal",
+      goalId: "goal_456",
+      objective: "Complete the controller",
       successCriteria: ["Criteria"],
+      scopeIn: [],
+      scopeOut: [],
+      boundaries: [],
+      status: GoalStatus.COMPLETED,
+      version: 4,
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+      progress: [],
+      nextGoalId: "goal_789",
+    };
+    const nextGoalView: GoalView = {
+      goalId: "goal_789",
+      objective: "Next goal objective",
+      successCriteria: ["Next criteria"],
       scopeIn: [],
       scopeOut: [],
       boundaries: [],
@@ -167,35 +101,24 @@ describe("CompleteGoalController", () => {
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
     };
-    (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
-    (getGoalContextQueryHandler.execute as jest.Mock).mockResolvedValue({
-      goal: mockView,
-      components: [],
-      dependencies: [],
-      decisions: [],
-      invariants: [],
-      guidelines: [],
-      relations: [],
-    });
+    (goalReader.findById as jest.Mock)
+      .mockResolvedValueOnce(mockView)
+      .mockResolvedValueOnce(nextGoalView);
+    (completeGoalCommandHandler.execute as jest.Mock).mockResolvedValue({ goalId: "goal_456" });
 
     const controller = new CompleteGoalController(
       completeGoalCommandHandler,
-      getGoalContextQueryHandler,
       goalReader,
-      turnTracker,
-      reviewEventWriter,
-      goalEventReader,
-      eventBus,
       claimPolicy,
       workerIdentityReader
     );
 
-    const response = await controller.handle({ goalId: "goal_789", commit: false });
+    const response = await controller.handle({ goalId: "goal_456" });
 
-    expect(response.status).toBe(GoalStatus.TODO);
-    expect(reviewEventWriter.append).not.toHaveBeenCalled();
-    expect(goalEventReader.readStream).not.toHaveBeenCalled();
-    expect(eventBus.publish).not.toHaveBeenCalled();
+    expect(response.nextGoal).toBeDefined();
+    expect(response.nextGoal?.goalId).toBe("goal_789");
+    expect(response.nextGoal?.objective).toBe("Next goal objective");
+    expect(response.nextGoal?.status).toBe(GoalStatus.TODO);
   });
 
   it("rejects completion when goal is claimed by another worker", async () => {
@@ -214,25 +137,55 @@ describe("CompleteGoalController", () => {
 
     const controller = new CompleteGoalController(
       completeGoalCommandHandler,
-      getGoalContextQueryHandler,
       goalReader,
-      turnTracker,
-      reviewEventWriter,
-      goalEventReader,
-      eventBus,
       claimPolicy,
       workerIdentityReader
     );
 
     await expect(
-      controller.handle({ goalId: "goal_123", commit: false })
+      controller.handle({ goalId: "goal_123" })
     ).rejects.toThrow(
       "Goal is claimed by another worker. Claim expires at 2025-01-15T11:00:00.000Z."
     );
 
     // Verify nothing else was called
-    expect(turnTracker.getCommitGate).not.toHaveBeenCalled();
     expect(goalReader.findById).not.toHaveBeenCalled();
     expect(completeGoalCommandHandler.execute).not.toHaveBeenCalled();
+  });
+
+  it("throws error when goal not found after completion", async () => {
+    (completeGoalCommandHandler.execute as jest.Mock).mockResolvedValue({ goalId: "goal_456" });
+    (goalReader.findById as jest.Mock).mockResolvedValue(null);
+
+    const controller = new CompleteGoalController(
+      completeGoalCommandHandler,
+      goalReader,
+      claimPolicy,
+      workerIdentityReader
+    );
+
+    await expect(
+      controller.handle({ goalId: "goal_456" })
+    ).rejects.toThrow("Goal not found after completion: goal_456");
+  });
+
+  it("propagates errors from command handler", async () => {
+    const errorMessage = formatErrorMessage(GoalErrorMessages.NOT_QUALIFIED, {});
+    (completeGoalCommandHandler.execute as jest.Mock).mockRejectedValue(
+      new Error(errorMessage)
+    );
+
+    const controller = new CompleteGoalController(
+      completeGoalCommandHandler,
+      goalReader,
+      claimPolicy,
+      workerIdentityReader
+    );
+
+    await expect(
+      controller.handle({ goalId: "goal_123" })
+    ).rejects.toThrow(errorMessage);
+
+    expect(goalReader.findById).not.toHaveBeenCalled();
   });
 });
