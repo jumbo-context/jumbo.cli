@@ -123,6 +123,10 @@ export async function goalShow(
         console.log(`  Expires At:  ${goal.claimExpiresAt}`);
       }
 
+      console.log("\n---");
+      console.log("NOTE: This command provides goal overview only.");
+      console.log("To load full implementation context (architecture, decisions, invariants),");
+      console.log(`run: jumbo goal start --goal-id ${goal.goalId}`);
       console.log("");
     } else {
       // Structured output for programmatic consumers

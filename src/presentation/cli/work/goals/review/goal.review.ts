@@ -30,7 +30,7 @@ export const metadata: CommandMetadata = {
       description: "Submit a goal for QA review"
     }
   ],
-  related: ["goal start", "goal complete", "goal pause"]
+  related: ["goal start", "goal qualify", "goal complete", "goal pause"]
 };
 
 /**
@@ -158,7 +158,7 @@ function renderReviewContext(
   renderer.divider();
   renderer.headline("## Next Steps");
   renderer.info("If ALL criteria are met:");
-  renderer.info(`  Run: jumbo goal complete --goal-id ${response.goalId}`);
+  renderer.info(`  Run: jumbo goal qualify --goal-id ${response.goalId}`);
   renderer.info("\nIf ANY criteria are NOT met:");
   renderer.info("  Fix the issues and run: jumbo goal review --goal-id " + response.goalId + " again");
   renderer.info("---\n");
