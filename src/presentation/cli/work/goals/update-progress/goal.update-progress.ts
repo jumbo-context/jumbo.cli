@@ -1,5 +1,5 @@
 /**
- * CLI Command: jumbo goal updateProgress
+ * CLI Command: jumbo goal update-progress
  *
  * Appends a task description to a goal's progress array.
  */
@@ -29,7 +29,7 @@ export const metadata: CommandMetadata = {
   options: [],
   examples: [
     {
-      command: "jumbo goal updateProgress --goal-id goal_abc123 --task-description \"Implemented user login form\"",
+      command: "jumbo goal update-progress --goal-id goal_abc123 --task-description \"Implemented user login form\"",
       description: "Record progress on a goal"
     }
   ],
