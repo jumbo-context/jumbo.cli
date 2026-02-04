@@ -43,7 +43,6 @@ import { FsGoalUnblockedEventStore } from "../work/goals/unblock/FsGoalUnblocked
 import { FsGoalPausedEventStore } from "../work/goals/pause/FsGoalPausedEventStore.js";
 import { FsGoalResumedEventStore } from "../work/goals/resume/FsGoalResumedEventStore.js";
 import { FsGoalCompletedEventStore } from "../work/goals/complete/FsGoalCompletedEventStore.js";
-import { FsGoalReviewedEventStore } from "../work/goals/complete/FsGoalReviewedEventStore.js";
 import { FsGoalResetEventStore } from "../work/goals/reset/FsGoalResetEventStore.js";
 import { FsGoalRemovedEventStore } from "../work/goals/remove/FsGoalRemovedEventStore.js";
 import { FsGoalProgressUpdatedEventStore } from "../work/goals/update-progress/FsGoalProgressUpdatedEventStore.js";
@@ -110,6 +109,8 @@ import { SqliteGoalCompletedProjector } from "../work/goals/complete/SqliteGoalC
 import { SqliteGoalResetProjector } from "../work/goals/reset/SqliteGoalResetProjector.js";
 import { SqliteGoalRemovedProjector } from "../work/goals/remove/SqliteGoalRemovedProjector.js";
 import { SqliteGoalProgressUpdatedProjector } from "../work/goals/update-progress/SqliteGoalProgressUpdatedProjector.js";
+import { SqliteGoalSubmittedForReviewProjector } from "../work/goals/review/SqliteGoalSubmittedForReviewProjector.js";
+import { SqliteGoalQualifiedProjector } from "../work/goals/qualify/SqliteGoalQualifiedProjector.js";
 import { SqliteGoalContextReader } from "../work/goals/get-context/SqliteGoalContextReader.js";
 import { SqliteGoalStatusReader } from "../work/goals/SqliteGoalStatusReader.js";
 // Decision Projection Stores - decomposed by use case
@@ -202,6 +203,8 @@ import { GoalCompletedEventHandler } from "../../application/work/goals/complete
 import { GoalResetEventHandler } from "../../application/work/goals/reset/GoalResetEventHandler.js";
 import { GoalRemovedEventHandler } from "../../application/work/goals/remove/GoalRemovedEventHandler.js";
 import { GoalProgressUpdatedEventHandler } from "../../application/work/goals/update-progress/GoalProgressUpdatedEventHandler.js";
+import { GoalSubmittedForReviewEventHandler } from "../../application/work/goals/review/GoalSubmittedForReviewEventHandler.js";
+import { GoalQualifiedEventHandler } from "../../application/work/goals/qualify/GoalQualifiedEventHandler.js";
 // Decision Event Handlers - decomposed by use case
 import { DecisionAddedEventHandler } from "../../application/solution/decisions/add/DecisionAddedEventHandler.js";
 import { DecisionUpdatedEventHandler } from "../../application/solution/decisions/update/DecisionUpdatedEventHandler.js";
@@ -250,7 +253,12 @@ import { RelationRemovedEventHandler } from "../../application/relations/remove/
 import { CompleteGoalController } from "../../application/work/goals/complete/CompleteGoalController.js";
 import { CompleteGoalCommandHandler } from "../../application/work/goals/complete/CompleteGoalCommandHandler.js";
 import { GetGoalContextQueryHandler } from "../../application/work/goals/get-context/GetGoalContextQueryHandler.js";
-import { ReviewTurnTracker } from "../../application/work/goals/complete/ReviewTurnTracker.js";
+import { ReviewGoalController } from "../../application/work/goals/review/ReviewGoalController.js";
+import { SubmitGoalForReviewCommandHandler } from "../../application/work/goals/review/SubmitGoalForReviewCommandHandler.js";
+import { FsGoalSubmittedForReviewEventStore } from "../work/goals/review/FsGoalSubmittedForReviewEventStore.js";
+import { QualifyGoalController } from "../../application/work/goals/qualify/QualifyGoalController.js";
+import { QualifyGoalCommandHandler } from "../../application/work/goals/qualify/QualifyGoalCommandHandler.js";
+import { FsGoalQualifiedEventStore } from "../work/goals/qualify/FsGoalQualifiedEventStore.js";
 
 // Solution Context
 import { UnprimedBrownfieldQualifier } from "../../application/solution/UnprimedBrownfieldQualifier.js";
@@ -332,10 +340,11 @@ export class HostBuilder {
     const goalPausedEventStore = new FsGoalPausedEventStore(this.rootDir);
     const goalResumedEventStore = new FsGoalResumedEventStore(this.rootDir);
     const goalCompletedEventStore = new FsGoalCompletedEventStore(this.rootDir);
-    const goalReviewedEventStore = new FsGoalReviewedEventStore(this.rootDir);
     const goalResetEventStore = new FsGoalResetEventStore(this.rootDir);
     const goalRemovedEventStore = new FsGoalRemovedEventStore(this.rootDir);
     const goalProgressUpdatedEventStore = new FsGoalProgressUpdatedEventStore(this.rootDir);
+    const goalSubmittedForReviewEventStore = new FsGoalSubmittedForReviewEventStore(this.rootDir);
+    const goalQualifiedEventStore = new FsGoalQualifiedEventStore(this.rootDir);
 
     // Solution Category
     // Architecture Event Stores - decomposed by use case
@@ -410,6 +419,8 @@ export class HostBuilder {
     const goalResetProjector = new SqliteGoalResetProjector(this.db);
     const goalRemovedProjector = new SqliteGoalRemovedProjector(this.db);
     const goalProgressUpdatedProjector = new SqliteGoalProgressUpdatedProjector(this.db);
+    const goalSubmittedForReviewProjector = new SqliteGoalSubmittedForReviewProjector(this.db);
+    const goalQualifiedProjector = new SqliteGoalQualifiedProjector(this.db);
     const goalContextReader = new SqliteGoalContextReader(this.db);
     const goalStatusReader = new SqliteGoalStatusReader(this.db);
 
@@ -505,18 +516,40 @@ export class HostBuilder {
       architectureReader,
       relationRemovedProjector
     );
-    const reviewTurnTracker = new ReviewTurnTracker(
-      goalReviewedEventStore,
-      settingsReader
-    );
     const completeGoalController = new CompleteGoalController(
       completeGoalCommandHandler,
-      getGoalContextQueryHandler,
       goalCompletedProjector,
-      reviewTurnTracker,
-      goalReviewedEventStore,
-      goalReviewedEventStore,
+      goalClaimPolicy,
+      workerIdentityReader
+    );
+    // ReviewGoalController dependencies
+    const submitGoalForReviewCommandHandler = new SubmitGoalForReviewCommandHandler(
+      goalSubmittedForReviewEventStore,
+      goalSubmittedForReviewEventStore,
+      goalContextReader,
       eventBus,
+      goalClaimPolicy,
+      workerIdentityReader
+    );
+    const reviewGoalController = new ReviewGoalController(
+      submitGoalForReviewCommandHandler,
+      getGoalContextQueryHandler,
+      goalContextReader,
+      goalClaimPolicy,
+      workerIdentityReader
+    );
+    // QualifyGoalController dependencies
+    const qualifyGoalCommandHandler = new QualifyGoalCommandHandler(
+      goalQualifiedEventStore,
+      goalQualifiedEventStore,
+      goalContextReader,
+      eventBus,
+      goalClaimPolicy,
+      workerIdentityReader
+    );
+    const qualifyGoalController = new QualifyGoalController(
+      qualifyGoalCommandHandler,
+      goalContextReader,
       goalClaimPolicy,
       workerIdentityReader
     );
@@ -559,6 +592,8 @@ export class HostBuilder {
     const goalResetEventHandler = new GoalResetEventHandler(goalResetProjector);
     const goalRemovedEventHandler = new GoalRemovedEventHandler(goalRemovedProjector);
     const goalProgressUpdatedEventHandler = new GoalProgressUpdatedEventHandler(goalProgressUpdatedProjector);
+    const goalSubmittedForReviewEventHandler = new GoalSubmittedForReviewEventHandler(goalSubmittedForReviewProjector);
+    const goalQualifiedEventHandler = new GoalQualifiedEventHandler(goalQualifiedProjector);
 
     // Solution Category
     // Architecture Event Handlers - decomposed by use case
@@ -631,6 +666,8 @@ export class HostBuilder {
     eventBus.subscribe("GoalResetEvent", goalResetEventHandler);
     eventBus.subscribe("GoalRemovedEvent", goalRemovedEventHandler);
     eventBus.subscribe("GoalProgressUpdatedEvent", goalProgressUpdatedEventHandler);
+    eventBus.subscribe("GoalSubmittedForReviewEvent", goalSubmittedForReviewEventHandler);
+    eventBus.subscribe("GoalQualifiedEvent", goalQualifiedEventHandler);
 
     // Solution Category - Architecture events - decomposed by use case
     eventBus.subscribe("ArchitectureDefinedEvent", architectureDefinedEventHandler);
@@ -722,10 +759,11 @@ export class HostBuilder {
       goalPausedEventStore,
       goalResumedEventStore,
       goalCompletedEventStore,
-      goalReviewedEventStore,
       goalResetEventStore,
       goalRemovedEventStore,
       goalProgressUpdatedEventStore,
+      goalSubmittedForReviewEventStore,
+      goalQualifiedEventStore,
       // Session Projection Stores - decomposed by use case
       sessionStartedProjector,
       sessionEndedProjector,
@@ -748,8 +786,9 @@ export class HostBuilder {
       goalContextReader,
       goalStatusReader,
       // Goal Controllers
-      reviewTurnTracker,
       completeGoalController,
+      reviewGoalController,
+      qualifyGoalController,
 
       // Solution Category
       // Architecture Event Stores - decomposed by use case

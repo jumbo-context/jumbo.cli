@@ -43,22 +43,22 @@ export class CanStartRule implements ValidationRule<GoalState> {
 
 /**
  * Validates that a goal can be completed.
- * A goal can only be completed if it has been started (in 'doing' or 'blocked' status).
- * Cannot complete a goal that hasn't been started or is already completed.
+ * A goal can only be completed if it is in 'qualified' status.
+ * Cannot complete a goal that hasn't been qualified or is already completed.
  */
 export class CanCompleteRule implements ValidationRule<GoalState> {
   validate(state: GoalState): ValidationResult {
-    if (state.status === GoalStatus.TODO) {
-      return {
-        isValid: false,
-        errors: [GoalErrorMessages.NOT_STARTED],
-      };
-    }
-
     if (state.status === GoalStatus.COMPLETED) {
       return {
         isValid: false,
         errors: [GoalErrorMessages.ALREADY_COMPLETED],
+      };
+    }
+
+    if (state.status !== GoalStatus.QUALIFIED) {
+      return {
+        isValid: false,
+        errors: [GoalErrorMessages.NOT_QUALIFIED],
       };
     }
 

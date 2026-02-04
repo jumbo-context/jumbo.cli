@@ -59,6 +59,15 @@ export class GoalContextRenderer {
     });
     renderer.info("\n" + "INSTRUCTION: Your (the developer's) success in fulfilling the objective is measured by these specific criteria and adherence to the instructions below.");
 
+    if(goal.progress && goal.progress.length > 0){
+      renderer.headline("## Current Progress:");
+      goal.progress.forEach((progressItem) => {
+        renderer.info(`- ${progressItem}`);
+      });
+      renderer.info("\n" + "INSTRUCTION: Implementation of this goal has previously been started.");
+      renderer.info("Review the current progress to understand what has already been accomplished and continue from there.");
+    }
+
     if(this.isScoped(context)){
 
       renderer.headline("### Scope & Boundaries:");

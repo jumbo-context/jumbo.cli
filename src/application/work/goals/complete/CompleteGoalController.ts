@@ -1,14 +1,8 @@
 import { CompleteGoalRequest } from "./CompleteGoalRequest.js";
 import { CompleteGoalResponse } from "./CompleteGoalResponse.js";
 import { CompleteGoalCommandHandler } from "./CompleteGoalCommandHandler.js";
-import { GetGoalContextQueryHandler } from "../get-context/GetGoalContextQueryHandler.js";
 import { IGoalCompleteReader } from "./IGoalCompleteReader.js";
-import { ReviewTurnTracker } from "./ReviewTurnTracker.js";
-import { IGoalReviewedEventWriter } from "./IGoalReviewedEventWriter.js";
-import { IGoalReviewedEventReader } from "./IGoalReviewedEventReader.js";
-import { IEventBus } from "../../../shared/messaging/IEventBus.js";
-import { Goal } from "../../../../domain/work/goals/Goal.js";
-import { GoalErrorMessages, GoalStatus, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
+import { GoalErrorMessages, formatErrorMessage } from "../../../../domain/work/goals/Constants.js";
 import { GoalClaimPolicy } from "../claims/GoalClaimPolicy.js";
 import { IWorkerIdentityReader } from "../../../host/workers/IWorkerIdentityReader.js";
 
@@ -16,20 +10,15 @@ import { IWorkerIdentityReader } from "../../../host/workers/IWorkerIdentityRead
  * CompleteGoalController
  *
  * Controller for goal completion requests (similar to HTTP request controller).
- * Routes requests based on policy (commit flag + turn limit) and returns structured responses.
+ * Handles completion for QUALIFIED goals only.
  *
- * - QA Mode (commit=false): Returns criteria and QA prompt for verification, records QA attempt
- * - Commit Mode (commit=true): Delegates to CompleteGoalCommandHandler and returns learnings prompt
+ * Review logic has been moved to ReviewGoalController.
+ * This controller only handles the final completion step after a goal has been qualified.
  */
 export class CompleteGoalController {
   constructor(
     private readonly completeGoalCommandHandler: CompleteGoalCommandHandler,
-    private readonly getGoalContextQueryHandler: GetGoalContextQueryHandler,
     private readonly goalReader: IGoalCompleteReader,
-    private readonly turnTracker: ReviewTurnTracker,
-    private readonly reviewEventWriter: IGoalReviewedEventWriter,
-    private readonly goalEventReader: IGoalReviewedEventReader, // Use for full goal history
-    private readonly eventBus: IEventBus,
     private readonly claimPolicy: GoalClaimPolicy,
     private readonly workerIdentityReader: IWorkerIdentityReader
   ) {}
@@ -46,75 +35,13 @@ export class CompleteGoalController {
       );
     }
 
-    // Check if we should auto-commit due to turn limit
-    const gate = await this.turnTracker.getCommitGate(request.goalId);
-    const effectiveCommit = request.commit ? gate.current >= 1 : gate.canCommit;
-
-    if (request.commit && gate.current < 1) {
-      throw new Error(
-        formatErrorMessage(GoalErrorMessages.QA_REVIEW_REQUIRED, {
-          goalId: request.goalId,
-        })
-      );
-    }
-
-    if (effectiveCommit) {
-      return this.handleCommit(request.goalId);
-    } else {
-      return this.handleQA(request.goalId);
-    }
-  }
-
-  /**
-   * Handle QA mode: Return criteria and QA prompt, record review
-   */
-  private async handleQA(goalId: string): Promise<CompleteGoalResponse> {
-    // Get current goal view
-    const goalView = await this.goalReader.findById(goalId);
-    if (!goalView) {
-      throw new Error(`Goal not found: ${goalId}`);
-    }
-
-    if (goalView.status === GoalStatus.DOING) {
-      // Record review (before incrementing count for next turn)
-      const currentTurnCount = await this.turnTracker.getCurrentTurnCount(goalId);
-      const nextTurnNumber = currentTurnCount + 1;
-
-      // Rehydrate goal to record review
-      const history = await this.goalEventReader.readStream(goalId);
-      const goal = Goal.rehydrate(goalId, history as any);
-      const reviewEvent = goal.recordReview(nextTurnNumber);
-
-      // Persist and publish review event
-      await this.reviewEventWriter.append(reviewEvent);
-      await this.eventBus.publish(reviewEvent);
-    }
-
-    // Get full goal context (criteria, components, invariants, etc.)
-    const goalContext = await this.getGoalContextQueryHandler.execute(goalId);
-
-    return {
-      goalId,
-      objective: goalView.objective,
-      status: goalView.status,
-      criteria: goalContext,
-    };
-  }
-
-  /**
-   * Handle Commit mode: Delegate to CompleteGoalCommandHandler and return learnings prompt
-   * @param goalId - The goal ID to complete
-   */
-  private async handleCommit(
-    goalId: string
-  ): Promise<CompleteGoalResponse> {
-    // Delegate to command handler (state change)
-    await this.completeGoalCommandHandler.execute({ goalId });
+    // Delegate to command handler (validates QUALIFIED status, performs state change)
+    await this.completeGoalCommandHandler.execute({ goalId: request.goalId });
 
     // Get updated goal view
-    const goalView = await this.goalReader.findById(goalId);
+    const goalView = await this.goalReader.findById(request.goalId);
     if (!goalView) {
-      throw new Error(`Goal not found after completion: ${goalId}`);
+      throw new Error(`Goal not found after completion: ${request.goalId}`);
     }
 
     // Check for next goal
@@ -131,10 +58,9 @@ export class CompleteGoalController {
     }
 
     return {
-      goalId,
+      goalId: request.goalId,
       objective: goalView.objective,
       status: goalView.status,
-      // No criteria in commit mode (token optimization)
       nextGoal,
     };
   }

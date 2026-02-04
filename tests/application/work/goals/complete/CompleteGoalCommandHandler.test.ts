@@ -81,7 +81,7 @@ describe("CompleteGoalCommandHandler", () => {
     );
   });
 
-  it("should complete goal and publish GoalCompletedEvent event", async () => {
+  it("should complete goal from qualified status and publish GoalCompletedEvent event", async () => {
     // Arrange
     const command: CompleteGoalCommand = {
       goalId: "goal_123",
@@ -95,15 +95,15 @@ describe("CompleteGoalCommandHandler", () => {
       scopeIn: [],
       scopeOut: [],
       boundaries: [],
-      status: GoalStatus.DOING,
-      version: 2,
+      status: GoalStatus.QUALIFIED,
+      version: 4,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
-    // Mock event history (GoalAddedEvent, GoalStartedEvent)
+    // Mock event history (GoalAddedEvent, GoalStartedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent)
     const mockHistory = [
       {
         type: GoalEventType.ADDED,
@@ -128,6 +128,26 @@ describe("CompleteGoalCommandHandler", () => {
           status: GoalStatus.DOING,
         },
       },
+      {
+        type: "GoalSubmittedForReviewEvent",
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: "2025-01-01T02:00:00Z",
+        },
+      },
+      {
+        type: "GoalQualifiedEvent",
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: "2025-01-01T03:00:00Z",
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: "2025-01-01T03:00:00Z",
+        },
+      },
     ];
     (eventReader.readStream as jest.Mock).mockResolvedValue(mockHistory);
 
@@ -142,7 +162,7 @@ describe("CompleteGoalCommandHandler", () => {
     const appendedEvent = (eventWriter.append as jest.Mock).mock.calls[0][0];
     expect(appendedEvent.type).toBe(GoalEventType.COMPLETED);
     expect(appendedEvent.aggregateId).toBe("goal_123");
-    expect(appendedEvent.version).toBe(3);
+    expect(appendedEvent.version).toBe(5);
     expect(appendedEvent.payload.status).toBe(GoalStatus.COMPLETED);
 
     // Verify event was published to event bus
@@ -152,7 +172,7 @@ describe("CompleteGoalCommandHandler", () => {
     expect(publishedEvent.aggregateId).toBe("goal_123");
   });
 
-  it("should complete goal from blocked status", async () => {
+  it("should throw error when completing from blocked status", async () => {
     // Arrange
     const command: CompleteGoalCommand = {
       goalId: "goal_456",
@@ -213,16 +233,10 @@ describe("CompleteGoalCommandHandler", () => {
     ];
     (eventReader.readStream as jest.Mock).mockResolvedValue(mockHistory);
 
-    // Act
-    const result = await handler.execute(command);
-
-    // Assert
-    expect(result.goalId).toBe("goal_456");
-
-    // Verify event was appended
-    const appendedEvent = (eventWriter.append as jest.Mock).mock.calls[0][0];
-    expect(appendedEvent.type).toBe(GoalEventType.COMPLETED);
-    expect(appendedEvent.version).toBe(4);
+    // Act & Assert
+    await expect(handler.execute(command)).rejects.toThrow(
+      "Cannot complete goal. Goal must be qualified first."
+    );
   });
 
   it("should throw error if goal not found", async () => {
@@ -240,7 +254,7 @@ describe("CompleteGoalCommandHandler", () => {
     );
   });
 
-  it("should propagate validation error if goal not started", async () => {
+  it("should propagate validation error if goal not qualified (to-do status)", async () => {
     // Arrange
     const command: CompleteGoalCommand = {
       goalId: "goal_789",
@@ -283,7 +297,7 @@ describe("CompleteGoalCommandHandler", () => {
 
     // Act & Assert
     await expect(handler.execute(command)).rejects.toThrow(
-      "Cannot complete a goal that has not been started"
+      "Cannot complete goal. Goal must be qualified first."
     );
   });
 
@@ -302,14 +316,14 @@ describe("CompleteGoalCommandHandler", () => {
       scopeOut: [],
       boundaries: [],
       status: GoalStatus.COMPLETED,
-      version: 3,
+      version: 5,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
-    // Mock event history (GoalAddedEvent, GoalStartedEvent, GoalCompletedEvent)
+    // Mock event history (GoalAddedEvent, GoalStartedEvent, GoalSubmittedForReviewEvent, GoalQualifiedEvent, GoalCompletedEvent)
     const mockHistory = [
       {
         type: GoalEventType.ADDED,
@@ -335,10 +349,30 @@ describe("CompleteGoalCommandHandler", () => {
         },
       },
       {
-        type: GoalEventType.COMPLETED,
+        type: "GoalSubmittedForReviewEvent",
         aggregateId: "goal_999",
         version: 3,
         timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: "2025-01-01T02:00:00Z",
+        },
+      },
+      {
+        type: "GoalQualifiedEvent",
+        aggregateId: "goal_999",
+        version: 4,
+        timestamp: "2025-01-01T03:00:00Z",
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: "2025-01-01T03:00:00Z",
+        },
+      },
+      {
+        type: GoalEventType.COMPLETED,
+        aggregateId: "goal_999",
+        version: 5,
+        timestamp: "2025-01-01T04:00:00Z",
         payload: {
           status: GoalStatus.COMPLETED,
         },
@@ -399,7 +433,7 @@ describe("CompleteGoalCommandHandler", () => {
       goalId: "goal_123",
     };
 
-    // Mock projection exists
+    // Mock projection exists (qualified status)
     const mockView: GoalView = {
       goalId: "goal_123",
       objective: "Implement authentication",
@@ -407,8 +441,8 @@ describe("CompleteGoalCommandHandler", () => {
       scopeIn: [],
       scopeOut: [],
       boundaries: [],
-      status: GoalStatus.DOING,
-      version: 2,
+      status: GoalStatus.QUALIFIED,
+      version: 4,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
@@ -424,7 +458,7 @@ describe("CompleteGoalCommandHandler", () => {
       claimExpiresAt: "2025-01-15T09:00:00.000Z", // Expired before current time (10:00)
     });
 
-    // Mock event history
+    // Mock event history (includes qualification)
     const mockHistory = [
       {
         type: GoalEventType.ADDED,
@@ -447,6 +481,26 @@ describe("CompleteGoalCommandHandler", () => {
         timestamp: "2025-01-01T01:00:00Z",
         payload: {
           status: GoalStatus.DOING,
+        },
+      },
+      {
+        type: "GoalSubmittedForReviewEvent",
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: "2025-01-01T02:00:00Z",
+        },
+      },
+      {
+        type: "GoalQualifiedEvent",
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: "2025-01-01T03:00:00Z",
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: "2025-01-01T03:00:00Z",
         },
       },
     ];
@@ -466,7 +520,7 @@ describe("CompleteGoalCommandHandler", () => {
       goalId: "goal_123",
     };
 
-    // Mock projection exists
+    // Mock projection exists (qualified status)
     const mockView: GoalView = {
       goalId: "goal_123",
       objective: "Implement authentication",
@@ -474,8 +528,8 @@ describe("CompleteGoalCommandHandler", () => {
       scopeIn: [],
       scopeOut: [],
       boundaries: [],
-      status: GoalStatus.DOING,
-      version: 2,
+      status: GoalStatus.QUALIFIED,
+      version: 4,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
@@ -490,7 +544,7 @@ describe("CompleteGoalCommandHandler", () => {
       claimExpiresAt: "2025-01-15T11:00:00.000Z",
     });
 
-    // Mock event history
+    // Mock event history (includes qualification)
     const mockHistory = [
       {
         type: GoalEventType.ADDED,
@@ -513,6 +567,26 @@ describe("CompleteGoalCommandHandler", () => {
         timestamp: "2025-01-01T01:00:00Z",
         payload: {
           status: GoalStatus.DOING,
+        },
+      },
+      {
+        type: "GoalSubmittedForReviewEvent",
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: "2025-01-01T02:00:00Z",
+        },
+      },
+      {
+        type: "GoalQualifiedEvent",
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: "2025-01-01T03:00:00Z",
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: "2025-01-01T03:00:00Z",
         },
       },
     ];
@@ -533,7 +607,7 @@ describe("CompleteGoalCommandHandler", () => {
       goalId: "goal_123",
     };
 
-    // Mock projection exists
+    // Mock projection exists (qualified status)
     const mockView: GoalView = {
       goalId: "goal_123",
       objective: "Test goal",
@@ -541,15 +615,15 @@ describe("CompleteGoalCommandHandler", () => {
       scopeIn: [],
       scopeOut: [],
       boundaries: [],
-      status: GoalStatus.DOING,
-      version: 2,
+      status: GoalStatus.QUALIFIED,
+      version: 4,
       createdAt: "2025-01-01T00:00:00Z",
       updatedAt: "2025-01-01T00:00:00Z",
       progress: [],
     };
     (goalReader.findById as jest.Mock).mockResolvedValue(mockView);
 
-    // Mock event history
+    // Mock event history (includes qualification)
     const mockHistory = [
       {
         type: GoalEventType.ADDED,
@@ -572,6 +646,26 @@ describe("CompleteGoalCommandHandler", () => {
         timestamp: "2025-01-01T01:00:00Z",
         payload: {
           status: GoalStatus.DOING,
+        },
+      },
+      {
+        type: "GoalSubmittedForReviewEvent",
+        aggregateId: "goal_123",
+        version: 3,
+        timestamp: "2025-01-01T02:00:00Z",
+        payload: {
+          status: GoalStatus.INREVIEW,
+          submittedAt: "2025-01-01T02:00:00Z",
+        },
+      },
+      {
+        type: "GoalQualifiedEvent",
+        aggregateId: "goal_123",
+        version: 4,
+        timestamp: "2025-01-01T03:00:00Z",
+        payload: {
+          status: GoalStatus.QUALIFIED,
+          qualifiedAt: "2025-01-01T03:00:00Z",
         },
       },
     ];

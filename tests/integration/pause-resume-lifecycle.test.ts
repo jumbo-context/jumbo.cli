@@ -15,8 +15,6 @@ import { PauseGoalCommandHandler } from "../../src/application/work/goals/pause/
 import { PauseGoalCommand } from "../../src/application/work/goals/pause/PauseGoalCommand.js";
 import { ResumeGoalCommandHandler } from "../../src/application/work/goals/resume/ResumeGoalCommandHandler.js";
 import { ResumeGoalCommand } from "../../src/application/work/goals/resume/ResumeGoalCommand.js";
-import { CompleteGoalCommandHandler } from "../../src/application/work/goals/complete/CompleteGoalCommandHandler.js";
-import { CompleteGoalCommand } from "../../src/application/work/goals/complete/CompleteGoalCommand.js";
 import { GoalStatus, GoalEventType } from "../../src/domain/work/goals/Constants.js";
 
 describe("Pause-Resume Lifecycle Integration", () => {
@@ -39,7 +37,7 @@ describe("Pause-Resume Lifecycle Integration", () => {
     await fs.remove(tmpDir);
   });
 
-  it("full lifecycle: create → start → pause → resume → complete", async () => {
+  it("full lifecycle: create → start → pause → resume", async () => {
     // 1. Add goal
     const addHandler = new AddGoalCommandHandler(
       container.goalAddedEventStore,
@@ -120,43 +118,25 @@ describe("Pause-Resume Lifecycle Integration", () => {
     expect(view!.note).toBe("Testing resume functionality");
     expect(view!.version).toBe(4);
 
-    // 5. Complete goal
-    const completeHandler = new CompleteGoalCommandHandler(
-      container.goalCompletedEventStore,
-      container.goalCompletedEventStore,
-      container.goalCompletedProjector,
-      container.eventBus,
-      container.goalClaimPolicy,
-      container.workerIdentityReader
-    );
-    const completeCommand: CompleteGoalCommand = {
-      goalId,
-    };
-    await completeHandler.execute(completeCommand);
-
-    // Verify projection after complete
-    view = await container.goalCompletedProjector.findById(goalId);
-    expect(view!.status).toBe(GoalStatus.COMPLETED);
-    expect(view!.version).toBe(5);
+    // Note: Completion requires QUALIFIED status which needs the full qualification workflow
+    // This test focuses on pause/resume lifecycle only
 
     // Verify event stream correctness
     const events = await container.eventStore.readStream(goalId);
-    expect(events).toHaveLength(5);
+    expect(events).toHaveLength(4);
     expect(events[0].type).toBe(GoalEventType.ADDED);
     expect(events[1].type).toBe(GoalEventType.STARTED);
     expect(events[2].type).toBe(GoalEventType.PAUSED);
     expect(events[3].type).toBe(GoalEventType.RESUMED);
-    expect(events[4].type).toBe(GoalEventType.COMPLETED);
 
     // Verify all events persisted to file system
     const eventsDir = path.join(tmpDir, "events", goalId);
     const files = await fs.readdir(eventsDir);
-    expect(files).toHaveLength(5);
+    expect(files).toHaveLength(4);
     expect(files).toContain("000001.GoalAddedEvent.json");
     expect(files).toContain("000002.GoalStartedEvent.json");
     expect(files).toContain("000003.GoalPausedEvent.json");
     expect(files).toContain("000004.GoalResumedEvent.json");
-    expect(files).toContain("000005.GoalCompletedEvent.json");
   });
 
   it("pause event contains reason and note", async () => {

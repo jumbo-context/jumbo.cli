@@ -15,14 +15,16 @@ import { goalBlock, metadata as goalBlockMeta } from '../../work/goals/block/goa
 import { goalComplete, metadata as goalCompleteMeta } from '../../work/goals/complete/goal.complete.js';
 import { goalsList, metadata as goalsListMeta } from '../../work/goals/list/goals.list.js';
 import { goalPause, metadata as goalPauseMeta } from '../../work/goals/pause/goal.pause.js';
+import { goalQualify, metadata as goalQualifyMeta } from '../../work/goals/qualify/goal.qualify.js';
 import { goalRemove, metadata as goalRemoveMeta } from '../../work/goals/remove/goal.remove.js';
 import { goalReset, metadata as goalResetMeta } from '../../work/goals/reset/goal.reset.js';
 import { goalResume, metadata as goalResumeMeta } from '../../work/goals/resume/goal.resume.js';
+import { goalReview, metadata as goalReviewMeta } from '../../work/goals/review/goal.review.js';
 import { goalShow, metadata as goalShowMeta } from '../../work/goals/show/goal.show.js';
 import { goalStart, metadata as goalStartMeta } from '../../work/goals/start/goal.start.js';
 import { goalUnblock, metadata as goalUnblockMeta } from '../../work/goals/unblock/goal.unblock.js';
 import { goalUpdate, metadata as goalUpdateMeta } from '../../work/goals/update/goal.update.js';
-import { goalUpdateProgress, metadata as goalUpdateProgressMeta } from '../../work/goals/update-progress/goal.updateProgress.js';
+import { goalUpdateProgress, metadata as goalUpdateProgressMeta } from '../../work/goals/update-progress/goal.update-progress.js';
 import { workPause, metadata as workPauseMeta } from '../../work/pause/work.pause.js';
 import { workResume, metadata as workResumeMeta } from '../../work/resume/work.resume.js';
 import { sessionCompact, metadata as sessionCompactMeta } from '../../work/sessions/compact/session.compact.js';
@@ -106,6 +108,11 @@ export const commands: RegisteredCommand[] = [
     handler: goalPause
   },
   {
+    path: 'goal qualify',
+    metadata: goalQualifyMeta,
+    handler: goalQualify
+  },
+  {
     path: 'goal remove',
     metadata: goalRemoveMeta,
     handler: goalRemove
@@ -119,6 +126,11 @@ export const commands: RegisteredCommand[] = [
     path: 'goal resume',
     metadata: goalResumeMeta,
     handler: goalResume
+  },
+  {
+    path: 'goal review',
+    metadata: goalReviewMeta,
+    handler: goalReview
   },
   {
     path: 'goal show',
@@ -141,7 +153,7 @@ export const commands: RegisteredCommand[] = [
     handler: goalUpdate
   },
   {
-    path: 'goal updateProgress',
+    path: 'goal update-progress',
     metadata: goalUpdateProgressMeta,
     handler: goalUpdateProgress
   },

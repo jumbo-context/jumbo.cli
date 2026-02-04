@@ -81,8 +81,8 @@ export async function goalStart(options: { goalId: string }, container: IApplica
     // LLM Guidance
     const additionalLlmInstructions = [
       "@LLM: Goal context loaded. Work within scope and boundaries.",
-      "YOUR ROLE: Proactively run jumbo commands to capture project memories as they surface.",
-      "Run 'jumbo --help' to see what can be tracked, if you haven't already.",
+      "Track your progress by documenting completed sub-tasks with 'jumbo goal update-progress --goal-id " + options.goalId + " --task-description <description>'.",
+      "Run 'jumbo goal review --goal-id " + options.goalId + "' when you are finished to submit the goal for review.",
     ];
     renderer.info(additionalLlmInstructions.join("\n") + "\n");
 

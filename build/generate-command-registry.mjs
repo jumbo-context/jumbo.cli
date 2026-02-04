@@ -98,7 +98,9 @@ function generateImport(filePath, importPrefix) {
   // "goal start" → "goalStart"
   // "audience pain add" → "audiencePainAdd"
   const commandParts = fullCommand.split(' ');
-  const handlerName = commandParts[0] + commandParts.slice(1).map(capitalize).join('');
+  const handlerName = commandParts
+    .map((part, index) => toHandlerCasePart(part, index))
+    .join('');
   const metaName = `${handlerName}Meta`;
 
   return {
@@ -154,6 +156,16 @@ ${commandEntries}
  */
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Convert a command path segment into handler casing
+ * Example: "update-progress" -> "UpdateProgress"
+ */
+function toHandlerCasePart(part, index) {
+  const segments = part.split('-');
+  const normalized = segments[0] + segments.slice(1).map(capitalize).join('');
+  return index === 0 ? normalized : capitalize(normalized);
 }
 
 /**

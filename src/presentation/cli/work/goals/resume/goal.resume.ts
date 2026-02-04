@@ -128,19 +128,12 @@ export async function goalResume(options: { goalId: string; note?: string }, con
     renderer.info("---\n");
 
     // LLM Guidance
-    const llmInstruction = [
+    const additionalLlmInstructions = [
       "@LLM: Goal context loaded. Work within scope and boundaries.",
-      "YOUR ROLE: Proactively run jumbo commands to capture project memories as they surface.",
-      "Run 'jumbo --help' to see what can be tracked, if you haven't already.",
+      "Run 'jumbo goal review --goal-id " + options.goalId + "' when you are finished to submit the goal for review.",
     ];
-    renderer.info(llmInstruction.join("\n") + "\n");
+    renderer.info(additionalLlmInstructions.join("\n") + "\n");
 
-    // Success output
-    renderer.success("Goal resumed", {
-      goalId: goalContext.goal.goalId,
-      objective: goalContext.goal.objective,
-      status: goalContext.goal.status,
-    });
   } catch (error) {
     renderer.error("Failed to resume goal", error instanceof Error ? error : String(error));
     process.exit(1);

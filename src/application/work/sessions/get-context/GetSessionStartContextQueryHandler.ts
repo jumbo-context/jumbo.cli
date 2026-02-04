@@ -49,6 +49,11 @@ export class GetSessionStartContextQueryHandler {
    * @returns SessionStartContextView with all assembled data
    */
   async execute(): Promise<SessionStartContextView> {
+
+    const doingGoals = await this.goalStatusReader.findByStatus(GoalStatus.DOING);
+    const pausedGoals = await this.goalStatusReader.findByStatus(GoalStatus.PAUSED);
+    const blockedGoals = await this.goalStatusReader.findByStatus(GoalStatus.BLOCKED);
+
     // Query all projection stores in parallel for efficiency
     const [
       project,
@@ -63,7 +68,7 @@ export class GetSessionStartContextQueryHandler {
       this.audienceContextReader?.findAllActive() ?? Promise.resolve([]),
       this.audiencePainContextReader?.findAllActive() ?? Promise.resolve([]),
       this.sessionSummaryReader.findLatest(),
-      this.goalStatusReader.findByStatus(GoalStatus.DOING),
+      doingGoals.concat(pausedGoals, blockedGoals),
       this.goalStatusReader.findByStatus(GoalStatus.TODO),
       this.unprimedBrownfieldQualifier?.isUnprimed() ?? Promise.resolve(false),
     ]);
