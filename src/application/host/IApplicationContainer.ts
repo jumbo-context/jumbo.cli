@@ -208,6 +208,8 @@ import { IRelationRemovedProjector } from "../context/relations/remove/IRelation
 import { IRelationRemovedReader } from "../context/relations/remove/IRelationRemovedReader.js";
 import { IRelationReader } from "../context/relations/IRelationReader.js";
 import { IRelationViewReader } from "../context/relations/get/IRelationViewReader.js";
+import { AuditRelationsController } from "../context/relations/audit/AuditRelationsController.js";
+import { IRelationNodeCatalog } from "../context/relations/audit/IRelationNodeCatalog.js";
 // Audience Pain Projection Store ports - decomposed by use case
 import { IAudiencePainAddedProjector } from "../context/audience-pains/add/IAudiencePainAddedProjector.js";
 import { IAudiencePainUpdatedProjector } from "../context/audience-pains/update/IAudiencePainUpdatedProjector.js";
@@ -643,6 +645,7 @@ export interface IApplicationContainer {
   getRelationsController: GetRelationsController;
   traverseRelationsController: TraverseRelationsController;
   findRelationPathController: FindRelationPathController;
+  auditRelationsController: AuditRelationsController;
 
   // Relations Category - Event Stores - decomposed by use case
   relationAddedEventStore: IRelationAddedEventWriter;
@@ -652,4 +655,5 @@ export interface IApplicationContainer {
   relationAddedProjector: IRelationAddedProjector & IRelationAddedReader;
   relationRemovedProjector: IRelationRemovedProjector & IRelationRemovedReader & IRelationReader;
   relationViewReader: IRelationViewReader;
+  relationNodeCatalog: IRelationNodeCatalog;
 }

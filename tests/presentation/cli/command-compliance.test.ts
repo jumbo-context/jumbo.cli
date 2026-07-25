@@ -119,4 +119,18 @@ describe("Command Compliance", () => {
       commandPath: "index rebuild",
     });
   });
+
+  test("relations audit command declares project scope and selectable checks", () => {
+    const command = commands.find((candidate) => candidate.path === "relations audit");
+
+    expect(command).toBeDefined();
+    expect(command?.metadata.requiresProject).toBe(true);
+    expect(command?.metadata.options?.map((option) => option.flags)).toEqual([
+      "-c, --check <checks...>",
+      "--entity-type <type>",
+    ]);
+    expect(command?.metadata.examples?.map((example) => example.command)).toContain(
+      "jumbo relations audit --format json",
+    );
+  });
 });
