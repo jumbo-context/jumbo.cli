@@ -5,7 +5,7 @@ sidebar:
   order: 12
 ---
 
-Add, list, traverse, find paths through, and remove relationships between entities in the knowledge graph — linking goals, components, decisions, and other entities.
+Add, list, traverse, find paths through, audit, and remove relationships between entities in the knowledge graph — linking goals, components, decisions, and other entities.
 
 ---
 
@@ -158,6 +158,38 @@ If either ID appears under multiple entity types, specify its matching type opti
 > jumbo relations path --from-id goal_abc123 --to-id comp_def456 --direction out --max-depth 3
 > jumbo relations path --from-id goal_abc123 --to-id comp_def456 --relation-type involves --strength strong
 > jumbo relations path --from-id goal_abc123 --to-id comp_def456 --format json
+```
+
+---
+
+## jumbo relations audit
+
+Audit relation graph integrity and coverage without modifying relations, projections, or events. By default, the command runs every check.
+
+### Synopsis
+
+```bash
+> jumbo relations audit [options]
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-c, --check <checks...>` | Run one or more checks: `dangling`, `isolated`, `inactive-only`, `ambiguous-id`, or `summary` |
+| `--entity-type <type>` | Filter findings and summary data by relation endpoint entity type |
+
+The checks report active relations with missing typed endpoints, current entities without an active relation, current entities connected only by inactive relations, IDs shared by multiple entity types, and counts grouped by entity type, relation type, strength, and status. Only explicitly removed projection records are treated as non-current; deprecated, resolved, completed, ended, and deactivated entities remain auditable context.
+
+Text output uses stable check headings and typed entity IDs. `--format json` returns the requested checks, filter, summary, finding collections, and counts as one structured result.
+
+### Examples
+
+```bash
+> jumbo relations audit
+> jumbo relations audit --check dangling isolated
+> jumbo relations audit --check summary --entity-type component
+> jumbo relations audit --format json
 ```
 
 ---

@@ -257,6 +257,7 @@ import { SqliteRelationDeactivatedProjector } from "../context/relations/deactiv
 import { SqliteRelationReactivatedProjector } from "../context/relations/reactivate/SqliteRelationReactivatedProjector.js";
 import { SqliteRelationRemovedProjector } from "../context/relations/remove/SqliteRelationRemovedProjector.js";
 import { SqliteRelationViewReader } from "../context/relations/get/SqliteRelationViewReader.js";
+import { SqliteRelationNodeCatalog } from "../context/relations/audit/SqliteRelationNodeCatalog.js";
 // AudiencePain Projection Stores - decomposed by use case
 import { SqliteAudiencePainAddedProjector } from "../context/audience-pains/add/SqliteAudiencePainAddedProjector.js";
 import { SqliteAudiencePainUpdatedProjector } from "../context/audience-pains/update/SqliteAudiencePainUpdatedProjector.js";
@@ -416,6 +417,8 @@ import { RelationTraversalQueryNormalizer } from "../../application/context/rela
 import { FindRelationPathController } from "../../application/context/relations/path/FindRelationPathController.js";
 import { LocalFindRelationPathGateway } from "../../application/context/relations/path/LocalFindRelationPathGateway.js";
 import { RelationShortestPathFinder } from "../../application/context/relations/path/RelationShortestPathFinder.js";
+import { AuditRelationsController } from "../../application/context/relations/audit/AuditRelationsController.js";
+import { RelationAuditPolicy } from "../../application/context/relations/audit/RelationAuditPolicy.js";
 // Context
 import { GoalContextQueryHandler } from "../../application/context/goals/get/GoalContextQueryHandler.js";
 import { GoalBacklogPreviewQueryHandler } from "../../application/context/goals/query/GoalBacklogPreviewQueryHandler.js";
@@ -982,6 +985,7 @@ const audiencePainContextReader = new SqliteAudiencePainContextReader(this.db);
     const relationReactivatedProjector = new SqliteRelationReactivatedProjector(this.db);
     const relationRemovedProjector = new SqliteRelationRemovedProjector(this.db);
     const relationViewReader = new SqliteRelationViewReader(this.db);
+    const relationNodeCatalog = new SqliteRelationNodeCatalog(this.db);
 
     // ============================================================
     // STEP 4: Create Application Services / Controllers
@@ -1833,6 +1837,12 @@ const audiencePainContextReader = new SqliteAudiencePainContextReader(this.db);
       relationShortestPathFinder
     );
     const findRelationPathController = new FindRelationPathController(findRelationPathGateway);
+    const relationAuditPolicy = new RelationAuditPolicy();
+    const auditRelationsController = new AuditRelationsController(
+      relationNodeCatalog,
+      relationViewReader,
+      relationAuditPolicy,
+    );
 
     // ============================================================
     // STEP 5: Create Projection Handlers (Event Subscribers)
@@ -2366,12 +2376,14 @@ const audiencePainContextReader = new SqliteAudiencePainContextReader(this.db);
       getRelationsController,
       traverseRelationsController,
       findRelationPathController,
+      auditRelationsController,
       // Relations Category - decomposed by use case
       relationAddedEventStore,
       relationRemovedEventStore,
       relationAddedProjector,
       relationRemovedProjector,
       relationViewReader,
+      relationNodeCatalog,
     };
   }
 }

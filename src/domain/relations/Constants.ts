@@ -35,6 +35,17 @@ export const RelationStatus = {
 
 export type RelationStatusValue = typeof RelationStatus[keyof typeof RelationStatus];
 
+// Read-only relation graph audit checks
+export const RelationAuditCheck = {
+  DANGLING: 'dangling',
+  ISOLATED: 'isolated',
+  INACTIVE_ONLY: 'inactive-only',
+  AMBIGUOUS_ID: 'ambiguous-id',
+  SUMMARY: 'summary'
+} as const;
+
+export type RelationAuditCheckValue = typeof RelationAuditCheck[keyof typeof RelationAuditCheck];
+
 // Relation event types
 export const RelationEventType = {
   ADDED: 'RelationAddedEvent',
