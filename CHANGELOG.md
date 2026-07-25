@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.20.0] - 2026-07-25
+
 ### Added
 
 - **Relation graph audits**: Added `jumbo relations audit` with selectable dangling, isolated, inactive-only, ambiguous-ID, and summary checks, optional entity-type filtering, deterministic text output, and a stable structured result for relation coverage diagnostics.
