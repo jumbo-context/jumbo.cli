@@ -3,6 +3,10 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { render } from "ink-testing-library";
 import stripAnsi from "strip-ansi";
 import { GoalsScreen } from "../../../../src/presentation/tui/goals/GoalsScreen.js";
+import {
+  GoalAuthoringRequestStatus,
+  GoalAuthoringResultCopy,
+} from "../../../../src/presentation/tui/goals/GoalAuthoringFlowConstants.js";
 import { StateReaderProvider } from "../../../../src/presentation/tui/state-reading/StateReader.js";
 import { GoalStatus } from "../../../../src/domain/goals/Constants.js";
 import {
@@ -148,7 +152,10 @@ function renderGoalsScreen(
     readonly handledRequests?: GetGoalsRequest[];
     readonly terminalWidth?: number;
     readonly shortcutsEnabled?: boolean;
-    readonly addGoalController?: RequestController<AddGoalRequest, AddGoalResponse>;
+    readonly addGoalController?: RequestController<
+      AddGoalRequest,
+      AddGoalResponse
+    >;
     readonly onModalOpenChange?: (isOpen: boolean) => void;
   } = {},
 ): ReturnType<typeof render> {
@@ -336,7 +343,9 @@ describe("GoalsScreen", () => {
 
   it("renders every available goal-show content section", async () => {
     const { lastFrame, stdin, unmount } = renderGoalsScreen({
-      contexts: new Map([["goal_real", createGoalContext({ componentCount: 1 })]]),
+      contexts: new Map([
+        ["goal_real", createGoalContext({ componentCount: 1 })],
+      ]),
     });
     const expectedSections = [
       "OBJECTIVE:",
@@ -376,7 +385,9 @@ describe("GoalsScreen", () => {
     expect(frame).toContain("Claimed by");
     expect(frame).toContain("worker-1");
     expect(frame).not.toContain("Objective.");
-    expect(frame.indexOf("OBJECTIVE:")).toBeLessThan(frame.indexOf("META-DATA:"));
+    expect(frame.indexOf("OBJECTIVE:")).toBeLessThan(
+      frame.indexOf("META-DATA:"),
+    );
     expect(frame).not.toContain("WORKSPACE:");
     expect(frame).not.toContain("CLAIM:");
     unmount();
@@ -398,7 +409,9 @@ describe("GoalsScreen", () => {
 
   it("paginates related entity rows at six items before rendering overflow", async () => {
     const { lastFrame, stdin, unmount } = renderGoalsScreen({
-      contexts: new Map([["goal_real", createGoalContext({ componentCount: 7 })]]),
+      contexts: new Map([
+        ["goal_real", createGoalContext({ componentCount: 7 })],
+      ]),
     });
 
     await waitForFrame(lastFrame, "META-DATA");
@@ -508,7 +521,11 @@ describe("GoalsScreen", () => {
     });
 
     await waitForFrame(lastFrame, "META-DATA");
-    const frame = await navigateRightUntil(stdin, lastFrame, "SUCCESS CRITERIA:");
+    const frame = await navigateRightUntil(
+      stdin,
+      lastFrame,
+      "SUCCESS CRITERIA:",
+    );
     expect(frame).not.toContain("SUCCESS CRITERIA (1/2):");
     expect(frame).not.toContain("(1/2)");
     unmount();
@@ -680,7 +697,7 @@ describe("GoalsScreen", () => {
     unmount();
   });
 
-  it("closes the flow and renders the refreshed list with the created goal on success", async () => {
+  it("keeps success visible until acknowledgement, then refreshes and closes", async () => {
     const onModalOpenChange = jest.fn();
     const goals: GoalView[] = [];
     const { lastFrame, stdin, unmount } = renderGoalsScreen({
@@ -707,6 +724,17 @@ describe("GoalsScreen", () => {
       criterion: "Goal is persisted",
     });
 
+    const resultFrame = await waitForFrame(lastFrame, "goal_created");
+    expect(resultFrame).toContain(GoalAuthoringRequestStatus.SUCCESS);
+    expect(resultFrame).toContain(GoalAuthoringResultCopy.goalIdLabel);
+    expect(resultFrame).not.toContain("Created goal");
+    expect(onModalOpenChange).not.toHaveBeenLastCalledWith(false);
+
+    stdin.write(SPACE);
+    await settleInput();
+    expect(lastFrame()).toContain("goal_created");
+
+    stdin.write("\r");
     const frame = await waitForFrame(lastFrame, "Created goal");
     expect(frame).toContain("Created goal");
     expect(frame).toContain("1/1");
@@ -732,8 +760,13 @@ describe("GoalsScreen", () => {
     });
     await waitUntil(() => dispatched.mock.calls.length > 0);
     onModalOpenChange.mockClear();
-    await settleInput();
+    const failureFrame = await waitForFrame(
+      lastFrame,
+      GoalAuthoringRequestStatus.FAILURE,
+    );
 
+    expect(failureFrame).toContain("dispatch failed");
+    expect(failureFrame).not.toContain(GoalAuthoringResultCopy.goalIdLabel);
     expect(onModalOpenChange).not.toHaveBeenCalledWith(false);
 
     stdin.write("\x1b");
@@ -755,8 +788,12 @@ describe("GoalsScreen", () => {
       criterion: "Goal is persisted",
     });
     onModalOpenChange.mockClear();
-    await settleInput();
+    const failureFrame = await waitForFrame(
+      lastFrame,
+      GoalAuthoringRequestStatus.FAILURE,
+    );
 
+    expect(failureFrame).not.toContain(GoalAuthoringResultCopy.goalIdLabel);
     expect(onModalOpenChange).not.toHaveBeenCalledWith(false);
 
     stdin.write("\x1b");

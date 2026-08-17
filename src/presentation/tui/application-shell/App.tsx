@@ -9,7 +9,11 @@ import { SearchOverlay } from "../search/SearchOverlay.js";
 import { InitFlow } from "../project-initialization/InitFlow.js";
 import type { InitFlowActionControllers } from "../project-initialization/InitFlow.js";
 import { GoalAuthoringFlow } from "../goals/GoalAuthoringFlow.js";
-import type { GoalAuthoringValues } from "../goals/GoalAuthoringFlow.js";
+import type {
+  GoalAuthoringSubmissionResult,
+  GoalAuthoringValues,
+} from "../goals/GoalAuthoringFlow.js";
+import { GoalAuthoringRequestStatus } from "../goals/GoalAuthoringFlowConstants.js";
 import { AddGoalRequestFactory } from "../goals/AddGoalRequestFactory.js";
 import { DEFAULT_SCREEN_INDEX } from "../navigation/ScreenDefinitions.js";
 import { ActionDispatcher } from "../action-dispatch/ActionDispatcher.js";
@@ -20,7 +24,10 @@ import type { StateReaderOptions } from "../state-reading/StateReaderOptions.js"
 import { useProjectContext } from "../state-reading/useProjectContext.js";
 import { SubprocessManagerProvider } from "../daemon-subprocesses/SubprocessManagerProvider.js";
 import { useSubprocessManager } from "../daemon-subprocesses/useSubprocessManager.js";
-import type { ISubprocessManager, SubprocessSnapshot } from "../daemon-subprocesses/ISubprocessManager.js";
+import type {
+  ISubprocessManager,
+  SubprocessSnapshot,
+} from "../daemon-subprocesses/ISubprocessManager.js";
 import type { NotificationDrawerNotification } from "./NotificationDrawer.js";
 import type { CliUpdateController } from "../../../application/cli-metadata/update/CliUpdateController.js";
 import type { CliUpdateCheckResult } from "../../../application/cli-metadata/update/CliUpdateCheckResult.js";
@@ -187,19 +194,17 @@ function AppFrame({
   const subprocessManager = useSubprocessManager();
   const { columns, rows } = useTerminalDimensions();
   const projectContext = useProjectContext();
-  const [activeScreenIndex, setActiveScreenIndex] = useState(
-    DEFAULT_SCREEN_INDEX,
-  );
+  const [activeScreenIndex, setActiveScreenIndex] =
+    useState(DEFAULT_SCREEN_INDEX);
   const [initFlowOpen, setInitFlowOpen] = useState(false);
   const [goalAuthoringOpen, setGoalAuthoringOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [screenModalOpen, setScreenModalOpen] = useState(false);
-  const [goalStatusFilter, setGoalStatusFilter] =
-    useState<readonly GoalStatusType[] | undefined>(undefined);
-  const [goalAuthoringError, setGoalAuthoringError] = useState<string | null>(null);
-  const [goalAuthoringWorking, setGoalAuthoringWorking] = useState(false);
+  const [goalStatusFilter, setGoalStatusFilter] = useState<
+    readonly GoalStatusType[] | undefined
+  >(undefined);
   const [lifecycleRouteOverride, setLifecycleRouteOverride] =
     useState<ProjectLifecycleState | null>(null);
   const [unprimedSkipped, setUnprimedSkipped] = useState(false);
@@ -209,9 +214,9 @@ function AppFrame({
   const [billboardAnimationComplete, setBillboardAnimationComplete] = useState(
     !launchAnimationEnabled,
   );
-  const [daemonStatuses, setDaemonStatuses] = useState<readonly SubprocessSnapshot[]>(
-    subprocessManager.getAllStatuses(),
-  );
+  const [daemonStatuses, setDaemonStatuses] = useState<
+    readonly SubprocessSnapshot[]
+  >(subprocessManager.getAllStatuses());
   const [cliUpdateCheck, setCliUpdateCheck] =
     useState<CliUpdateCheckResult | null>(null);
   const [cliUpgradeResult, setCliUpgradeResult] =
@@ -338,7 +343,6 @@ function AppFrame({
       setInitFlowOpen(true);
     }
     if (goalAuthoringShortcutEnabled && (input === "g" || input === "G")) {
-      setGoalAuthoringError(null);
       setGoalAuthoringOpen(true);
     }
     if (
@@ -379,10 +383,9 @@ function AppFrame({
 
   const handleInitComplete = useCallback(
     async (_values: Record<string, string>) => {
-      await completeStateChangingOverlay(
-        () => setInitFlowOpen(false),
-        { reinstallStateReaders: true },
-      );
+      await completeStateChangingOverlay(() => setInitFlowOpen(false), {
+        reinstallStateReaders: true,
+      });
     },
     [completeStateChangingOverlay],
   );
@@ -392,36 +395,47 @@ function AppFrame({
   }, []);
 
   const handleGoalAuthoringComplete = useCallback(
-    async (values: GoalAuthoringValues) => {
+    async (
+      values: GoalAuthoringValues,
+    ): Promise<GoalAuthoringSubmissionResult> => {
       const addGoalController = actionControllers?.addGoalController;
       if (addGoalController === undefined) {
-        setGoalAuthoringError(AppCopy.goalAuthoringUnavailable);
-        return;
+        return {
+          status: GoalAuthoringRequestStatus.FAILURE,
+          error: AppCopy.goalAuthoringUnavailable,
+        };
       }
 
-      setGoalAuthoringWorking(true);
-      setGoalAuthoringError(null);
       const result = await ActionDispatcher.dispatch(
         addGoalController,
         AddGoalRequestFactory.create(values),
       );
-      setGoalAuthoringWorking(false);
 
       if (!result.ok) {
-        setGoalAuthoringError(result.error.message);
-        return;
+        return {
+          status: GoalAuthoringRequestStatus.FAILURE,
+          error: result.error.message,
+        };
       }
 
-      await completeStateChangingOverlay(
-        () => setGoalAuthoringOpen(false),
-        { lifecycleRouteOverride: ProjectLifecycle.PRIMED },
-      );
+      return {
+        status: GoalAuthoringRequestStatus.SUCCESS,
+        goalId: result.response.goalId,
+      };
     },
-    [actionControllers, completeStateChangingOverlay],
+    [actionControllers],
+  );
+
+  const handleGoalAuthoringAcknowledged = useCallback(
+    async (_goalId: string) => {
+      await completeStateChangingOverlay(() => setGoalAuthoringOpen(false), {
+        lifecycleRouteOverride: ProjectLifecycle.PRIMED,
+      });
+    },
+    [completeStateChangingOverlay],
   );
 
   const handleGoalAuthoringCancel = useCallback(() => {
-    setGoalAuthoringError(null);
     setGoalAuthoringOpen(false);
   }, []);
 
@@ -444,11 +458,7 @@ function AppFrame({
       setCliUpgradeResult(result);
       setCliUpgradeWorking(false);
     },
-    [
-      cliUpdateCheck,
-      cliUpdateController,
-      cliUpgradeWorking,
-    ],
+    [cliUpdateCheck, cliUpdateController, cliUpgradeWorking],
   );
 
   const handleBannerAnimationComplete = useCallback(() => {
@@ -472,7 +482,9 @@ function AppFrame({
     <Box flexDirection="column" width={columns} height={rows}>
       <Box flexShrink={0}>
         <Header
-          projectName={projectContext.data?.name ?? AppCopy.placeholderProjectName}
+          projectName={
+            projectContext.data?.name ?? AppCopy.placeholderProjectName
+          }
           directoryPath={directoryPath}
           version={version}
           terminalWidth={columns}
@@ -535,9 +547,8 @@ function AppFrame({
           >
             <GoalAuthoringFlow
               onComplete={handleGoalAuthoringComplete}
+              onSuccessAcknowledged={handleGoalAuthoringAcknowledged}
               onCancel={handleGoalAuthoringCancel}
-              dispatchError={goalAuthoringError}
-              disabled={goalAuthoringWorking}
             />
           </Box>
         )}
@@ -564,8 +575,8 @@ function AppFrame({
             searchOpen
               ? []
               : cockpitLaunchpadVisible
-              ? COCKPIT_FOOTER_SHORTCUTS
-              : DEFAULT_FOOTER_SHORTCUTS
+                ? COCKPIT_FOOTER_SHORTCUTS
+                : DEFAULT_FOOTER_SHORTCUTS
           }
           notifications={buildNotifications(
             daemonStatuses,
@@ -590,7 +601,8 @@ function buildDaemonFailureNotifications(
     .map((status) => ({
       id: `daemon-${status.name}-failed`,
       title: `${status.name.toUpperCase()} daemon failed`,
-      body: status.stderr[status.stderr.length - 1] ?? AppCopy.daemonFailureBody,
+      body:
+        status.stderr[status.stderr.length - 1] ?? AppCopy.daemonFailureBody,
       unread: true,
     }));
 }

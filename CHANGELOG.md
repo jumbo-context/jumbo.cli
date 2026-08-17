@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **TUI goal creation result screen**: Cockpit and Goals-screen authoring now show a bounded pending, success, or failure result after submission. Successful results include the created goal ID and remain visible until Enter is pressed; failures retain every entered value for retry or allow cancellation with Escape.
+
 ### Fixed
 
 - **TUI goal scope authoring**: Scope-in and scope-out values are now collected as independent repeatable items, preserving spaces, item order, and entered values when navigating backward or forward through the goal wizard.
@@ -816,7 +820,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Goal update extended**: 'goal update' extended with '--nextGoalId' for latent goal chaining.
-
 
 ## [1.0.0-beta.0] - 2026-01-01
 

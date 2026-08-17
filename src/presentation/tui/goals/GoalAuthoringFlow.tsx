@@ -1,12 +1,24 @@
 import React, { useMemo, useState } from "react";
+import { Box, Text, useInput } from "ink";
+import {
+  BaseColors,
+  SemanticColors,
+  TuiGlyphs,
+} from "../../shared/DesignTokens.js";
+import { KeyBadge } from "../ui-primitives/KeyBadge.js";
 import { Wizard } from "../wizard/Wizard.js";
 import type { WizardStepDefinition } from "../wizard/Wizard.js";
 import { WizardFieldKind } from "../wizard/WizardConstants.js";
 import {
   AUTHORING_PROGRESS_LABELS,
+  GOAL_AUTHORING_RESULT_MAX_MESSAGE_LENGTH,
+  GOAL_AUTHORING_RESULT_PANEL_WIDTH,
   GoalAuthoringCopy,
   GoalAuthoringCriterionValue,
   GoalAuthoringFieldKey,
+  GoalAuthoringRequestStatus,
+  GoalAuthoringResultCopy,
+  GoalAuthoringResultInteractionKey,
   GoalAuthoringStage,
   type GoalAuthoringStageValue,
 } from "./GoalAuthoringFlowConstants.js";
@@ -23,6 +35,22 @@ export interface GoalAuthoringValues {
   readonly branch: string;
   readonly worktree: string;
 }
+
+export type GoalAuthoringSubmissionResult =
+  | {
+      readonly status: typeof GoalAuthoringRequestStatus.SUCCESS;
+      readonly goalId: string;
+    }
+  | {
+      readonly status: typeof GoalAuthoringRequestStatus.FAILURE;
+      readonly error: string;
+    };
+
+type GoalAuthoringRequestResult =
+  | {
+      readonly status: typeof GoalAuthoringRequestStatus.PENDING;
+    }
+  | GoalAuthoringSubmissionResult;
 
 const DETAILS_STEPS: readonly WizardStepDefinition[] = [
   {
@@ -94,10 +122,11 @@ const WORKSPACE_STEPS: readonly WizardStepDefinition[] = [
 ] as const;
 
 interface GoalAuthoringFlowProps {
-  readonly onComplete: (values: GoalAuthoringValues) => void | Promise<void>;
+  readonly onComplete: (
+    values: GoalAuthoringValues,
+  ) => Promise<GoalAuthoringSubmissionResult>;
+  readonly onSuccessAcknowledged?: (goalId: string) => void | Promise<void>;
   readonly onCancel: () => void;
-  readonly dispatchError?: string | null;
-  readonly disabled?: boolean;
 }
 
 type ScopeFieldKey =
@@ -106,9 +135,8 @@ type ScopeFieldKey =
 
 export function GoalAuthoringFlow({
   onComplete,
+  onSuccessAcknowledged = () => {},
   onCancel,
-  dispatchError = null,
-  disabled = false,
 }: GoalAuthoringFlowProps): React.ReactElement {
   const [stage, setStage] = useState<GoalAuthoringStageValue>(
     GoalAuthoringStage.DETAILS,
@@ -135,6 +163,9 @@ export function GoalAuthoringFlow({
     branch: "",
     worktree: "",
   });
+  const [requestResult, setRequestResult] =
+    useState<GoalAuthoringRequestResult | null>(null);
+  const [acknowledgingSuccess, setAcknowledgingSuccess] = useState(false);
 
   const criterionNumber = criteriaEditIndex + 1;
   const criteriaSteps = useMemo(
@@ -206,19 +237,18 @@ export function GoalAuthoringFlow({
     setSequencingValues({
       previousGoal: values[GoalAuthoringFieldKey.PREVIOUS_GOAL] ?? "",
       nextGoal: values[GoalAuthoringFieldKey.NEXT_GOAL] ?? "",
-      prerequisiteGoals:
-        values[GoalAuthoringFieldKey.PREREQUISITE_GOALS] ?? "",
+      prerequisiteGoals: values[GoalAuthoringFieldKey.PREREQUISITE_GOALS] ?? "",
     });
     setStage(GoalAuthoringStage.WORKSPACE);
   };
 
-  const handleWorkspaceConfirm = (values: Record<string, string>) => {
+  const handleWorkspaceConfirm = async (values: Record<string, string>) => {
     const nextWorkspaceValues = {
       branch: values[GoalAuthoringFieldKey.BRANCH] ?? "",
       worktree: values[GoalAuthoringFieldKey.WORKTREE] ?? "",
     };
     setWorkspaceValues(nextWorkspaceValues);
-    onComplete({
+    const authoringValues = {
       title,
       objective,
       successCriteria,
@@ -229,7 +259,17 @@ export function GoalAuthoringFlow({
       prerequisiteGoals: sequencingValues.prerequisiteGoals,
       branch: nextWorkspaceValues.branch,
       worktree: nextWorkspaceValues.worktree,
-    });
+    };
+
+    setRequestResult({ status: GoalAuthoringRequestStatus.PENDING });
+    try {
+      setRequestResult(await onComplete(authoringValues));
+    } catch (caughtError) {
+      setRequestResult({
+        status: GoalAuthoringRequestStatus.FAILURE,
+        error: normalizeSubmissionError(caughtError),
+      });
+    }
   };
 
   const handleCriteriaBack = () => {
@@ -267,6 +307,49 @@ export function GoalAuthoringFlow({
     setStage(GoalAuthoringStage.SCOPE);
   };
 
+  useInput((_input, key) => {
+    if (
+      requestResult === null ||
+      requestResult.status === GoalAuthoringRequestStatus.PENDING ||
+      acknowledgingSuccess
+    ) {
+      return;
+    }
+
+    if (
+      requestResult.status === GoalAuthoringRequestStatus.FAILURE &&
+      key.escape
+    ) {
+      onCancel();
+      return;
+    }
+
+    if (!key.return) {
+      return;
+    }
+
+    if (requestResult.status === GoalAuthoringRequestStatus.FAILURE) {
+      setRequestResult(null);
+      setWizardKey((current) => current + 1);
+      setStage(GoalAuthoringStage.WORKSPACE);
+      return;
+    }
+
+    setAcknowledgingSuccess(true);
+    void Promise.resolve(onSuccessAcknowledged(requestResult.goalId)).catch(
+      () => setAcknowledgingSuccess(false),
+    );
+  });
+
+  if (requestResult !== null) {
+    return (
+      <GoalAuthoringResultScreen
+        result={requestResult}
+        acknowledgingSuccess={acknowledgingSuccess}
+      />
+    );
+  }
+
   if (stage === GoalAuthoringStage.DETAILS) {
     return (
       <Wizard
@@ -276,8 +359,6 @@ export function GoalAuthoringFlow({
         onConfirm={handleDetailsConfirm}
         onCancel={onCancel}
         initialValues={{ title, objective }}
-        dispatchError={dispatchError}
-        disabled={disabled}
         progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.DETAILS]}
       />
     );
@@ -300,8 +381,6 @@ export function GoalAuthoringFlow({
               ? GoalAuthoringCriterionValue.YES
               : GoalAuthoringCriterionValue.NO,
         }}
-        dispatchError={dispatchError}
-        disabled={disabled}
         progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.CRITERIA]}
       />
     );
@@ -323,8 +402,6 @@ export function GoalAuthoringFlow({
               ? GoalAuthoringCriterionValue.YES
               : GoalAuthoringCriterionValue.NO,
         }}
-        dispatchError={dispatchError}
-        disabled={disabled}
         progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.SCOPE]}
       />
     );
@@ -340,8 +417,6 @@ export function GoalAuthoringFlow({
         onCancel={onCancel}
         onBack={handleSequencingBack}
         initialValues={sequencingValues}
-        dispatchError={dispatchError}
-        disabled={disabled}
         progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.SEQUENCING]}
       />
     );
@@ -349,18 +424,133 @@ export function GoalAuthoringFlow({
 
   return (
     <Wizard
-      key={GoalAuthoringStage.WORKSPACE}
+      key={`workspace-${wizardKey}`}
       title={GoalAuthoringCopy.title}
       steps={WORKSPACE_STEPS}
       onConfirm={handleWorkspaceConfirm}
       onCancel={onCancel}
       onBack={() => setStage(GoalAuthoringStage.SEQUENCING)}
       initialValues={workspaceValues}
-      dispatchError={dispatchError}
-      disabled={disabled}
       progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.WORKSPACE]}
     />
   );
+}
+
+function GoalAuthoringResultScreen({
+  result,
+  acknowledgingSuccess,
+}: {
+  readonly result: GoalAuthoringRequestResult;
+  readonly acknowledgingSuccess: boolean;
+}): React.ReactElement {
+  const isPending = result.status === GoalAuthoringRequestStatus.PENDING;
+  const isSuccess = result.status === GoalAuthoringRequestStatus.SUCCESS;
+  const statusColor = isPending
+    ? SemanticColors.info
+    : isSuccess
+      ? SemanticColors.success
+      : SemanticColors.error;
+  const statusCopy = isPending
+    ? GoalAuthoringResultCopy.pending
+    : isSuccess
+      ? GoalAuthoringResultCopy.success
+      : GoalAuthoringResultCopy.failure;
+
+  return (
+    <Box
+      width="100%"
+      height="100%"
+      overflow="hidden"
+      alignItems="center"
+      justifyContent="center"
+      flexGrow={1}
+    >
+      <Box
+        width={GOAL_AUTHORING_RESULT_PANEL_WIDTH}
+        maxWidth="100%"
+        flexShrink={1}
+        flexDirection="column"
+        backgroundColor={BaseColors.black}
+        paddingX={4}
+        paddingY={2}
+      >
+        <Text color={SemanticColors.headline} bold>
+          {TuiGlyphs.accentBar} {GoalAuthoringResultCopy.title}
+        </Text>
+
+        <Box marginTop={1}>
+          <Text color={SemanticColors.secondary}>
+            {GoalAuthoringResultCopy.statusLabel}:{" "}
+          </Text>
+          <Text color={statusColor} bold>
+            {result.status}
+          </Text>
+        </Box>
+        <Text color={statusColor} wrap="truncate-end">
+          {statusCopy}
+        </Text>
+
+        {result.status === GoalAuthoringRequestStatus.SUCCESS && (
+          <Box marginTop={1}>
+            <Text color={SemanticColors.secondary}>
+              {GoalAuthoringResultCopy.goalIdLabel}:{" "}
+            </Text>
+            <Text color={SemanticColors.primary} wrap="wrap">
+              {result.goalId}
+            </Text>
+          </Box>
+        )}
+
+        {result.status === GoalAuthoringRequestStatus.FAILURE && (
+          <Box marginTop={1} flexDirection="column">
+            <Text color={SemanticColors.secondary}>
+              {GoalAuthoringResultCopy.errorLabel}:
+            </Text>
+            <Text color={SemanticColors.error} wrap="wrap">
+              {truncateResultMessage(result.error)}
+            </Text>
+          </Box>
+        )}
+
+        {!isPending && (
+          <Box marginTop={1} gap={2} flexWrap="wrap">
+            <KeyBadge
+              char={GoalAuthoringResultInteractionKey.ACKNOWLEDGE}
+              label={
+                isSuccess
+                  ? GoalAuthoringResultCopy.acknowledge
+                  : GoalAuthoringResultCopy.retry
+              }
+              compact
+            />
+            {!isSuccess && (
+              <KeyBadge
+                char={GoalAuthoringResultInteractionKey.CANCEL}
+                label={GoalAuthoringResultCopy.cancel}
+                compact
+              />
+            )}
+          </Box>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+function normalizeSubmissionError(caughtError: unknown): string {
+  if (caughtError instanceof Error) {
+    return caughtError.message;
+  }
+
+  return String(caughtError);
+}
+
+function truncateResultMessage(message: string): string {
+  if (message.length <= GOAL_AUTHORING_RESULT_MAX_MESSAGE_LENGTH) {
+    return message;
+  }
+
+  return `${message.slice(0, GOAL_AUTHORING_RESULT_MAX_MESSAGE_LENGTH - 3)}...`;
 }
 
 function buildCriteriaSteps(

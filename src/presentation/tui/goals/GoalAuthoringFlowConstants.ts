@@ -91,6 +91,36 @@ export const GoalAuthoringCriterionValue = {
   NO: "no",
 } as const;
 
+export const GoalAuthoringRequestStatus = {
+  PENDING: "pending",
+  SUCCESS: "success",
+  FAILURE: "failure",
+} as const;
+
+export type GoalAuthoringRequestStatusValue =
+  (typeof GoalAuthoringRequestStatus)[keyof typeof GoalAuthoringRequestStatus];
+
+export const GoalAuthoringResultInteractionKey = {
+  ACKNOWLEDGE: "enter",
+  CANCEL: "esc",
+} as const;
+
+export const GoalAuthoringResultCopy = {
+  title: "Goal Request",
+  statusLabel: "Status",
+  goalIdLabel: "Goal ID",
+  errorLabel: "Error",
+  pending: "Submitting goal request...",
+  success: "Goal created successfully.",
+  failure: "Goal creation failed.",
+  acknowledge: "continue",
+  retry: "retry",
+  cancel: "cancel",
+} as const;
+
+export const GOAL_AUTHORING_RESULT_PANEL_WIDTH = 88;
+export const GOAL_AUTHORING_RESULT_MAX_MESSAGE_LENGTH = 512;
+
 export const AUTHORING_PROGRESS_LABELS: Readonly<
   Record<GoalAuthoringStageValue, string>
 > = {

@@ -3,10 +3,24 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { render } from "ink-testing-library";
 import stripAnsi from "strip-ansi";
 import { GoalAuthoringFlow } from "../../../../src/presentation/tui/goals/GoalAuthoringFlow.js";
+import type {
+  GoalAuthoringSubmissionResult,
+  GoalAuthoringValues,
+} from "../../../../src/presentation/tui/goals/GoalAuthoringFlow.js";
+import {
+  GOAL_AUTHORING_RESULT_PANEL_WIDTH,
+  GoalAuthoringRequestStatus,
+  GoalAuthoringResultCopy,
+} from "../../../../src/presentation/tui/goals/GoalAuthoringFlowConstants.js";
 import { WizardValidationCopy } from "../../../../src/presentation/tui/wizard/WizardConstants.js";
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 50));
 const LEFT_ARROW = "\x1B[D";
+const SUCCESSFUL_SUBMISSION: GoalAuthoringSubmissionResult = {
+  status: GoalAuthoringRequestStatus.SUCCESS,
+  goalId: "goal_created",
+};
+const completeSuccessfully = async () => SUCCESSFUL_SUBMISSION;
 const waitForFrame = async (
   lastFrame: () => string | undefined,
   predicate: (frame: string) => boolean,
@@ -24,7 +38,10 @@ const waitForFrame = async (
 describe("GoalAuthoringFlow", () => {
   it("renders the objective step using the wizard primitive", () => {
     const { lastFrame, unmount } = render(
-      <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
+      <GoalAuthoringFlow
+        onComplete={completeSuccessfully}
+        onCancel={() => {}}
+      />,
     );
 
     const frame = lastFrame() ?? "";
@@ -40,7 +57,10 @@ describe("GoalAuthoringFlow", () => {
     const objective =
       "Allow full fidelity view of a Decision by extending the commands with 'jumbo decision show --id'. Today only summaries are visible via 'jumbo decisions list'";
     const { lastFrame, stdin, unmount } = render(
-      <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
+      <GoalAuthoringFlow
+        onComplete={completeSuccessfully}
+        onCancel={() => {}}
+      />,
     );
 
     stdin.write("Demonstration");
@@ -49,8 +69,10 @@ describe("GoalAuthoringFlow", () => {
     await tick();
     stdin.write(objective);
     const frame = stripAnsi(
-      await waitForFrame(lastFrame, (renderedFrame) =>
-        renderedFrame.includes("list'") && renderedFrame.includes("▎"),
+      await waitForFrame(
+        lastFrame,
+        (renderedFrame) =>
+          renderedFrame.includes("list'") && renderedFrame.includes("▎"),
       ),
     );
 
@@ -68,7 +90,10 @@ describe("GoalAuthoringFlow", () => {
 
   it("includes all goal authoring steps", async () => {
     const { lastFrame, stdin, unmount } = render(
-      <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
+      <GoalAuthoringFlow
+        onComplete={completeSuccessfully}
+        onCancel={() => {}}
+      />,
     );
 
     stdin.write("Prototype S2");
@@ -117,7 +142,7 @@ describe("GoalAuthoringFlow", () => {
   });
 
   it("collects criteria and multiple scope items as arrays", async () => {
-    const handleComplete = jest.fn();
+    const handleComplete = jest.fn(async () => SUCCESSFUL_SUBMISSION);
     const { stdin, lastFrame, unmount } = render(
       <GoalAuthoringFlow onComplete={handleComplete} onCancel={() => {}} />,
     );
@@ -227,7 +252,7 @@ describe("GoalAuthoringFlow", () => {
   });
 
   it("allows scope boundaries to be left blank", async () => {
-    const handleComplete = jest.fn();
+    const handleComplete = jest.fn(async () => SUCCESSFUL_SUBMISSION);
     const { stdin, lastFrame, unmount } = render(
       <GoalAuthoringFlow onComplete={handleComplete} onCancel={() => {}} />,
     );
@@ -286,7 +311,10 @@ describe("GoalAuthoringFlow", () => {
 
   it("preserves scope items when navigating backward and forward", async () => {
     const { stdin, lastFrame, unmount } = render(
-      <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
+      <GoalAuthoringFlow
+        onComplete={completeSuccessfully}
+        onCancel={() => {}}
+      />,
     );
 
     stdin.write("Prototype S2");
@@ -346,11 +374,184 @@ describe("GoalAuthoringFlow", () => {
     expect(lastFrame()).toContain("Renders goals");
 
     stdin.write(LEFT_ARROW);
-    await waitForFrame(lastFrame, (frame) =>
-      frame.includes("Title") && frame.includes("Objective"),
+    await waitForFrame(
+      lastFrame,
+      (frame) => frame.includes("Title") && frame.includes("Objective"),
     );
     expect(lastFrame()).toContain("Prototype S2");
     expect(lastFrame()).toContain("Prototype the Goals screen");
     unmount();
   });
+
+  it("replaces the wizard with pending and keeps success visible until acknowledged", async () => {
+    let resolveSubmission:
+      | ((result: GoalAuthoringSubmissionResult) => void)
+      | undefined;
+    const submission = new Promise<GoalAuthoringSubmissionResult>((resolve) => {
+      resolveSubmission = resolve;
+    });
+    const onComplete = jest.fn(
+      async (_values: GoalAuthoringValues) => submission,
+    );
+    const onSuccessAcknowledged = jest.fn();
+    const { stdin, lastFrame, unmount } = render(
+      <GoalAuthoringFlow
+        onComplete={onComplete}
+        onSuccessAcknowledged={onSuccessAcknowledged}
+        onCancel={() => {}}
+      />,
+    );
+
+    await submitMinimalAuthoringFlow(stdin, lastFrame);
+
+    const pendingFrame = await waitForFrame(lastFrame, (frame) =>
+      frame.includes(GoalAuthoringRequestStatus.PENDING),
+    );
+    expect(pendingFrame).toContain(GoalAuthoringResultCopy.pending);
+    expect(pendingFrame).not.toContain(GoalAuthoringResultCopy.goalIdLabel);
+    expect(pendingFrame).not.toContain("Branch (optional)");
+
+    resolveSubmission?.(SUCCESSFUL_SUBMISSION);
+    const successFrame = await waitForFrame(lastFrame, (frame) =>
+      frame.includes(GoalAuthoringRequestStatus.SUCCESS),
+    );
+    expect(successFrame).toContain(GoalAuthoringResultCopy.success);
+    expect(successFrame).toContain(SUCCESSFUL_SUBMISSION.goalId);
+
+    await tick();
+    expect(lastFrame()).toContain(SUCCESSFUL_SUBMISSION.goalId);
+    expect(onSuccessAcknowledged).not.toHaveBeenCalled();
+
+    stdin.write("\r");
+    await waitForFrame(
+      lastFrame,
+      () => onSuccessAcknowledged.mock.calls.length === 1,
+    );
+    expect(onSuccessAcknowledged).toHaveBeenCalledWith(
+      SUCCESSFUL_SUBMISSION.goalId,
+    );
+    unmount();
+  });
+
+  it("shows failure without a goal ID and retries with every value preserved", async () => {
+    const onComplete = jest
+      .fn<
+        (values: GoalAuthoringValues) => Promise<GoalAuthoringSubmissionResult>
+      >()
+      .mockResolvedValueOnce({
+        status: GoalAuthoringRequestStatus.FAILURE,
+        error: "normalized dispatch failure",
+      })
+      .mockResolvedValueOnce(SUCCESSFUL_SUBMISSION);
+    const { stdin, lastFrame, unmount } = render(
+      <GoalAuthoringFlow onComplete={onComplete} onCancel={() => {}} />,
+    );
+
+    await submitMinimalAuthoringFlow(stdin, lastFrame, {
+      branch: "feature/preserved",
+      worktree: "../preserved-worktree",
+    });
+    const failureFrame = await waitForFrame(lastFrame, (frame) =>
+      frame.includes(GoalAuthoringRequestStatus.FAILURE),
+    );
+    expect(failureFrame).toContain("normalized dispatch failure");
+    expect(failureFrame).not.toContain(GoalAuthoringResultCopy.goalIdLabel);
+
+    stdin.write("\r");
+    const retryFrame = await waitForFrame(lastFrame, (frame) =>
+      frame.includes("Branch (optional)"),
+    );
+    expect(retryFrame).toContain("feature/preserved");
+    expect(retryFrame).toContain("../preserved-worktree");
+
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(lastFrame, () => onComplete.mock.calls.length === 2);
+
+    expect(onComplete.mock.calls[1]?.[0]).toEqual(
+      onComplete.mock.calls[0]?.[0],
+    );
+    expect(lastFrame()).toContain(SUCCESSFUL_SUBMISSION.goalId);
+    unmount();
+  });
+
+  it("cancels from failure and bounds long result content", async () => {
+    const onCancel = jest.fn();
+    const longError = "dispatch failure ".repeat(100);
+    const { stdin, lastFrame, unmount } = render(
+      <GoalAuthoringFlow
+        onComplete={async () => ({
+          status: GoalAuthoringRequestStatus.FAILURE,
+          error: longError,
+        })}
+        onCancel={onCancel}
+      />,
+    );
+
+    await submitMinimalAuthoringFlow(stdin, lastFrame);
+    const failureFrame = stripAnsi(
+      await waitForFrame(lastFrame, (frame) =>
+        frame.includes(GoalAuthoringRequestStatus.FAILURE),
+      ),
+    );
+
+    expect(failureFrame).not.toContain(longError);
+    const longestRenderedLine = Math.max(
+      ...failureFrame.split("\n").map((line) => line.trimStart().length),
+    );
+    expect(longestRenderedLine).toBeLessThanOrEqual(
+      GOAL_AUTHORING_RESULT_PANEL_WIDTH,
+    );
+
+    stdin.write("\x1b");
+    await waitForFrame(lastFrame, () => onCancel.mock.calls.length === 1);
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    unmount();
+  });
 });
+
+async function submitMinimalAuthoringFlow(
+  stdin: ReturnType<typeof render>["stdin"],
+  lastFrame: () => string | undefined,
+  workspace: {
+    readonly branch?: string;
+    readonly worktree?: string;
+  } = {},
+): Promise<void> {
+  stdin.write("Goal title");
+  await tick();
+  stdin.write("\r");
+  await tick();
+  stdin.write("Goal objective");
+  await tick();
+  stdin.write("\r");
+  await waitForFrame(lastFrame, (frame) => frame.includes("Success criterion"));
+  stdin.write("Goal criterion");
+  await tick();
+  stdin.write("\r");
+  await tick();
+  stdin.write("\r");
+  await waitForFrame(lastFrame, (frame) => frame.includes("Scope in"));
+  stdin.write("\r");
+  await tick();
+  stdin.write("\r");
+  await waitForFrame(lastFrame, (frame) => frame.includes("Scope out"));
+  stdin.write("\r");
+  await tick();
+  stdin.write("\r");
+  await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
+  stdin.write("\r");
+  await tick();
+  stdin.write("\r");
+  await tick();
+  stdin.write("\r");
+  await waitForFrame(lastFrame, (frame) => frame.includes("Branch"));
+  stdin.write(workspace.branch ?? "");
+  await tick();
+  stdin.write("\r");
+  await tick();
+  stdin.write(workspace.worktree ?? "");
+  await tick();
+  stdin.write("\r");
+}
