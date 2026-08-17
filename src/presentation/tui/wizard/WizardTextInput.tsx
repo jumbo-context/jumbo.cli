@@ -69,6 +69,14 @@ export function WizardTextInput({
             backgroundColor={INPUT_BACKGROUND}
           >
             {placeholder}
+            {focused && (
+              <Text
+                color={SemanticColors.inputText}
+                backgroundColor={INPUT_BACKGROUND}
+              >
+                ▎
+              </Text>
+            )}
           </Text>
         ) : (
           <Text
@@ -76,14 +84,7 @@ export function WizardTextInput({
             backgroundColor={INPUT_BACKGROUND}
           >
             {value}
-          </Text>
-        )}
-        {focused && (
-          <Text
-            color={SemanticColors.inputText}
-            backgroundColor={INPUT_BACKGROUND}
-          >
-            ▎
+            {focused && "▎"}
           </Text>
         )}
       </Box>

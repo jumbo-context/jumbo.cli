@@ -5,7 +5,10 @@ import {
   SemanticColors,
   TuiGlyphs,
 } from "../../shared/DesignTokens.js";
-import { GoalStatus, type GoalStatusType } from "../../../domain/goals/Constants.js";
+import {
+  GoalStatus,
+  type GoalStatusType,
+} from "../../../domain/goals/Constants.js";
 import type { GoalView } from "../../../application/context/goals/GoalView.js";
 import type { AddGoalRequest } from "../../../application/context/goals/add/AddGoalRequest.js";
 import type { AddGoalResponse } from "../../../application/context/goals/add/AddGoalResponse.js";
@@ -19,7 +22,11 @@ import type { InvariantView } from "../../../application/context/invariants/Inva
 import { KeyBadge } from "../ui-primitives/KeyBadge.js";
 import { HorizontalRule } from "../ui-primitives/HorizontalRule.js";
 import { GoalAuthoringFlow } from "./GoalAuthoringFlow.js";
-import type { GoalAuthoringValues } from "./GoalAuthoringFlow.js";
+import type {
+  GoalAuthoringSubmissionResult,
+  GoalAuthoringValues,
+} from "./GoalAuthoringFlow.js";
+import { GoalAuthoringRequestStatus } from "./GoalAuthoringFlowConstants.js";
 import { AddGoalRequestFactory } from "./AddGoalRequestFactory.js";
 import { ActionDispatcher } from "../action-dispatch/ActionDispatcher.js";
 import type { RequestController } from "../action-dispatch/RequestController.js";
@@ -135,8 +142,6 @@ export function GoalsScreen({
   const [sectionPageFlowIndex, setSectionPageFlowIndex] = useState(0);
   const [filterIndex, setFilterIndex] = useState(0);
   const [authoringOpen, setAuthoringOpen] = useState(false);
-  const [authoringError, setAuthoringError] = useState<string | null>(null);
-  const [authoringWorking, setAuthoringWorking] = useState(false);
   const activeFilter = GOAL_STATUS_FILTERS[filterIndex];
   const requestedStatusFilter = useMemo(
     () =>
@@ -165,10 +170,13 @@ export function GoalsScreen({
       : selectedGoal;
   const activeContext =
     contextualGoal !== undefined && contextualGoal.goalId === selectedGoal?.id
-      ? goalContext.data?.contextualGoalView.context ?? EMPTY_GOAL_CONTEXT
+      ? (goalContext.data?.contextualGoalView.context ?? EMPTY_GOAL_CONTEXT)
       : EMPTY_GOAL_CONTEXT;
   const sections = useMemo(
-    () => (activeGoal === undefined ? [] : buildGoalSections(activeGoal, activeContext)),
+    () =>
+      activeGoal === undefined
+        ? []
+        : buildGoalSections(activeGoal, activeContext),
     [activeContext, activeGoal],
   );
   const sectionPages = useMemo(
@@ -229,7 +237,6 @@ export function GoalsScreen({
     }
 
     if (input === "n" || input === "N" || input === "a" || input === "A") {
-      setAuthoringError(null);
       updateAuthoringOpen(true);
       return;
     }
@@ -269,31 +276,40 @@ export function GoalsScreen({
     }
   });
 
-  const handleAuthoringComplete = async (values: GoalAuthoringValues) => {
+  const handleAuthoringComplete = async (
+    values: GoalAuthoringValues,
+  ): Promise<GoalAuthoringSubmissionResult> => {
     if (addGoalController === undefined) {
-      setAuthoringError(GoalsScreenCopy.authoringUnavailable);
-      return;
+      return {
+        status: GoalAuthoringRequestStatus.FAILURE,
+        error: GoalsScreenCopy.authoringUnavailable,
+      };
     }
 
-    setAuthoringWorking(true);
-    setAuthoringError(null);
     const result = await ActionDispatcher.dispatch(
       addGoalController,
       AddGoalRequestFactory.create(values),
     );
-    setAuthoringWorking(false);
 
     if (!result.ok) {
-      setAuthoringError(result.error.message);
-      return;
+      return {
+        status: GoalAuthoringRequestStatus.FAILURE,
+        error: result.error.message,
+      };
     }
 
-    updateAuthoringOpen(false);
+    return {
+      status: GoalAuthoringRequestStatus.SUCCESS,
+      goalId: result.response.goalId,
+    };
+  };
+
+  const handleAuthoringAcknowledged = async (_goalId: string) => {
     await goalsList.refresh();
+    updateAuthoringOpen(false);
   };
 
   const handleAuthoringCancel = () => {
-    setAuthoringError(null);
     updateAuthoringOpen(false);
   };
 
@@ -301,9 +317,8 @@ export function GoalsScreen({
     return (
       <GoalAuthoringFlow
         onComplete={handleAuthoringComplete}
+        onSuccessAcknowledged={handleAuthoringAcknowledged}
         onCancel={handleAuthoringCancel}
-        dispatchError={authoringError}
-        disabled={authoringWorking}
       />
     );
   }
@@ -320,15 +335,23 @@ export function GoalsScreen({
 
         <Box gap={3}>
           <Box>
-            <Text color={SemanticColors.label}>{GoalsScreenCopy.showingLabel} </Text>
+            <Text color={SemanticColors.label}>
+              {GoalsScreenCopy.showingLabel}{" "}
+            </Text>
             <Text color={SemanticColors.primary}>
-              {selectedGoal ? `${selectedIndex + 1}/${visibleGoals.length}` : "0/0"}
+              {selectedGoal
+                ? `${selectedIndex + 1}/${visibleGoals.length}`
+                : "0/0"}
             </Text>
             <KeyBadge char="↑↓" />
           </Box>
           <Box>
-            <Text color={SemanticColors.label}>{GoalsScreenCopy.stateLineLabel} </Text>
-            <Text color={SemanticColors.primary}>{formatFilterLabel(filterLabel)}</Text>
+            <Text color={SemanticColors.label}>
+              {GoalsScreenCopy.stateLineLabel}{" "}
+            </Text>
+            <Text color={SemanticColors.primary}>
+              {formatFilterLabel(filterLabel)}
+            </Text>
             <KeyBadge char="space" />
           </Box>
         </Box>
@@ -338,7 +361,9 @@ export function GoalsScreen({
 
       <Box flexDirection="column" paddingX={1}>
         {goalsList.loading && goalsList.data === null ? (
-          <Text color={SemanticColors.muted}>{GoalsScreenCopy.loadingGoals}</Text>
+          <Text color={SemanticColors.muted}>
+            {GoalsScreenCopy.loadingGoals}
+          </Text>
         ) : goalsList.error !== null ? (
           <Text color={SemanticColors.error}>{goalsList.error.message}</Text>
         ) : activeGoal === undefined || activeSectionPage === undefined ? (
@@ -352,12 +377,16 @@ export function GoalsScreen({
               totalPages={activeSectionPage.totalPages}
             />
             {goalContext.loading && goalContext.data === null && (
-              <Text color={SemanticColors.muted}>{GoalsScreenCopy.loadingContext}</Text>
-
+              <Text color={SemanticColors.muted}>
+                {GoalsScreenCopy.loadingContext}
+              </Text>
             )}
             <GoalSectionRows
               rows={activeSectionPage.rows}
-              emptyText={activeSectionPage.section.emptyText ?? GoalsScreenCopy.emptyFieldValue}
+              emptyText={
+                activeSectionPage.section.emptyText ??
+                GoalsScreenCopy.emptyFieldValue
+              }
             />
           </Box>
         )}
@@ -376,7 +405,7 @@ function GoalHeading({
       <Box>
         <Text color={SemanticColors.headline}>GOAL: </Text>
         <Text color={SemanticColors.headline}>
-          {truncateText(goal.title, GOAL_BROWSER_TITLE_MAX_LENGTH)} 
+          {truncateText(goal.title, GOAL_BROWSER_TITLE_MAX_LENGTH)}
         </Text>
         <KeyBadge char="←→" label="details" />
       </Box>
@@ -400,8 +429,8 @@ function SectionHeading({
     totalPages > 1
       ? `${normalizedTitle} (${pageIndex + 1}/${totalPages}):`
       : section.title.endsWith(":")
-      ? section.title
-      : `${section.title}:`;
+        ? section.title
+        : `${section.title}:`;
 
   return (
     <Box marginTop={1}>
@@ -439,7 +468,8 @@ function GoalSectionRows({
             index > 0
               ? 1
               : 0
-          }>
+          }
+        >
           {row.heading !== undefined ? (
             <Text color={SemanticColors.h2} bold>
               {row.heading}
@@ -473,7 +503,9 @@ function GoalSectionRows({
           ) : (
             <React.Fragment>
               <Text color={SemanticColors.label}>{row.label} </Text>
-              <Text color={row.color ?? SemanticColors.primary}>{row.value}</Text>
+              <Text color={row.color ?? SemanticColors.primary}>
+                {row.value}
+              </Text>
             </React.Fragment>
           )}
         </Box>
@@ -536,7 +568,10 @@ function buildGoalSections(
     listSection(
       "successCriteria",
       GoalsScreenCopy.sections.successCriteria,
-      goal.criteria.map((criterion) => ({ value: criterion, marker: "bullet" })),
+      goal.criteria.map((criterion) => ({
+        value: criterion,
+        marker: "bullet",
+      })),
     ),
     listSection(
       "currentProgress",
@@ -585,19 +620,12 @@ function buildGoalSections(
   ];
 }
 
-function textSection(
-  key: string,
-  title: string,
-  value?: string,
-): GoalSection {
+function textSection(key: string, title: string, value?: string): GoalSection {
   return {
     key,
     title,
     paginated: false,
-    rows:
-      value === undefined || value.trim().length === 0
-        ? []
-        : [{ value }],
+    rows: value === undefined || value.trim().length === 0 ? [] : [{ value }],
   };
 }
 

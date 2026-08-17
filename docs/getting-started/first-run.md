@@ -111,7 +111,7 @@ Select option 2 to auto-approve subsequent registrations of the same type, or re
 End your agent session when finished, or clear context and switch to a fresh terminal for Step 3.
 
 :::tip[Best practice]
-Archive all of your context related `.md` files to a location outside of your repository, and strip your `AGENTS.md` of any special instructions that can be registered with Jumbo. They will cause context bloat and potential conflicting instructions (as your project evolves) if left for agents to read. *You can always ask an agent to port them from Jumbo to an `.md` later if you want to remove Jumbo.*
+Archive all of your context related `.md` files to a location outside of your repository, and strip your `AGENTS.md` of any special instructions that can be registered with Jumbo. They will cause context bloat and potential conflicting instructions (as your project evolves) if left for agents to read. _You can always ask an agent to port them from Jumbo to an `.md` later if you want to remove Jumbo._
 :::
 
 ---
@@ -133,7 +133,7 @@ jumbo goal add \
     "Includes unit tests for limit exceeded scenarios"
 ```
 
-If you are using the TUI, run `jumbo` and press `g` from the primed-empty Cockpit screen to open the same goal authoring flow without leaving the interface.
+If you are using the TUI, run `jumbo` and press `g` from the primed-empty Cockpit screen to open the same goal authoring flow without leaving the interface. After submission, the final screen shows the request status and created goal ID; press Enter to acknowledge success, or retry or cancel if creation fails.
 
 You can also press `m` anywhere the main TUI frame owns input to open the Mega Menu. Use the arrow keys and Enter to navigate between Cockpit, Goals, Memory, and Settings. Goal menu entries such as Backlog, Active, and Archive open the Goals screen with the matching status filter already applied.
 

@@ -9,6 +9,10 @@ import type {
 } from "../../../../src/presentation/tui/daemon-subprocesses/ISubprocessManager.js";
 import type { AddGoalRequest } from "../../../../src/application/context/goals/add/AddGoalRequest.js";
 import type { Settings } from "../../../../src/application/settings/Settings.js";
+import {
+  GoalAuthoringRequestStatus,
+  GoalAuthoringResultCopy,
+} from "../../../../src/presentation/tui/goals/GoalAuthoringFlowConstants.js";
 
 interface HeaderProps {
   readonly projectName: string;
@@ -34,9 +38,8 @@ jest.unstable_mockModule(
   }),
 );
 
-const { App: ProductionApp } = await import(
-  "../../../../src/presentation/tui/application-shell/App.js"
-);
+const { App: ProductionApp } =
+  await import("../../../../src/presentation/tui/application-shell/App.js");
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 10));
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -426,16 +429,18 @@ describe("App", () => {
       config: stoppedDaemonSnapshot.config,
       stdout: [],
       stderr: [],
-      events: [{
-        daemon: "refiner",
-        status: "working",
-        category: "activity",
-        goalId: "goal_single_navigation",
-        phase: "agent",
-        elapsedMs: 1_000,
-        timestampMs: 1_000,
-        message: "single navigation activity",
-      }],
+      events: [
+        {
+          daemon: "refiner",
+          status: "working",
+          category: "activity",
+          goalId: "goal_single_navigation",
+          phase: "agent",
+          elapsedMs: 1_000,
+          timestampMs: 1_000,
+          message: "single navigation activity",
+        },
+      ],
     };
     const terminate = jest.fn(async (name: DaemonName) => {
       refinerSnapshot = { ...refinerSnapshot, name, status: "stopped" };
@@ -480,8 +485,10 @@ describe("App", () => {
       };
 
       await navigateFromGoalsToCockpit(stdin, lastFrame);
-      await waitForFrame(lastFrame, (frame) =>
-        frame.includes("single navigation activity") && frame.includes("6s"),
+      await waitForFrame(
+        lastFrame,
+        (frame) =>
+          frame.includes("single navigation activity") && frame.includes("6s"),
       );
 
       expect(manager.spawn).not.toHaveBeenCalled();
@@ -503,21 +510,69 @@ describe("App", () => {
 
   it("preserves multiple independently updating daemons across navigation", async () => {
     const snapshots = new Map<DaemonName, SubprocessSnapshot>([
-      ["refiner", {
-        name: "refiner", status: "running", pid: 5101,
-        config: stoppedDaemonSnapshot.config, stdout: [], stderr: [],
-        events: [{ daemon: "refiner", status: "working", category: "activity", goalId: "goal_refiner", timestampMs: 7_000, message: "refiner resumed" }],
-      }],
-      ["reviewer", {
-        name: "reviewer", status: "running", pid: 5102,
-        config: stoppedDaemonSnapshot.config, stdout: [], stderr: [],
-        events: [{ daemon: "reviewer", status: "working", category: "activity", goalId: "goal_reviewer", timestampMs: 8_000, message: "reviewer resumed" }],
-      }],
-      ["codifier", {
-        name: "codifier", status: "running", pid: 5103,
-        config: stoppedDaemonSnapshot.config, stdout: [], stderr: [],
-        events: [{ daemon: "codifier", status: "working", category: "activity", goalId: "goal_codifier", timestampMs: 9_000, message: "codifier resumed" }],
-      }],
+      [
+        "refiner",
+        {
+          name: "refiner",
+          status: "running",
+          pid: 5101,
+          config: stoppedDaemonSnapshot.config,
+          stdout: [],
+          stderr: [],
+          events: [
+            {
+              daemon: "refiner",
+              status: "working",
+              category: "activity",
+              goalId: "goal_refiner",
+              timestampMs: 7_000,
+              message: "refiner resumed",
+            },
+          ],
+        },
+      ],
+      [
+        "reviewer",
+        {
+          name: "reviewer",
+          status: "running",
+          pid: 5102,
+          config: stoppedDaemonSnapshot.config,
+          stdout: [],
+          stderr: [],
+          events: [
+            {
+              daemon: "reviewer",
+              status: "working",
+              category: "activity",
+              goalId: "goal_reviewer",
+              timestampMs: 8_000,
+              message: "reviewer resumed",
+            },
+          ],
+        },
+      ],
+      [
+        "codifier",
+        {
+          name: "codifier",
+          status: "running",
+          pid: 5103,
+          config: stoppedDaemonSnapshot.config,
+          stdout: [],
+          stderr: [],
+          events: [
+            {
+              daemon: "codifier",
+              status: "working",
+              category: "activity",
+              goalId: "goal_codifier",
+              timestampMs: 9_000,
+              message: "codifier resumed",
+            },
+          ],
+        },
+      ],
     ]);
     const manager: ISubprocessManager = {
       spawn: jest.fn(async (name) => snapshots.get(name)!),
@@ -545,16 +600,19 @@ describe("App", () => {
           ...snapshot,
           events: snapshot.events.map((event) => ({
             ...event,
-            elapsedMs: name === "refiner" ? 7_000 : name === "reviewer" ? 8_000 : 9_000,
+            elapsedMs:
+              name === "refiner" ? 7_000 : name === "reviewer" ? 8_000 : 9_000,
           })),
         });
       }
 
       await navigateFromGoalsToCockpit(stdin, lastFrame);
-      const frame = await waitForFrame(lastFrame, (currentFrame) =>
-        currentFrame.includes("refiner resumed") &&
-        currentFrame.includes("reviewer resumed") &&
-        currentFrame.includes("codifier resumed"),
+      const frame = await waitForFrame(
+        lastFrame,
+        (currentFrame) =>
+          currentFrame.includes("refiner resumed") &&
+          currentFrame.includes("reviewer resumed") &&
+          currentFrame.includes("codifier resumed"),
       );
 
       expect(frame).toContain("7s");
@@ -836,9 +894,11 @@ describe("App", () => {
     await waitForFrame(lastFrame, (frame) => frame.includes("Author Goal"));
 
     stdin.write("\x1b");
-    await waitForFrame(lastFrame, (frame) =>
-      frame.includes("Ready to create your first goal.") &&
-      !frame.includes("Author Goal"),
+    await waitForFrame(
+      lastFrame,
+      (frame) =>
+        frame.includes("Ready to create your first goal.") &&
+        !frame.includes("Author Goal"),
     );
 
     expect(lastFrame()).not.toContain("Author Goal");
@@ -894,11 +954,29 @@ describe("App", () => {
     await tick();
     stdin.write("\r");
     await tick();
-    stdin.write("src/presentation/tui");
+    stdin.write("src/presentation tui");
     await tick();
-    stdin.write("\t");
+    stdin.write("\r");
     await tick();
-    stdin.write("src/application");
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("tests/presentation/tui");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("src/application layer");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("src/domain");
     await tick();
     stdin.write("\r");
     await tick();
@@ -911,17 +989,26 @@ describe("App", () => {
     stdin.write("\r");
     await tick();
     stdin.write("\r");
-    await waitForFrame(lastFrame, (frame) =>
-      !frame.includes("Ready to create your first goal."),
+    await tick();
+    stdin.write("\r");
+    const resultFrame = await waitForFrame(lastFrame, (frame) =>
+      frame.includes("goal_created"),
     );
+
+    expect(resultFrame).toContain(GoalAuthoringRequestStatus.SUCCESS);
+    expect(resultFrame).toContain(GoalAuthoringResultCopy.goalIdLabel);
+    stdin.write("m");
+    await tick();
+    expect(lastFrame()).toContain("goal_created");
+    expect(lastFrame()).not.toContain("Navigate");
 
     expect(addGoalRequests).toEqual([
       {
         title: "Prototype Cockpit goal authoring",
         objective: "Open goal authoring from Cockpit",
         successCriteria: ["Wizard opens and closes"],
-        scopeIn: ["src/presentation/tui"],
-        scopeOut: ["src/application"],
+        scopeIn: ["src/presentation tui", "tests/presentation/tui"],
+        scopeOut: ["src/application layer", "src/domain"],
         nextGoalId: undefined,
         previousGoalId: undefined,
         prerequisiteGoals: undefined,
@@ -929,7 +1016,10 @@ describe("App", () => {
         worktree: undefined,
       },
     ]);
-    expect(lastFrame()).not.toContain("Author Goal");
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("EVENTS//"));
+
+    expect(lastFrame()).not.toContain(GoalAuthoringResultCopy.title);
     expect(lastFrame()).not.toContain("to add a goal");
     unmount();
   }, 10000);
@@ -978,6 +1068,10 @@ describe("App", () => {
       stdin.write("\r");
       await tick();
       stdin.write("\r");
+      await waitForFrame(lastFrame, (frame) => frame.includes("Scope out"));
+      stdin.write("\r");
+      await tick();
+      stdin.write("\r");
       await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
 
       stdin.write("\r");
@@ -995,6 +1089,13 @@ describe("App", () => {
         () => addGoalController.handle.mock.calls.length > 0,
       );
 
+      const resultFrame = await waitForFrame(lastFrame, (frame) =>
+        frame.includes("goal_created"),
+      );
+      expect(resultFrame).toContain(GoalAuthoringRequestStatus.SUCCESS);
+      expect(resultFrame).not.toContain("EVENTS//");
+
+      stdin.write("\r");
       await waitForFrame(lastFrame, (frame) => frame.includes("EVENTS//"));
 
       expect(lastFrame()).not.toContain("to add a goal");
@@ -1085,5 +1186,4 @@ describe("App", () => {
     expect(lastFrame()).toContain("Navigate");
     unmount();
   }, 10000);
-
 });

@@ -1,10 +1,10 @@
 /**
  * AddGoalRequestFactory - Assembles an AddGoalRequest from GoalAuthoringValues.
  *
- * Normalizes free-text authoring fields at the presentation-application
- * boundary: blank optional text becomes undefined and whitespace/comma
- * separated lists become arrays. Shared by the App overlay and GoalsScreen
- * submission paths so the two cannot drift.
+ * Normalizes optional authoring fields at the presentation-application
+ * boundary. Scope arrays are copied without parsing so item content and order
+ * stay intact. Shared by the App overlay and GoalsScreen submission paths so
+ * the two cannot drift.
  */
 
 import type { AddGoalRequest } from "../../../application/context/goals/add/AddGoalRequest.js";
@@ -16,8 +16,8 @@ export const AddGoalRequestFactory = {
       title: values.title,
       objective: values.objective,
       successCriteria: [...values.successCriteria],
-      scopeIn: optionalList(values.scopeIn),
-      scopeOut: optionalList(values.scopeOut),
+      scopeIn: optionalArray(values.scopeIn),
+      scopeOut: optionalArray(values.scopeOut),
       nextGoalId: optionalText(values.nextGoal),
       previousGoalId: optionalText(values.previousGoal),
       prerequisiteGoals: optionalList(values.prerequisiteGoals),
@@ -39,4 +39,8 @@ function optionalList(value: string): string[] | undefined {
     .filter((item) => item.length > 0);
 
   return values.length > 0 ? values : undefined;
+}
+
+function optionalArray(values: readonly string[]): string[] | undefined {
+  return values.length > 0 ? [...values] : undefined;
 }

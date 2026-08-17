@@ -14,6 +14,8 @@ export const GoalAuthoringFieldKey = {
   OBJECTIVE: "objective",
   SCOPE_IN: "scopeIn",
   SCOPE_OUT: "scopeOut",
+  ADD_ANOTHER_SCOPE_IN: "addAnotherScopeIn",
+  ADD_ANOTHER_SCOPE_OUT: "addAnotherScopeOut",
   PREVIOUS_GOAL: "previousGoal",
   NEXT_GOAL: "nextGoal",
   PREREQUISITE_GOALS: "prerequisiteGoals",
@@ -37,12 +39,14 @@ export const GoalAuthoringCopy = {
     },
   },
   scope: {
-    title: "Scope",
-    description:
-      "Identify the work area and boundaries that keep the goal focused.",
+    scopeInTitlePrefix: "Scope in item",
+    scopeOutTitlePrefix: "Scope out item",
+    description: "Add each work area or boundary as a separate item.",
     fields: {
-      scopeIn: "Scope in (optional)",
-      scopeOut: "Scope out (optional)",
+      scopeIn: "Scope in item (optional)",
+      scopeOut: "Scope out item (optional)",
+      addAnotherScopeIn: "Add another scope-in item?",
+      addAnotherScopeOut: "Add another scope-out item?",
       scopeInPlaceholder: "e.g. src/presentation/tui/goals",
       scopeOutPlaceholder: "e.g. src/application",
     },
@@ -86,6 +90,36 @@ export const GoalAuthoringCriterionValue = {
   YES: "yes",
   NO: "no",
 } as const;
+
+export const GoalAuthoringRequestStatus = {
+  PENDING: "pending",
+  SUCCESS: "success",
+  FAILURE: "failure",
+} as const;
+
+export type GoalAuthoringRequestStatusValue =
+  (typeof GoalAuthoringRequestStatus)[keyof typeof GoalAuthoringRequestStatus];
+
+export const GoalAuthoringResultInteractionKey = {
+  ACKNOWLEDGE: "enter",
+  CANCEL: "esc",
+} as const;
+
+export const GoalAuthoringResultCopy = {
+  title: "Goal Request",
+  statusLabel: "Status",
+  goalIdLabel: "Goal ID",
+  errorLabel: "Error",
+  pending: "Submitting goal request...",
+  success: "Goal created successfully.",
+  failure: "Goal creation failed.",
+  acknowledge: "continue",
+  retry: "retry",
+  cancel: "cancel",
+} as const;
+
+export const GOAL_AUTHORING_RESULT_PANEL_WIDTH = 88;
+export const GOAL_AUTHORING_RESULT_MAX_MESSAGE_LENGTH = 512;
 
 export const AUTHORING_PROGRESS_LABELS: Readonly<
   Record<GoalAuthoringStageValue, string>
