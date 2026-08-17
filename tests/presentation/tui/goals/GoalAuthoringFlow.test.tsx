@@ -1,6 +1,7 @@
 import React from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { render } from "ink-testing-library";
+import stripAnsi from "strip-ansi";
 import { GoalAuthoringFlow } from "../../../../src/presentation/tui/goals/GoalAuthoringFlow.js";
 import { WizardValidationCopy } from "../../../../src/presentation/tui/wizard/WizardConstants.js";
 
@@ -32,6 +33,36 @@ describe("GoalAuthoringFlow", () => {
     expect(frame).toContain("Objective");
     expect(frame).toContain("1/5");
     expect(frame).toContain("esc");
+    unmount();
+  });
+
+  it("wraps a long objective without expanding the wizard backdrop", async () => {
+    const objective =
+      "Allow full fidelity view of a Decision by extending the commands with 'jumbo decision show --id'. Today only summaries are visible via 'jumbo decisions list'";
+    const { lastFrame, stdin, unmount } = render(
+      <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
+    );
+
+    stdin.write("Demonstration");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write(objective);
+    const frame = stripAnsi(
+      await waitForFrame(lastFrame, (renderedFrame) =>
+        renderedFrame.includes("list'") && renderedFrame.includes("▎"),
+      ),
+    );
+
+    expect(
+      frame.split("\n").every((line) => line.trimStart().length <= 88),
+    ).toBe(true);
+    expect(frame.replace(/\s+/g, " ")).toContain(objective);
+    expect(frame.replace(/\s+/g, " ")).toContain(`list'▎`);
+    expect(frame).toContain("▎");
+    expect(frame).toContain("Title");
+    expect(frame).toContain("Objective");
+    expect(frame).toContain("1/5");
     unmount();
   });
 

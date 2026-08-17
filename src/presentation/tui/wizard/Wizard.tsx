@@ -459,7 +459,7 @@ export function Wizard({
         backgroundColor={BaseColors.black}
         paddingX={4}
         paddingY={2}
-        minWidth={OVERLAY_MIN_WIDTH}
+        width={OVERLAY_MIN_WIDTH}
         ref={panelRef}
       >
         <Box flexDirection="column" gap={0}>
