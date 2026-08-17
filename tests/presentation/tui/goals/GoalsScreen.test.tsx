@@ -45,7 +45,13 @@ async function waitUntil(condition: () => boolean): Promise<void> {
 async function submitAuthoringFlow(
   stdin: ReturnType<typeof render>["stdin"],
   readFrame: () => string | undefined,
-  values: { readonly title: string; readonly objective: string; readonly criterion: string },
+  values: {
+    readonly title: string;
+    readonly objective: string;
+    readonly criterion: string;
+    readonly scopeIn?: readonly string[];
+    readonly scopeOut?: readonly string[];
+  },
 ): Promise<void> {
   stdin.write("n");
   await waitForFrame(readFrame, "Author Goal");
@@ -66,10 +72,18 @@ async function submitAuthoringFlow(
   stdin.write("\r");
   await waitForFrame(readFrame, "Scope in");
 
-  stdin.write("\r");
-  await settleInput();
-  stdin.write("\r");
-  await waitForFrame(readFrame, "Previous goal");
+  await submitScopeCollection(
+    stdin,
+    readFrame,
+    values.scopeIn ?? [],
+    "Scope out",
+  );
+  await submitScopeCollection(
+    stdin,
+    readFrame,
+    values.scopeOut ?? [],
+    "Previous goal",
+  );
 
   stdin.write("\r");
   await settleInput();
@@ -82,6 +96,30 @@ async function submitAuthoringFlow(
   await settleInput();
   stdin.write("\r");
   await settleInput();
+}
+
+async function submitScopeCollection(
+  stdin: ReturnType<typeof render>["stdin"],
+  readFrame: () => string | undefined,
+  items: readonly string[],
+  nextStageText: string,
+): Promise<void> {
+  const submittedItems = items.length > 0 ? items : [""];
+
+  for (const [index, item] of submittedItems.entries()) {
+    stdin.write(item);
+    await settleInput();
+    stdin.write("\r");
+    await settleInput();
+    if (index < submittedItems.length - 1) {
+      stdin.write("y");
+      await settleInput();
+    }
+    stdin.write("\r");
+    await settleInput();
+  }
+
+  await waitForFrame(readFrame, nextStageText);
 }
 
 async function navigateRightUntil(
@@ -626,6 +664,8 @@ describe("GoalsScreen", () => {
       title: "Created goal",
       objective: "Dispatch the authored goal",
       criterion: "Goal is persisted",
+      scopeIn: ["src/presentation tui", "tests/presentation/tui"],
+      scopeOut: ["src/application layer", "src/domain"],
     });
     await waitUntil(() => dispatchedRequests.length > 0);
 
@@ -634,6 +674,8 @@ describe("GoalsScreen", () => {
       title: "Created goal",
       objective: "Dispatch the authored goal",
       successCriteria: ["Goal is persisted"],
+      scopeIn: ["src/presentation tui", "tests/presentation/tui"],
+      scopeOut: ["src/application layer", "src/domain"],
     });
     unmount();
   });

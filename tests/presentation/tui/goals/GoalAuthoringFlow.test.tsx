@@ -88,14 +88,18 @@ describe("GoalAuthoringFlow", () => {
     await tick();
     stdin.write("\r");
     await tick();
-    expect(lastFrame()).toContain("Scope in (optional)");
+    expect(lastFrame()).toContain("Scope in item (optional)");
     expect(lastFrame()).toContain("3/5");
 
     stdin.write("src/presentation/tui");
     await tick();
-    stdin.write("\t");
+    stdin.write("\r");
     await tick();
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
     stdin.write("src/application");
+    await tick();
+    stdin.write("\r");
     await tick();
     stdin.write("\r");
     await tick();
@@ -112,7 +116,7 @@ describe("GoalAuthoringFlow", () => {
     unmount();
   });
 
-  it("collects success criteria as an array", async () => {
+  it("collects criteria and multiple scope items as arrays", async () => {
     const handleComplete = jest.fn();
     const { stdin, lastFrame, unmount } = render(
       <GoalAuthoringFlow onComplete={handleComplete} onCancel={() => {}} />,
@@ -143,11 +147,44 @@ describe("GoalAuthoringFlow", () => {
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope in"));
 
-    stdin.write("src/presentation/tui");
+    stdin.write("src/presentation/tui goals");
     await tick();
-    stdin.write("\t");
+    stdin.write("\r");
     await tick();
-    stdin.write("src/application");
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(
+      lastFrame,
+      (frame) =>
+        frame.includes("Add another scope-in item?") &&
+        !frame.includes("src/presentation/tui goals"),
+    );
+    stdin.write("tests/presentation/tui");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) =>
+      frame.includes("Add another scope-out item?"),
+    );
+
+    stdin.write("src/application layer");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(
+      lastFrame,
+      (frame) =>
+        frame.includes("Add another scope-out item?") &&
+        !frame.includes("src/application layer"),
+    );
+    stdin.write("src/domain");
+    await tick();
+    stdin.write("\r");
     await tick();
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
@@ -178,8 +215,8 @@ describe("GoalAuthoringFlow", () => {
       title: "Prototype S2",
       objective: "Prototype the Goals screen",
       successCriteria: ["Renders goals", "Shows goal detail"],
-      scopeIn: "src/presentation/tui",
-      scopeOut: "src/application",
+      scopeIn: ["src/presentation/tui goals", "tests/presentation/tui"],
+      scopeOut: ["src/application layer", "src/domain"],
       previousGoal: "goal_previous",
       nextGoal: "goal_next",
       prerequisiteGoals: "goal_prerequisite",
@@ -213,6 +250,10 @@ describe("GoalAuthoringFlow", () => {
     stdin.write("\r");
     await tick();
     stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out"));
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
     expect(lastFrame()).not.toContain(WizardValidationCopy.required);
 
@@ -232,8 +273,8 @@ describe("GoalAuthoringFlow", () => {
       title: "Prototype S2",
       objective: "Prototype the Goals screen",
       successCriteria: ["Renders goals"],
-      scopeIn: "",
-      scopeOut: "",
+      scopeIn: [],
+      scopeOut: [],
       previousGoal: "",
       nextGoal: "",
       prerequisiteGoals: "",
@@ -243,7 +284,7 @@ describe("GoalAuthoringFlow", () => {
     unmount();
   });
 
-  it("preserves earlier answers when navigating back", async () => {
+  it("preserves scope items when navigating backward and forward", async () => {
     const { stdin, lastFrame, unmount } = render(
       <GoalAuthoringFlow onComplete={() => {}} onCancel={() => {}} />,
     );
@@ -262,20 +303,42 @@ describe("GoalAuthoringFlow", () => {
     await tick();
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope in"));
-    stdin.write("src/presentation/tui");
+    stdin.write("src/presentation tui");
     await tick();
-    stdin.write("\t");
+    stdin.write("\r");
     await tick();
-    stdin.write("src/application");
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
+    stdin.write("src/application layer");
+    await tick();
+    stdin.write("\r");
     await tick();
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
 
     stdin.write(LEFT_ARROW);
-    await waitForFrame(lastFrame, (frame) => frame.includes("Scope in"));
-    expect(lastFrame()).toContain("src/presentation/tui");
-    expect(lastFrame()).toContain("src/application");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
+    expect(lastFrame()).toContain("src/application layer");
 
+    stdin.write(LEFT_ARROW);
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope in item"));
+    expect(lastFrame()).toContain("src/presentation tui");
+
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
+    expect(lastFrame()).toContain("src/application layer");
+
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
+
+    stdin.write(LEFT_ARROW);
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
+    stdin.write(LEFT_ARROW);
+    await waitForFrame(lastFrame, (frame) => frame.includes("Scope in item"));
     stdin.write(LEFT_ARROW);
     await waitForFrame(lastFrame, (frame) =>
       frame.includes("Success criterion"),

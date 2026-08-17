@@ -894,11 +894,31 @@ describe("App", () => {
     await tick();
     stdin.write("\r");
     await tick();
-    stdin.write("src/presentation/tui");
+    stdin.write("src/presentation tui");
     await tick();
-    stdin.write("\t");
+    stdin.write("\r");
     await tick();
-    stdin.write("src/application");
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("tests/presentation/tui");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("src/application layer");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("y");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    stdin.write("src/domain");
+    await tick();
+    stdin.write("\r");
     await tick();
     stdin.write("\r");
     await tick();
@@ -920,8 +940,8 @@ describe("App", () => {
         title: "Prototype Cockpit goal authoring",
         objective: "Open goal authoring from Cockpit",
         successCriteria: ["Wizard opens and closes"],
-        scopeIn: ["src/presentation/tui"],
-        scopeOut: ["src/application"],
+        scopeIn: ["src/presentation tui", "tests/presentation/tui"],
+        scopeOut: ["src/application layer", "src/domain"],
         nextGoalId: undefined,
         previousGoalId: undefined,
         prerequisiteGoals: undefined,
@@ -975,6 +995,10 @@ describe("App", () => {
       stdin.write("\r");
       await waitForFrame(lastFrame, (frame) => frame.includes("Scope in"));
 
+      stdin.write("\r");
+      await tick();
+      stdin.write("\r");
+      await waitForFrame(lastFrame, (frame) => frame.includes("Scope out"));
       stdin.write("\r");
       await tick();
       stdin.write("\r");

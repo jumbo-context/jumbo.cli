@@ -14,6 +14,8 @@ export const GoalAuthoringFieldKey = {
   OBJECTIVE: "objective",
   SCOPE_IN: "scopeIn",
   SCOPE_OUT: "scopeOut",
+  ADD_ANOTHER_SCOPE_IN: "addAnotherScopeIn",
+  ADD_ANOTHER_SCOPE_OUT: "addAnotherScopeOut",
   PREVIOUS_GOAL: "previousGoal",
   NEXT_GOAL: "nextGoal",
   PREREQUISITE_GOALS: "prerequisiteGoals",
@@ -37,12 +39,14 @@ export const GoalAuthoringCopy = {
     },
   },
   scope: {
-    title: "Scope",
-    description:
-      "Identify the work area and boundaries that keep the goal focused.",
+    scopeInTitlePrefix: "Scope in item",
+    scopeOutTitlePrefix: "Scope out item",
+    description: "Add each work area or boundary as a separate item.",
     fields: {
-      scopeIn: "Scope in (optional)",
-      scopeOut: "Scope out (optional)",
+      scopeIn: "Scope in item (optional)",
+      scopeOut: "Scope out item (optional)",
+      addAnotherScopeIn: "Add another scope-in item?",
+      addAnotherScopeOut: "Add another scope-out item?",
       scopeInPlaceholder: "e.g. src/presentation/tui/goals",
       scopeOutPlaceholder: "e.g. src/application",
     },

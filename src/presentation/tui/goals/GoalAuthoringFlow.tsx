@@ -15,8 +15,8 @@ export interface GoalAuthoringValues {
   readonly title: string;
   readonly objective: string;
   readonly successCriteria: readonly string[];
-  readonly scopeIn: string;
-  readonly scopeOut: string;
+  readonly scopeIn: readonly string[];
+  readonly scopeOut: readonly string[];
   readonly nextGoal: string;
   readonly previousGoal: string;
   readonly prerequisiteGoals: string;
@@ -38,27 +38,6 @@ const DETAILS_STEPS: readonly WizardStepDefinition[] = [
         key: GoalAuthoringFieldKey.OBJECTIVE,
         label: GoalAuthoringCopy.details.fields.objective,
         placeholder: GoalAuthoringCopy.details.fields.objectivePlaceholder,
-      },
-    ],
-  },
-] as const;
-
-const SCOPE_STEPS: readonly WizardStepDefinition[] = [
-  {
-    title: GoalAuthoringCopy.scope.title,
-    description: GoalAuthoringCopy.scope.description,
-    fields: [
-      {
-        key: GoalAuthoringFieldKey.SCOPE_IN,
-        label: GoalAuthoringCopy.scope.fields.scopeIn,
-        placeholder: GoalAuthoringCopy.scope.fields.scopeInPlaceholder,
-        required: false,
-      },
-      {
-        key: GoalAuthoringFieldKey.SCOPE_OUT,
-        label: GoalAuthoringCopy.scope.fields.scopeOut,
-        placeholder: GoalAuthoringCopy.scope.fields.scopeOutPlaceholder,
-        required: false,
       },
     ],
   },
@@ -121,6 +100,10 @@ interface GoalAuthoringFlowProps {
   readonly disabled?: boolean;
 }
 
+type ScopeFieldKey =
+  | typeof GoalAuthoringFieldKey.SCOPE_IN
+  | typeof GoalAuthoringFieldKey.SCOPE_OUT;
+
 export function GoalAuthoringFlow({
   onComplete,
   onCancel,
@@ -134,9 +117,13 @@ export function GoalAuthoringFlow({
   const [objective, setObjective] = useState("");
   const [successCriteria, setSuccessCriteria] = useState<readonly string[]>([]);
   const [scopeValues, setScopeValues] = useState({
-    scopeIn: "",
-    scopeOut: "",
+    scopeIn: [] as readonly string[],
+    scopeOut: [] as readonly string[],
   });
+  const [scopeFieldKey, setScopeFieldKey] = useState<ScopeFieldKey>(
+    GoalAuthoringFieldKey.SCOPE_IN,
+  );
+  const [scopeEditIndex, setScopeEditIndex] = useState(0);
   const [sequencingValues, setSequencingValues] = useState({
     previousGoal: "",
     nextGoal: "",
@@ -153,6 +140,10 @@ export function GoalAuthoringFlow({
   const criteriaSteps = useMemo(
     () => buildCriteriaSteps(criterionNumber),
     [criterionNumber],
+  );
+  const scopeSteps = useMemo(
+    () => buildScopeSteps(scopeFieldKey, scopeEditIndex + 1),
+    [scopeEditIndex, scopeFieldKey],
   );
 
   const handleDetailsConfirm = (values: Record<string, string>) => {
@@ -181,10 +172,33 @@ export function GoalAuthoringFlow({
   };
 
   const handleScopeConfirm = (values: Record<string, string>) => {
-    setScopeValues({
-      scopeIn: values[GoalAuthoringFieldKey.SCOPE_IN] ?? "",
-      scopeOut: values[GoalAuthoringFieldKey.SCOPE_OUT] ?? "",
-    });
+    const item = values[scopeFieldKey] ?? "";
+    const nextScopeValues = {
+      ...scopeValues,
+      [scopeFieldKey]: replaceScopeItem(
+        scopeValues[scopeFieldKey],
+        scopeEditIndex,
+        item,
+      ),
+    };
+    setScopeValues(nextScopeValues);
+
+    if (
+      values[scopeAddAnotherFieldKey(scopeFieldKey)] ===
+      GoalAuthoringCriterionValue.YES
+    ) {
+      setScopeEditIndex(scopeEditIndex + 1);
+      setWizardKey((current) => current + 1);
+      return;
+    }
+
+    if (scopeFieldKey === GoalAuthoringFieldKey.SCOPE_IN) {
+      setScopeFieldKey(GoalAuthoringFieldKey.SCOPE_OUT);
+      setScopeEditIndex(0);
+      setWizardKey((current) => current + 1);
+      return;
+    }
+
     setStage(GoalAuthoringStage.SEQUENCING);
   };
 
@@ -229,11 +243,27 @@ export function GoalAuthoringFlow({
   };
 
   const handleScopeBack = () => {
+    if (scopeEditIndex > 0) {
+      setScopeEditIndex(scopeEditIndex - 1);
+      setWizardKey((current) => current + 1);
+      return;
+    }
+
+    if (scopeFieldKey === GoalAuthoringFieldKey.SCOPE_OUT) {
+      setScopeFieldKey(GoalAuthoringFieldKey.SCOPE_IN);
+      setScopeEditIndex(Math.max(scopeValues.scopeIn.length - 1, 0));
+      setWizardKey((current) => current + 1);
+      return;
+    }
+
     setCriteriaEditIndex(Math.max(successCriteria.length - 1, 0));
     setStage(GoalAuthoringStage.CRITERIA);
   };
 
   const handleSequencingBack = () => {
+    setScopeFieldKey(GoalAuthoringFieldKey.SCOPE_OUT);
+    setScopeEditIndex(Math.max(scopeValues.scopeOut.length - 1, 0));
+    setWizardKey((current) => current + 1);
     setStage(GoalAuthoringStage.SCOPE);
   };
 
@@ -280,13 +310,19 @@ export function GoalAuthoringFlow({
   if (stage === GoalAuthoringStage.SCOPE) {
     return (
       <Wizard
-        key={GoalAuthoringStage.SCOPE}
+        key={`scope-${scopeFieldKey}-${wizardKey}`}
         title={GoalAuthoringCopy.title}
-        steps={SCOPE_STEPS}
+        steps={scopeSteps}
         onConfirm={handleScopeConfirm}
         onCancel={onCancel}
         onBack={handleScopeBack}
-        initialValues={scopeValues}
+        initialValues={{
+          [scopeFieldKey]: scopeValues[scopeFieldKey][scopeEditIndex] ?? "",
+          [scopeAddAnotherFieldKey(scopeFieldKey)]:
+            scopeEditIndex < scopeValues[scopeFieldKey].length - 1
+              ? GoalAuthoringCriterionValue.YES
+              : GoalAuthoringCriterionValue.NO,
+        }}
         dispatchError={dispatchError}
         disabled={disabled}
         progressLabel={AUTHORING_PROGRESS_LABELS[GoalAuthoringStage.SCOPE]}
@@ -349,4 +385,61 @@ function buildCriteriaSteps(
       ],
     },
   ] as const;
+}
+
+function buildScopeSteps(
+  scopeFieldKey: ScopeFieldKey,
+  itemNumber: number,
+): readonly WizardStepDefinition[] {
+  const isScopeIn = scopeFieldKey === GoalAuthoringFieldKey.SCOPE_IN;
+  return [
+    {
+      title: `${
+        isScopeIn
+          ? GoalAuthoringCopy.scope.scopeInTitlePrefix
+          : GoalAuthoringCopy.scope.scopeOutTitlePrefix
+      } ${itemNumber}`,
+      description: GoalAuthoringCopy.scope.description,
+      fields: [
+        {
+          key: scopeFieldKey,
+          label: isScopeIn
+            ? GoalAuthoringCopy.scope.fields.scopeIn
+            : GoalAuthoringCopy.scope.fields.scopeOut,
+          placeholder: isScopeIn
+            ? GoalAuthoringCopy.scope.fields.scopeInPlaceholder
+            : GoalAuthoringCopy.scope.fields.scopeOutPlaceholder,
+          required: false,
+        },
+        {
+          key: scopeAddAnotherFieldKey(scopeFieldKey),
+          label: isScopeIn
+            ? GoalAuthoringCopy.scope.fields.addAnotherScopeIn
+            : GoalAuthoringCopy.scope.fields.addAnotherScopeOut,
+          kind: WizardFieldKind.YES_NO,
+          defaultValue: GoalAuthoringCriterionValue.NO,
+        },
+      ],
+    },
+  ] as const;
+}
+
+function scopeAddAnotherFieldKey(scopeFieldKey: ScopeFieldKey): string {
+  return scopeFieldKey === GoalAuthoringFieldKey.SCOPE_IN
+    ? GoalAuthoringFieldKey.ADD_ANOTHER_SCOPE_IN
+    : GoalAuthoringFieldKey.ADD_ANOTHER_SCOPE_OUT;
+}
+
+function replaceScopeItem(
+  items: readonly string[],
+  index: number,
+  item: string,
+): readonly string[] {
+  const nextItems = [...items];
+  if (item.trim().length === 0) {
+    nextItems.splice(index, 1);
+  } else {
+    nextItems[index] = item;
+  }
+  return nextItems;
 }
