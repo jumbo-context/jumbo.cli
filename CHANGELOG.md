@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.21.0] - 2026-08-18
+
 ### Added
 
 - **TUI goal creation result screen**: Cockpit and Goals-screen authoring now show a bounded pending, success, or failure result after submission. Successful results include the created goal ID and remain visible until Enter is pressed; failures retain every entered value for retry or allow cancellation with Escape.
