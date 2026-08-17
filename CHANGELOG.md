@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **TUI goal authoring layout**: Long objective values now wrap within the bounded goal wizard without expanding its background into horizontal bands, and the input cursor remains after the final wrapped character.
+
 ## [3.20.0] - 2026-07-25
 
 ### Added
