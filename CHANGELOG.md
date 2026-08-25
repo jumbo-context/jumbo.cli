@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Goal review verification**: Managed review instructions now discover and run project-supported verification instead of assuming a specific package manager or ecosystem, preventing unrelated review rejections in nonmatching projects.
+
 ## [3.21.0] - 2026-08-18
 
 ### Added

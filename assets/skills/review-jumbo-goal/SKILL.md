@@ -62,13 +62,16 @@ For each category in the review output:
 
 If ANY entity constraint is violated: add the issues to the feedback list.
 
-### 6. Run Tests
+### 6. Run Applicable Verification
 
-```bash
-npm test
-```
+Discover the project's verification commands from its repository instructions, build
+manifests, and CI configuration. Run the tests and other checks that apply to the changed
+scope using the project's own tooling.
 
-All tests must pass. If tests fail: add the issues to the feedback list.
+Record failures from applicable verification in the feedback list. Do not require
+verification commands that the project does not define as applicable. If the project
+defines no automated verification for the changed scope, record that fact as review
+evidence rather than a failure.
 
 ### 7. Qualify or Re-Review
 
@@ -87,8 +90,8 @@ jumbo goal reject --id <goal-id> --audit-findings <list of issues>
 
 ## Rules
 
-1. **Never approve with unresolved failures.** Every criterion, invariant, and test must pass before approving.
+1. **Never approve with unresolved failures.** Every criterion, invariant, and applicable verification must pass before approving.
 2. **Never skip entity categories.** Review output includes entities for a reason — each was registered during refinement as essential context.
-3. **Always run tests.** Implementation without passing tests is incomplete.
+3. **Always run applicable verification.** Use the project's defined tools and commands; do not assume a package manager or ecosystem.
 4. **Document issues clearly.** When rejecting a goal, provide detailed feedback for each failure.
 5. **Read the code, don't assume.** Verify each criterion by reading actual implementation, not by recalling what you wrote.
