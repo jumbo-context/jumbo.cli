@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.22.0] - 2026-08-25
+
+### Added
+
+- **Decision show command**: Added `jumbo decision show` to display the complete architectural decision record by ID, with text and JSON output formats.
+
 ### Fixed
 
 - **Goal review verification**: Managed review instructions now discover and run project-supported verification instead of assuming a specific package manager or ecosystem, preventing unrelated review rejections in nonmatching projects.
