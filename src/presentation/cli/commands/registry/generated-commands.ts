@@ -33,6 +33,7 @@ import { decisionsList, metadata as decisionsListMeta } from '../../commands/dec
 import { decisionRestore, metadata as decisionRestoreMeta } from '../../commands/decisions/restore/decision.restore.js';
 import { decisionReverse, metadata as decisionReverseMeta } from '../../commands/decisions/reverse/decision.reverse.js';
 import { decisionsSearch, metadata as decisionsSearchMeta } from '../../commands/decisions/search/decisions.search.js';
+import { decisionShow, metadata as decisionShowMeta } from '../../commands/decisions/show/decision.show.js';
 import { decisionSupersede, metadata as decisionSupersedeMeta } from '../../commands/decisions/supersede/decision.supersede.js';
 import { decisionUpdate, metadata as decisionUpdateMeta } from '../../commands/decisions/update/decision.update.js';
 import { dependencyAdd, metadata as dependencyAddMeta } from '../../commands/dependencies/add/dependency.add.js';
@@ -221,6 +222,11 @@ export const commands: RegisteredCommand[] = [
     path: 'decisions search',
     metadata: decisionsSearchMeta,
     handler: decisionsSearch
+  },
+  {
+    path: 'decision show',
+    metadata: decisionShowMeta,
+    handler: decisionShow
   },
   {
     path: 'decision supersede',

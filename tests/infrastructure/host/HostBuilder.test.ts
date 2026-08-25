@@ -5,6 +5,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { AuditRelationsController } from "../../../src/application/context/relations/audit/AuditRelationsController.js";
+import { ShowDecisionController } from "../../../src/application/context/decisions/show/ShowDecisionController.js";
 import { HostBuilder } from "../../../src/infrastructure/host/HostBuilder.js";
 import { SqliteRelationNodeCatalog } from "../../../src/infrastructure/context/relations/audit/SqliteRelationNodeCatalog.js";
 import { MigrationRunner } from "../../../src/infrastructure/persistence/MigrationRunner.js";
@@ -45,5 +46,13 @@ describe("HostBuilder relation audit wiring", () => {
         }),
       }),
     );
+  });
+
+  it("exposes a usable decision-show controller backed by the decision view reader", async () => {
+    const container = await new HostBuilder(tempDirectory, db).build();
+
+    expect(container.showDecisionController).toBeInstanceOf(ShowDecisionController);
+    await expect(container.showDecisionController.handle({ decisionId: "dec_missing" }))
+      .rejects.toThrow("Decision not found: dec_missing");
   });
 });

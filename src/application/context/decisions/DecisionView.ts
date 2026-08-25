@@ -1,6 +1,6 @@
 /**
  * Read model for Decision aggregate.
- * Represents the materialized view stored in SQLite.
+ * Represents the storage-agnostic projected state exposed by decision read ports.
  */
 export interface DecisionView {
   readonly decisionId: string;
