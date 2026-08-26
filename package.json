@@ -19,11 +19,11 @@
   ],
   "homepage": "https://jumbocontext.com",
   "bugs": {
-    "url": "https://github.com/jumbocontext/jumbo.cli/issues"
+    "url": "https://github.com/jumbocontext/cli/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jumbocontext/jumbo.cli.git"
+    "url": "git+https://github.com/jumbocontext/cli.git"
   },
   "type": "module",
   "license": "AGPL-3.0",
