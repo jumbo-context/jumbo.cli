@@ -77,13 +77,29 @@ describe("decision.show command", () => {
   });
 
   it("defaults non-TTY output to JSON when no format is supplied", async () => {
-    Renderer.reset();
-    handle.mockResolvedValue({ decision });
+    const isTtyDescriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+    Object.defineProperty(process.stdout, "isTTY", {
+      configurable: true,
+      value: false,
+    });
 
-    await decisionShow({ id: "dec_123" }, container as IApplicationContainer);
+    try {
+      Renderer.reset();
+      handle.mockResolvedValue({ decision });
 
-    expect(stdout).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(String(stdout.mock.calls[0][0]))).toEqual(decision);
+      await decisionShow({ id: "dec_123" }, container as IApplicationContainer);
+
+      expect(stdout).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(String(stdout.mock.calls[0][0]))).toEqual(decision);
+    } finally {
+      Renderer.reset();
+
+      if (isTtyDescriptor) {
+        Object.defineProperty(process.stdout, "isTTY", isTtyDescriptor);
+      } else {
+        Reflect.deleteProperty(process.stdout, "isTTY");
+      }
+    }
   });
 
   it("reports unknown IDs only on stderr and sets a non-zero exit code", async () => {

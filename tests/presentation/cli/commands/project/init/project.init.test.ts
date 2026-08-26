@@ -191,6 +191,8 @@ describe("project.init command", () => {
 
     if (isTtyDescriptor) {
       Object.defineProperty(process.stdout, "isTTY", isTtyDescriptor);
+    } else {
+      Reflect.deleteProperty(process.stdout, "isTTY");
     }
   });
 
