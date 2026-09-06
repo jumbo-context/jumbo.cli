@@ -58,7 +58,7 @@ Jumbo creates or updates several files outside `.jumbo/` to integrate with AI co
 | File | Purpose |
 |---|---|
 | `.claude/settings.json` | Claude Code hooks for session start and compaction |
-| `.codex/hooks.json` | Codex hooks for session start and compaction using text-mode Jumbo output |
+| `.codex/hooks.json` | Codex hooks using full text for session start and quiet text for compaction |
 | `.agents/hooks.json` | Antigravity hooks for session bootstrap |
 | `.agents/jumbo/antigravity-hook.mjs` | Antigravity hook runner that returns documented JSON hook envelopes |
 | `.github/hooks/hooks.json` | GitHub Copilot hooks for session start |

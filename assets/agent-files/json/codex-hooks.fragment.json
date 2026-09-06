@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jumbo work pause --format text"
+            "command": "jumbo work pause --format text --quiet"
           }
         ]
       }
