@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { SemanticColors, TuiGlyphs } from "../../shared/DesignTokens.js";
 
@@ -22,35 +22,75 @@ export function WizardTextInput({
   focused = true,
   error,
 }: WizardTextInputProps): React.ReactElement {
+  const [cursorPosition, setCursorPosition] = useState(
+    Array.from(value).length,
+  );
+  const editingRef = useRef({ value, cursorPosition });
+
+  useLayoutEffect(() => {
+    if (value !== editingRef.current.value) {
+      const nextPosition = Array.from(value).length;
+      editingRef.current = { value, cursorPosition: nextPosition };
+      setCursorPosition(nextPosition);
+    }
+  }, [value]);
+
   useInput(
     (input, key) => {
-      if (key.backspace || key.delete) {
-        if (value.length > 0) {
-          onChange(value.slice(0, -1));
+      const characters = Array.from(editingRef.current.value);
+      const position = editingRef.current.cursorPosition;
+      const moveCursor = (nextPosition: number) => {
+        editingRef.current.cursorPosition = nextPosition;
+        setCursorPosition(nextPosition);
+      };
+      const changeValue = (nextPosition: number) => {
+        const nextValue = characters.join("");
+        editingRef.current = { value: nextValue, cursorPosition: nextPosition };
+        setCursorPosition(nextPosition);
+        onChange(nextValue);
+      };
+
+      if (key.leftArrow) {
+        moveCursor(Math.max(0, position - 1));
+        return;
+      }
+
+      if (key.rightArrow) {
+        moveCursor(Math.min(characters.length, position + 1));
+        return;
+      }
+
+      if (key.backspace) {
+        if (position > 0) {
+          characters.splice(position - 1, 1);
+          changeValue(position - 1);
         }
         return;
       }
 
-      if (
-        key.return ||
-        key.tab ||
-        key.escape ||
-        key.upArrow ||
-        key.downArrow ||
-        key.leftArrow ||
-        key.rightArrow
-      ) {
+      if (key.delete) {
+        if (position < characters.length) {
+          characters.splice(position, 1);
+          changeValue(position);
+        }
+        return;
+      }
+
+      if (key.return || key.tab || key.escape || key.upArrow || key.downArrow) {
         return;
       }
 
       if (input && !key.ctrl && !key.meta) {
-        onChange(value + input);
+        const insertedCharacters = Array.from(input);
+        characters.splice(position, 0, ...insertedCharacters);
+        changeValue(position + insertedCharacters.length);
       }
     },
     { isActive: focused },
   );
 
   const showPlaceholder = value.length === 0 && placeholder !== undefined;
+  const characters = Array.from(value);
 
   return (
     <Box flexDirection="column" gap={0}>
@@ -83,8 +123,9 @@ export function WizardTextInput({
             color={SemanticColors.inputText}
             backgroundColor={INPUT_BACKGROUND}
           >
-            {value}
-            {focused && "▎"}
+            {focused
+              ? `${characters.slice(0, cursorPosition).join("")}▎${characters.slice(cursorPosition).join("")}`
+              : value}
           </Text>
         )}
       </Box>

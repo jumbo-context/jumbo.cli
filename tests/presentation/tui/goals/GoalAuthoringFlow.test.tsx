@@ -15,7 +15,7 @@ import {
 import { WizardValidationCopy } from "../../../../src/presentation/tui/wizard/WizardConstants.js";
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 50));
-const LEFT_ARROW = "\x1B[D";
+const CTRL_B = "\x02";
 const SUCCESSFUL_SUBMISSION: GoalAuthoringSubmissionResult = {
   status: GoalAuthoringRequestStatus.SUCCESS,
   goalId: "goal_created",
@@ -344,11 +344,11 @@ describe("GoalAuthoringFlow", () => {
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
 
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
     expect(lastFrame()).toContain("src/application layer");
 
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope in item"));
     expect(lastFrame()).toContain("src/presentation tui");
 
@@ -363,17 +363,17 @@ describe("GoalAuthoringFlow", () => {
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) => frame.includes("Previous goal"));
 
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope out item"));
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(lastFrame, (frame) => frame.includes("Scope in item"));
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(lastFrame, (frame) =>
       frame.includes("Success criterion"),
     );
     expect(lastFrame()).toContain("Renders goals");
 
-    stdin.write(LEFT_ARROW);
+    stdin.write(CTRL_B);
     await waitForFrame(
       lastFrame,
       (frame) => frame.includes("Title") && frame.includes("Objective"),
