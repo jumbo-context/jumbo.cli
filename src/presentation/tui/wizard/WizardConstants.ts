@@ -23,7 +23,7 @@ export const WizardKeyboardHintCopy = {
 } as const;
 
 export const WizardKeyboardHintKey = {
-  back: "←",
+  back: "ctrl+b",
   submit: "⏎",
   cancel: "esc",
   field: "↑↓",

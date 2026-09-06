@@ -97,7 +97,7 @@ describe("InitFlow", () => {
 
     expect(lastFrame()).toContain("Add an audience?");
 
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
 
     expect(lastFrame()).toContain("Project purpose");
@@ -153,7 +153,7 @@ describe("InitFlow", () => {
 
     expect(lastFrame()).toContain("Audience name");
 
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
 
     expect(lastFrame()).toContain("Add an audience?");
@@ -180,7 +180,7 @@ describe("InitFlow", () => {
 
     expect(lastFrame()).toContain("Value proposition title");
 
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
 
     expect(lastFrame()).toContain("Add a value proposition?");
@@ -240,9 +240,9 @@ describe("InitFlow", () => {
     await tick();
     stdin.write("\r");
     await tick();
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
     stdin.write("\r");
     await tick();
@@ -327,9 +327,9 @@ describe("InitFlow", () => {
       frame.includes("Proceed with initialization?"),
     );
 
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
-    stdin.write("\x1B[D");
+    stdin.write("\x02");
     await tick();
     stdin.write("\r");
     await waitForFrame(lastFrame, (frame) =>

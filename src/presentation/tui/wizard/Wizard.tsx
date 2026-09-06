@@ -282,7 +282,7 @@ export function Wizard({
       onBack?.();
     };
 
-    if (key.leftArrow && !input) {
+    if (key.ctrl && input === "b") {
       navigateBack();
       return;
     }

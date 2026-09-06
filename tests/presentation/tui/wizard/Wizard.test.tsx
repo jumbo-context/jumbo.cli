@@ -314,7 +314,7 @@ describe("Wizard", () => {
     expect(lastFrame()).not.toContain(WizardKeyboardHintCopy.back);
   });
 
-  it("shows left-arrow back hint when parent back is available", () => {
+  it("shows Ctrl+B back hint when parent back is available", () => {
     const { lastFrame } = render(
       <Wizard
         title="Setup"
@@ -342,7 +342,7 @@ describe("Wizard", () => {
     expect(lastFrame()).toContain(WizardKeyboardHintCopy.back);
   });
 
-  it("calls parent back handler from the first step", async () => {
+  it("calls parent back handler with Ctrl+B but not Left Arrow", async () => {
     const handleBack = jest.fn();
     const { stdin } = render(
       <Wizard
@@ -354,6 +354,10 @@ describe("Wizard", () => {
       />,
     );
     stdin.write("\x1B[D");
+    await tick();
+    expect(handleBack).not.toHaveBeenCalled();
+
+    stdin.write("\x02");
     await tick();
     expect(handleBack).toHaveBeenCalledTimes(1);
   });
@@ -479,12 +483,13 @@ describe("Wizard", () => {
     expect(lastFrame()).toContain("Smith");
   });
 
-  it("shows left-arrow back hint on second step when focused field is text", async () => {
+  it("navigates back with Ctrl+B but not Left Arrow while preserving text", async () => {
+    const handleConfirm = jest.fn();
     const { lastFrame, stdin } = render(
       <Wizard
         title="Setup"
         steps={TWO_STEP_CONFIG}
-        onConfirm={() => {}}
+        onConfirm={handleConfirm}
         onCancel={() => {}}
       />,
     );
@@ -494,6 +499,27 @@ describe("Wizard", () => {
     await tick();
     expect(lastFrame()).toContain(WizardKeyboardHintKey.back);
     expect(lastFrame()).toContain(WizardKeyboardHintCopy.back);
+    expect(lastFrame()).toContain("ctrl+b");
+
+    stdin.write("alice@example.com");
+    await tick();
+    stdin.write("\x1B[D");
+    await tick();
+    expect(lastFrame()).toContain("2/2");
+
+    stdin.write("\x02");
+    await tick();
+    expect(lastFrame()).toContain("1/2");
+    expect(lastFrame()).toContain("Alice");
+
+    stdin.write("\r");
+    await tick();
+    stdin.write("\r");
+    await tick();
+    expect(handleConfirm).toHaveBeenCalledWith({
+      name: "Alice",
+      email: "alice@example.com",
+    });
   });
 
   it("uses a supplied progress label instead of local step count", () => {
