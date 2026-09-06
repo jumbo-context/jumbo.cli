@@ -111,7 +111,7 @@ export const GoalLimits = {
   SUCCESS_CRITERION_MAX_LENGTH: 1000,
   MAX_SUCCESS_CRITERIA: 50,
   SCOPE_ITEM_MAX_LENGTH: 200,
-  MAX_SCOPE_ITEMS: 20,
+  MAX_SCOPE_ITEMS: 100,
   NOTE_MAX_LENGTH: 500,
   // Embedded context: file path limits (only validation needed - other fields pre-validated by source aggregates)
   FILE_PATH_MAX_LENGTH: 500
