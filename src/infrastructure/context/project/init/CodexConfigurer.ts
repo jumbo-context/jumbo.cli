@@ -9,8 +9,9 @@
  * Codex reads AGENTS.md natively, so no instruction file is needed.
  * Codex reads repo skills from .agents/skills and repo hooks from
  * the trusted project .codex configuration layer.
- * Codex hooks parse JSON stdout as hook-control envelopes, so Jumbo
- * lifecycle commands use text output to avoid parser conflicts.
+ * Codex 0.153.4 treats stdout starting with { or [ as hook-control JSON.
+ * PreCompact uses quiet text to omit the non-TTY [OK] success prefix.
+ * SessionStart keeps full text so startup and compact-resume context is delivered.
  *
  * Operations are idempotent and gracefully handle errors.
  */
@@ -49,7 +50,8 @@ const JSON_FORMATTING_OPTIONS: FormattingOptions = {
 const STALE_JUMBO_COMMAND_REPLACEMENTS: Readonly<Record<string, string>> = {
   "jumbo session start": "jumbo session start --format text",
   "jumbo work resume": "jumbo work resume --format text",
-  "jumbo work pause": "jumbo work pause --format text",
+  "jumbo work pause": "jumbo work pause --format text --quiet",
+  "jumbo work pause --format text": "jumbo work pause --format text --quiet",
 };
 const OBSOLETE_CODEX_SKILLS_RELATIVE_PATH = ".codex/skills";
 

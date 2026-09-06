@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Codex compaction hooks**: Managed PreCompact hooks now run `jumbo work pause --format text --quiet`, preventing Codex 0.153.4 from rejecting the non-TTY `[OK]` success prefix as invalid hook JSON. Initialization and repair migrate the previous bare and text-only managed commands while preserving user hooks and JSONC comments. SessionStart continues delivering full startup and resume context.
+
 ## [3.22.0] - 2026-08-25
 
 ### Added

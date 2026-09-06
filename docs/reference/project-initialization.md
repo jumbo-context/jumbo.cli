@@ -102,6 +102,10 @@ Jumbo-owned markdown files and JSON hook/settings fragments are loaded from `ass
 
 For Codex, Jumbo uses the repository skill directory `.agents/skills` and keeps `.codex` for documented Codex hooks/configuration. During repair and evolve, obsolete Jumbo-managed skill copies under `.codex/skills` are removed only when they exactly match the current managed templates; customized skills and extra user files are preserved.
 
+Codex's PreCompact hook runs `jumbo work pause --format text --quiet`. Quiet text removes the non-TTY `[OK]` success prefix that Codex 0.153.4 interprets as invalid hook JSON. A successful pause emits plain text; no active goal produces empty stdout; real failures retain stderr and a nonzero exit status. SessionStart hooks keep full text output so startup and compact-resume context reaches the agent.
+
+After upgrading Jumbo, run `jumbo evolve --yes` to refresh existing managed hooks. Initialization and repair replace the exact legacy commands `jumbo work pause` and `jumbo work pause --format text` with the quiet command, preserving user hooks, JSONC comments, and unrelated settings. Compatibility was verified against Codex 0.153.4; other versions require revalidation.
+
 For Antigravity, Jumbo uses the documented `agy` CLI target, keeps `GEMINI.md` as a thin compatibility reference to `JUMBO.md`, and manages workspace hooks through `.agents/hooks.json`. Antigravity repair removes obsolete Jumbo-managed Gemini hook/settings files while preserving unrelated user-owned `.gemini` content.
 
 ---
