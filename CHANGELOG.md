@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.23.0] - 2026-09-06
+
+### Added
+
+- **TUI wizard text editing**: Left and right arrows now move the cursor within text fields. Typing inserts text at the cursor, Backspace removes the preceding character, and Delete removes the following character.
+
+### Changed
+
+- **TUI wizard navigation**: Use `Ctrl+B` to return to the previous step; the left arrow now moves the text cursor. Wizard keyboard hints reflect the new shortcut.
+- **Goal scope limits**: Increased the maximum number of items in each goal scope list from 20 to 100.
+
 ### Fixed
 
 - **Codex compaction hooks**: Managed PreCompact hooks now run `jumbo work pause --format text --quiet`, preventing Codex 0.153.4 from rejecting the non-TTY `[OK]` success prefix as invalid hook JSON. Initialization and repair migrate the previous bare and text-only managed commands while preserving user hooks and JSONC comments. SessionStart continues delivering full startup and resume context.
