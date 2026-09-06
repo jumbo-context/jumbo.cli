@@ -3,7 +3,7 @@
  */
 
 import { Goal } from "../../../src/domain/goals/Goal";
-import { GoalEventType, GoalStatus } from "../../../src/domain/goals/Constants";
+import { GoalEventType, GoalStatus, GoalLimits } from "../../../src/domain/goals/Constants";
 import type { GoalEvent } from "../../../src/domain/goals/EventIndex";
 
 describe("Goal Aggregate", () => {
@@ -174,12 +174,12 @@ describe("Goal Aggregate", () => {
     it("should throw error if too many scope items", () => {
       // Arrange
       const goal = Goal.create("goal_123");
-      const tooManyItems = Array.from({ length: 21 }, (_, i) => `Item ${i}`);
+      const tooManyItems = Array.from({ length: GoalLimits.MAX_SCOPE_ITEMS + 1 }, (_, i) => `Item ${i}`);
 
       // Act & Assert
       expect(() =>
         goal.add("Test goal", "My objective", ["Criterion 1"], tooManyItems)
-      ).toThrow("Cannot have more than 20 scope items");
+      ).toThrow(`Cannot have more than ${GoalLimits.MAX_SCOPE_ITEMS} scope items`);
     });
 
     it("should throw error if scope item is too long", () => {
@@ -618,11 +618,11 @@ describe("Goal Aggregate", () => {
       // Arrange
       const goal = Goal.create("goal_123");
       goal.add("Original goal", "Original objective", ["Criterion 1"]);
-      const tooManyItems = Array.from({ length: 21 }, (_, i) => `Item ${i}`);
+      const tooManyItems = Array.from({ length: GoalLimits.MAX_SCOPE_ITEMS + 1 }, (_, i) => `Item ${i}`);
 
       // Act & Assert
       expect(() => goal.update(undefined, undefined, undefined, tooManyItems)).toThrow(
-        "Cannot have more than 20 scope items"
+        `Cannot have more than ${GoalLimits.MAX_SCOPE_ITEMS} scope items`
       );
     });
 
